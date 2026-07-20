@@ -50,7 +50,7 @@ class Buffer {
 
 export function InitApp() {
     const canvas = document.getElementById('glCanvas');
-    const gl = canvas.getContext('webgl');
+    const gl = canvas.getContext('webgl2');
 
     if (!gl) {
         console.error('Unable to initialize WebGL. Your browser may not support it.');
@@ -65,7 +65,7 @@ export function InitApp() {
     window.addEventListener('resize', resize);
     resize();
 
-    gl.clearColor(0.127, 0.127, 0.827, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     const vsSource = `
         attribute vec4 aVertexPosition;
