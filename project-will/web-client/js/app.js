@@ -48,6 +48,36 @@ class Buffer {
     }
 }
 
+class Texture {
+    constructor(gl, url) {
+        this.gl = gl;
+        this.texture = gl.createTexture();
+        this.isReady = false;
+        this._load(url);
+    }
+
+    _load(url) {
+        const gl = this.gl;
+        const image = new Image();
+        image.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            this.isReady = true;
+        };
+        image.src = url;
+    }
+
+    bind(unit = 0) {
+        if (!this.isReady) return;
+        this.gl.activeTexture(this.gl.TEXTURE0 + unit);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+    }
+}
+
 export function InitApp() {
     const canvas = document.getElementById('glCanvas');
     const gl = canvas.getContext('webgl2');
@@ -69,39 +99,72 @@ export function InitApp() {
 
     const vsSource = `
         attribute vec4 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        varying vec2 vTextureCoord;
+
         void main() {
             gl_Position = aVertexPosition;
+            vTextureCoord = aTextureCoord;
         }
     `;
 
     const fsSource = `
         precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+
         void main() {
-            gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
+            gl_FragColor = texture2D(uSampler, vTextureCoord);
         }
     `;
 
     const shader = new Shader(gl, vsSource, fsSource);
     if (!shader) return;
 
+    // Triangle vertices
     const vertices = new Float32Array([
-        0.0,  0.5,
-       -0.5, -0.5,
+        0.0, 0.5,
+        -0.5, -0.5,
         0.5, -0.5,
     ]);
-
     const vertexBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
+
+    // Texture coordinates matching the triangle vertices
+    // (0, 0.5) -> UV (0.5, 1.0)
+    // (-0.5, -0.5) -> UV (0.0, 0.0)
+    // (0.5, -0.5) -> UV (1.0, 0.0)
+    const texCoords = new Float32Array([
+        0.5, 1.0,
+        0.0, 0.0,
+        1.0, 0.0,
+    ]);
+    const textureBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
+
+    const woodTexture = new Texture(gl, 'img/wood-box.png');
 
     function render() {
         gl.clearColor(0.127, 0.127, 0.827, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        
+
         gl.useProgram(shader.program);
 
+        // Set up Vertex Positions
         const positionLoc = gl.getAttribLocation(shader.program, 'aVertexPosition');
         gl.enableVertexAttribArray(positionLoc);
         vertexBuffer.bind();
         gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+        // Set up Texture Coordinates
+        const texCoordLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
+        gl.enableVertexAttribArray(texCoordLoc);
+        textureBuffer.bind();
+        gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
+
+        // Bind the texture
+        woodTexture.bind(0);
+        const samplerLoc = gl.getUniformLocation(shader.program, 'uSampler');
+        gl.uniform1i(samplerLoc, 0);
 
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
