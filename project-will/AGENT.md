@@ -1,1 +1,2 @@
-We are creating a web graphics application. We need a boilerplate project. Your task is to create a index.html file that sets the html and body tag to 100% height and width, and includes a canvas element that fills the entire viewport. Additionally, include a script tag that links to a JavaScript file named "app.js". In app.js, you have to initialize webgl context on the canvas and set the clear color to a light gray.
+We are creating a web graphics application.
+Read app.js. The WebGL context has been created. We need to make classes for the shaders, buffers, and make a render loop to display a simple triangle on the screen.
