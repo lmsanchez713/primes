@@ -12,6 +12,7 @@
             height: 100%;
             overflow: hidden;
         }
+
         canvas {
             display: block;
             width: 100vw;
@@ -21,6 +22,11 @@
 </head>
 <body>
     <canvas id="glCanvas"></canvas>
-    <script src="app.js"></script>
+    <script type="module">
+        import { InitApp } from '/js/app.js';
+        document.addEventListener('DOMContentLoaded', async () => {
+            InitApp();
+        });
+    </script>
 </body>
 </html>
