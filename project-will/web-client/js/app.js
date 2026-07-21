@@ -28,7 +28,6 @@ export function InitApp() {
             vTextureCoord = aTextureCoord;
         }
     `;
-
     const fsSource = `
         precision mediump float;
         varying vec2 vTextureCoord;
@@ -68,7 +67,6 @@ export function InitApp() {
     const geometry = new Geometry(gl, gl.TRIANGLES);
 
     // Setup the attributes ONCE during initialization
-    // Note: You'll need to get locations from the shader
     const posLoc = gl.getAttribLocation(shader.program, 'aVertexPosition');
     const texLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
 
@@ -88,8 +86,7 @@ export function InitApp() {
     function render() {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        // In the render loop, you NO LONGER call gl.enableVertexAttribArray 
-        // or gl.vertexAttribPointer. You only do this:
+        // In the render loop, we only do this:
         triangleEntity.draw(gl);
     }
 
