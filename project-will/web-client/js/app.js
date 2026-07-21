@@ -1,4 +1,4 @@
-import { Shader, Buffer, Texture } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity } from './ogl2.js';
 
 export function InitApp() {
     const canvas = document.getElementById('glCanvas');
@@ -16,8 +16,6 @@ export function InitApp() {
     }
     window.addEventListener('resize', resize);
     resize();
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     const vsSource = `
         attribute vec4 aVertexPosition;
@@ -50,7 +48,6 @@ export function InitApp() {
         -0.5, -0.5,
         0.5, -0.5,
     ]);
-    const vertexBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
 
     // Texture coordinates matching the triangle vertices
     // (0, 0.5) -> UV (0.5, 1.0)
@@ -61,34 +58,39 @@ export function InitApp() {
         0.0, 0.0,
         1.0, 0.0,
     ]);
-    const textureBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
 
     const woodTexture = new Texture(gl, 'img/wood-box.png');
 
+    const posBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
+    const texBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
+
+    // Create the Geometry object
+    const geometry = new Geometry(gl, gl.TRIANGLES);
+
+    // Setup the attributes ONCE during initialization
+    // Note: You'll need to get locations from the shader
+    const posLoc = gl.getAttribLocation(shader.program, 'aVertexPosition');
+    const texLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
+
+    geometry.addAttribute(posBuffer, posLoc, 2); // size 2 because x, y
+    geometry.addAttribute(texBuffer, texLoc, 2); // size 2 because u, v
+    geometry.setCount(3); // We are drawing a triangle
+
+    // Wrap it in an Entity (The High-Level object)
+    const material = new Material(gl, shader);
+    material.setTexture('uSampler', woodTexture);
+
+    const triangleEntity = new Entity(geometry, material);
+
+    // --- 2. RENDER PHASE (Inside render function) ---
+
+    gl.clearColor(0.127, 0.127, 0.827, 1.0);
     function render() {
-        gl.clearColor(0.127, 0.127, 0.827, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.useProgram(shader.program);
-
-        // Set up Vertex Positions
-        const positionLoc = gl.getAttribLocation(shader.program, 'aVertexPosition');
-        gl.enableVertexAttribArray(positionLoc);
-        vertexBuffer.bind();
-        gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
-
-        // Set up Texture Coordinates
-        const texCoordLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
-        gl.enableVertexAttribArray(texCoordLoc);
-        textureBuffer.bind();
-        gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 0, 0);
-
-        // Bind the texture
-        woodTexture.bind(0);
-        const samplerLoc = gl.getUniformLocation(shader.program, 'uSampler');
-        gl.uniform1i(samplerLoc, 0);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        // In the render loop, you NO LONGER call gl.enableVertexAttribArray 
+        // or gl.vertexAttribPointer. You only do this:
+        triangleEntity.draw(gl);
     }
 
     function animate() {
