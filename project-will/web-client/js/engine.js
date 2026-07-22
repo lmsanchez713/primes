@@ -1,0 +1,42 @@
+import { Scene } from './ogl2.js';
+
+export class Engine {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.gl = canvas.getContext('webgl2');
+        if (!this.gl) {
+            console.error('WebGL2 not supported');
+            return;
+        }
+
+        this.scene = new Scene(this.gl);
+        this.isRunning = false;
+    }
+
+    start() {
+        this.isRunning = true;
+        this._loop = this._loop.bind(this);
+        requestAnimationFrame(this._loop);
+    }
+
+    stop() {
+        this.isRunning = false;
+    }
+
+    _loop() {
+        if (!this.isRunning) return;
+
+        this.update();
+        this.render();
+
+        requestAnimationFrame(this._loop);
+    }
+
+    update() {
+        // Logic updates (physics, input, etc.) could go here
+    }
+
+    render() {
+        this.scene.render();
+    }
+}

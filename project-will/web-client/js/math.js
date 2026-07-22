@@ -34,7 +34,8 @@ export class Mat4 {
         for (let i = 0; i < 4; i++) {
             for (let j = 0; j < 4; j++) {
                 let sum = 0;
-                for (let k = 0; k < 4; k++) {
+                let k = 0;
+                for (; k < 4; k++) {
                     sum += aD[i + k * 4] * bD[k * 4 + j];
                 }
                 oD[i + k * 4 + j] = sum; // Note: This is a simplified conceptual version
