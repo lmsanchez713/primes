@@ -1,8 +1,6 @@
 #!/bin/bash
-cd /var/www/lulusistemas.com.br
+cd /var/www/kanbanza.com.br
 echo Removing current website folder...
 sudo rm -r public_html
 echo Copying project files...
-sudo cp -r /menezes/projetos/lulusistemas/web public_html
-echo Copying javascript library files...
-sudo cp -r /menezes/codigo/javascript3/* public_html/js/
+sudo cp -r /primes/project-will/web-client public_html
