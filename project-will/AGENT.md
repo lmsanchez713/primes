@@ -1,2 +1,10 @@
-We are creating a web graphics application.
-Read app.js. The WebGL context has been created. We need to make classes for the shaders, buffers, and make a render loop to display a simple triangle on the screen.
+Agent Recommendations
+
+1: Cache Uniform Locations: Modify Material to store a map of location to uniformName so you only call getUniformLocation once during initialization.
+
+2: Implement "Out" Parameters: Update math.js to allow operations to write into an existing matrix rather than returning a new Mat4().
+Example: static multiply(a, b, target) { ... }
+
+3: Standardize Math: Fix the multiplication order in the vertex shader to align with standard Column-Major math.
+
+4: Texture Readiness: As noted in your docs, implement a way to check if a texture is loaded before attempting to bind it in the render loop to avoid black textures or errors.
