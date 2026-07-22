@@ -2,89 +2,121 @@
 
 ## 1. Analysis and Risk Report
 
-During the review of `ogl2.js` and `math.js`, the following potential issues and risks were identified:
+During the review of the core library and application code, the following issues and risks were identified:
 
-### 🔴 High Risk: Performance Bottleneck
-In `Material.apply()`, the code calls `gl.getUniformLocation(this.shader.program, name)` for **every uniform, every frame, for every material**.
-* **Problem:** `getUniformLocation` is a synchronous, expensive GPU-to-CPU call. Calling it inside the render loop will significantly drop the frame rate as the scene complexity increases.
-* **Recommendation:** Cache uniform locations in a `Map` within the `Shader` class during initialization or when a uniform is first used.
+### 🔴 High Risk: Performance Bottlenecks
 
-### 🟡 Medium Risk: Garbage Collection (GC) Pressure
-The `Mat4` class in `math.js` creates new objects (`new Mat4()`) inside static methods like `multiply`, `translation`, `scale`, and `perspective`.
-* **Problem:** In a 3D engine, these functions are often called hundreds of times per frame. Constant allocation leads to frequent Garbage Collection pauses, causing "stuttering" in animations.
-* **Recommendation:** Implement "out" parameters, where an existing `Mat4` instance is passed into the function to be modified, rather than returning a new one.
+* **Uniform Location Lookup in Render Loop (`Material.apply`)**:
+  The `Material.apply()` method calls `gl.getUniformLocation` for every uniform, every frame, for every material. This is a synchronous and expensive CPU-GPU synchronization point that will severely impact performance as scene complexity grows.
+  * **Recommendation**: Cache uniform locations in a `Map` within the `Shader` class during initialization or upon first access.
 
-### 🟡 Medium Risk: Async Texture Loading
-The `Texture` class uses `new Image()` and is asynchronous.
-* **Problem:** If an object is drawn before the image finishes loading, `isReady` prevents a crash, but there is no mechanism for the engine to know when a texture is actually usable, which might lead to objects appearing/disappearing unexpectedly during the first few frames.
+* **Matrix Multiplication Inconsistency (Shader vs Math)**:
+  The `app.js` shader uses `gl_Position = aVertexPosition * u_modelMatrix;`, which implies a row-vector convention. However, the `Mat4` class implements column-major logic. This discrepancy can lead to unexpected transformations if the math library's multiplication order doesn't align with the shader's multiplication order.
+  * **Recommendation**: Standardize on the WebGL/GLSL standard: `gl_Position = u_modelMatrix * aVertexPosition;`.
 
-### 🟢 Low Risk: API Redundancy
-In `Entity.draw(gl)`, the `gl` context is passed as an argument, even though `this.geometry` and `this.material` already store a reference to `gl`. This is redundant and slightly inconsistent with the rest of the API.
+* **Redundant Matrix Allocation (`Mat4.multiply`)**:
+  The `Mat4.multiply` method currently allocates a new `Mat4` object and then calls `_columnMajorMultiply`, which allocates *another* new `Mat4` object. This doubles the memory allocation per transformation.
+  * **Recommendation**: Refactor `multiply` to avoid double allocation and use "out" parameters to minimize object creation.
+
+### 🟡 Medium Risk: Memory and Resource Management
+
+* **Garbage Collection (GC) Pressure (`Mat4`)**:
+  The `Mat4` class methods (like `multiply`, `translation`, `scale`, `perspective`) create new objects instead of modifying existing ones. Frequent calls in the render loop will trigger frequent GC pauses, causing frame stutters.
+  * **Recommendation**: Implement "out" parameter support to allow reusing existing `Mat4` instances.
+
+* **Asynchronous Texture Loading (`Texture`)**:
+  Textures are loaded asynchronously via `Image.onload`. If an entity is drawn before the texture is ready, it will be skipped or rendered incorrectly. There is no mechanism to synchronize the engine's scene graph with texture readiness.
+  * **Recommendation**: Implement a callback or Promise-based system to notify the engine when a texture is fully loaded and ready for use.
+
+### 🟢 Low Risk: API Design
+
+* **API Redundancy (`Entity.draw`)**:
+  The `gl` context is passed to `Entity.draw(gl)`, even though `this.geometry` and `this.material` already hold a reference to the `gl` context.
+  * **Recommendation**: Remove `gl` from the `draw` parameter to maintain consistency.
 
 ---
 
-## 2. WebGL2 Wrapper API (`ogl2.js`)
+## 2. Core API Documentation
 
-A suite of high-level abstractions for managing WebGL2 state and objects.
+### 2.1 Lower-Level Abstractions (Core WebGL2 Wrappers)
 
-### `Shader`
+#### `Shader`
 Wraps a WebGLProgram to simplify shader compilation and linking.
 * **`constructor(gl, vsSource, fsSource)`**: Initializes a new shader program using vertex and fragment shader source code.
 * **`_initShader(gl, type, source)`**: Internal method to compile individual shader stages.
 * **`_initProgram(vsSource, fsSource)`**: Internal method to link the vertex and fragment shaders into a program.
 
-### `Buffer`
-A wrapper for WebGLBuffer objects.
+#### `Buffer`
+A wrapper for `WebGLBuffer` objects.
 * **`constructor(gl, type, data)`**: Creates a buffer of a specific type (`gl.ARRAY_BUFFER`, `gl.ELEMENT_ARRAY_BUFFER`, etc.) and uploads data to the GPU.
 * **`bind()`**: Binds this buffer to the WebGL context.
 
-### `Texture`
+#### `Texture`
 Handles 2D texture creation and asynchronous image loading.
 * **`constructor(gl, url)`**: Starts loading a texture from a URL.
 * **`_load(url)`**: Internal method to handle image loading, texture parameter configuration (Wrap, Filter), and status management.
-* **`bind(unit = 0)`**: Binds the texture to a specific texture unit (e.g., `gl.TEXTURE0`).
+* **`bind(unit = 0)`**: Binds the texture to a specific texture unit.
 
-### `VertexArray` (VAO)
-A container for Vertex Array Object state.
-* **`constructor(gl)`**: Creates a new VAO.
-* **`bind()`**: Binds the VAO.
-* **`unbind()`**: Binds `null` to unbind the VAO.
-
-### `Geometry`
-Defines the mesh shape using Vertex Array Objects and Buffers.
+#### `Geometry`
+Defines mesh shape using Vertex Array Objects (VAO) and Buffers.
 * **`constructor(gl, mode)`**: Initializes geometry with a draw mode (e.g., `gl.TRIANGLES`).
 * **`addAttribute(buffer, location, size, type)`**: Configures a buffer as a vertex attribute (position, UV, normal) within the VAO.
 * **`setCount(count)`**: Sets the number of vertices to be drawn.
 * **`bind()`**: Binds the associated VAO.
 * **`draw()`**: Executes the `gl.drawArrays` command.
 
-### `Material`
+#### `VertexArray`
+A container for WebGL Vertex Array Object (VAO) state.
+* **`constructor(gl)`**: Creates a new VAO.
+* **`bind()`**: Binds the VAO.
+* **`unbind()`**: Binds `null` to unbind the VAO.
+
+### 2.2 Mid-Level Abstractions (Scene Graph Components)
+
+#### `Material`
 Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 * **`constructor(gl, shader)`**: Links a `Shader` instance to this material.
 * **`setTexture(name, textureInstance)`**: Maps a `Texture` to a `sampler2D` uniform name.
 * **`setUniform(name, value)`**: Sets a uniform value (float, vec2, vec3, vec4, or matrix).
 * **`apply()`**: Binds the shader, binds all textures to correct units, and uploads all current uniform values to the GPU.
 
-### `Entity`
-A high-level scene object combining geometry and material.
+#### `Entity`
+A high-level scene object combining geometry and material. Supports parent-child hierarchies.
 * **`constructor(geometry, material)`**: Creates an entity with a specific shape and appearance.
-* **`draw(gl)`**: The main render call. Applies the material, binds the geometry, and draws the object.
+* **`add(child)`**: Adds a child entity to the hierarchy.
+* **`remove(child)`**: Removes a child entity.
+* **`render(gl, parentWorldMatrix)`**: Recursively renders the entity and its children, applying transformations.
+* **`pre_render(gl)` / `post_render(gl)`**: Lifecycle hooks for custom logic before/after rendering.
+
+### 2.3 High-Level Abstractions (Engine Core)
+
+#### `Scene`
+A container for all entities to be rendered in a scene.
+* **`constructor(gl)`**: Initializes a scene with a default root `Entity`.
+* **`add(entity)`**: Adds an entity to the root of the scene.
+* **`render()`**: Triggers the recursive rendering of the scene graph starting from the root.
+
+#### `Engine`
+The main controller for the WebGL2 lifecycle.
+* **`constructor(canvas)`**: Initializes the engine with a canvas element and sets up the WebGL2 context.
+* **`start()`**: Starts the animation loop.
+* **`stop()`**: Stops the animation loop.
+* **`render()`**: Renders the current state of the scene.
 
 ---
 
 ## 3. Math Library API (`math.js`)
 
-A utility library for 3D mathematical operations.
+A utility library for 3D mathematical operations, optimized for WebGL compatibility.
 
 ### `Vec3`
-A basic 3D vector container.
-* **`constructor(x, y, z)`**: Initializes the vector with `x`, `y`, and `z` components.
+A basic 3D vector container with `x`, `y`, and `z` components.
 
 ### `Mat4`
-A 4x4 Matrix class used for transformations (Translation, Rotation, Scale, Projection). Uses **Column-Major** order for compatibility with WebGL.
+A 4x4 Matrix class using **Column-Major** order.
 * **`constructor()`**: Initializes an identity matrix.
 * **`identity()`**: Resets the matrix to the identity matrix.
-* **`static multiply(a, b)`**: Multiplies two `Mat4` matrices.
+* **`static multiply(a, b)`**: Performs matrix multiplication ($A \times B$).
 * **`static translation(x, y, z)`**: Returns a translation matrix.
 * **`static scale(x, y, z)`**: Returns a scale matrix.
 * **`static perspective(fovy, aspect, near, far)`**: Returns a perspective projection matrix.
