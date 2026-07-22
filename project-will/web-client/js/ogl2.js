@@ -162,15 +162,21 @@ export class Material {
             const loc = gl.getUniformLocation(this.shader.program, name);
             if (!loc) return;
 
-            if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-                if (value.length === 1) gl.uniform1fv(loc, value);
-                else if (value.length === 2) gl.uniform2fv(loc, value);
-                else if (value.length === 3) gl.uniform3fv(loc, value);
-                else if (value.length === 4) gl.uniform4fv(loc, value);
-                else if (value.length === 9) gl.uniformMatrix3fv(loc, false, value);
-                else if (value.length === 16) gl.uniformMatrix4fv(loc, false, value);
+            let data = value;
+            // Handle Mat4 objects by extracting their data property
+            if (value && value.data && (ArrayBuffer.isView(value.data) || Array.isArray(value.data))) {
+                data = value.data;
+            }
+
+            if (Array.isArray(data) || ArrayBuffer.isView(data)) {
+                if (data.length === 1) gl.uniform1fv(loc, data);
+                else if (data.length === 2) gl.uniform2fv(loc, data);
+                else if (data.length === 3) gl.uniform3fv(loc, data);
+                else if (data.length === 4) gl.uniform4fv(loc, data);
+                else if (data.length === 9) gl.uniformMatrix3fv(loc, false, data);
+                else if (data.length === 16) gl.uniformMatrix4fv(loc, false, data);
             } else {
-                gl.uniform1f(loc, value);
+                gl.uniform1f(loc, data);
             }
         });
     }
@@ -208,6 +214,7 @@ export class Entity {
 
         if (this.geometry && this.material) {
             this.material.apply();
+            // Now we can pass the Mat4 object itself because Material.apply handles it
             this.material.setUniform('u_modelMatrix', worldMatrix);
             this.geometry.bind();
             this.geometry.draw();
