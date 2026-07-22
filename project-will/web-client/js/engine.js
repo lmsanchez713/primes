@@ -37,6 +37,8 @@ export class Engine {
     }
 
     render() {
+        // Clear the color buffer using the color set by gl.clearColor()
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.scene.render();
     }
 }
