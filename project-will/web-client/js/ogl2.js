@@ -195,6 +195,7 @@ export class Entity {
         this.geometry = geometry;
         this.material = material;
         this.transform = new Mat4();
+        this.worldMatrix = new Mat4();
         this.parent = null;
         this.children = [];
     }
@@ -216,19 +217,19 @@ export class Entity {
     }
 
     render(gl, parentWorldMatrix) {
-        const worldMatrix = Mat4.multiply(parentWorldMatrix, this.transform);
+        Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         this.pre_render(gl);
 
         if (this.geometry && this.material) {
             this.material.apply();
-            this.material.setUniform('u_modelMatrix', worldMatrix);
+            this.material.setUniform('u_modelMatrix', this.worldMatrix);
             this.geometry.bind();
             this.geometry.draw();
         }
 
         for (const child of this.children) {
-            child.render(gl, worldMatrix);
+            child.render(gl, this.worldMatrix);
         }
 
         this.post_render(gl);
@@ -242,6 +243,7 @@ export class Scene {
     constructor(gl) {
         this.gl = gl;
         this.root = new Entity();
+        this.identity = new Mat4();
     }
 
     add(entity) {
@@ -250,7 +252,6 @@ export class Scene {
 
     render() {
         const gl = this.gl;
-        const identity = new Mat4(); 
-        this.root.render(gl, identity);
+        this.root.render(gl, this.identity);
     }
 }

@@ -29,7 +29,7 @@ export function InitApp() {
         varying vec2 vTextureCoord;
 
         void main() {
-            gl_Position = aVertexPosition * u_modelMatrix;
+            gl_Position = u_modelMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
     `;

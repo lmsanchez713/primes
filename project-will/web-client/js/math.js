@@ -11,7 +11,7 @@ export class Vec3 {
 
 export class Mat4 {
     constructor() {
-        this.data = new Float32Array(16).fill(0);
+        this.data = new Float32Array(16);
         this.identity();
     }
 
@@ -25,84 +25,63 @@ export class Mat4 {
         return this;
     }
 
-    static multiply(a, b) {
-        const out = new Mat4();
+    static multiply(a, b, out = new Mat4()) {
         const aD = a.data;
         const bD = b.data;
         const oD = out.data;
 
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-                let sum = 0;
-                let k = 0;
-                for (; k < 4; k++) {
-                    sum += aD[i + k * 4] * bD[k * 4 + j];
-                }
-                oD[i + k * 4 + j] = sum; // Note: This is a simplified conceptual version
-            }
-        }
-        // The above is a bit messy due to row/column major confusion. 
-        // Let's use a standard column-major implementation for WebGL.
-        return this._columnMajorMultiply(aD, bD);
-    }
-
-    static _columnMajorMultiply(a, b) {
-        const out = new Float32Array(16);
         for (let i = 0; i < 4; i++) { // column
             for (let j = 0; j < 4; j++) { // row
                 let sum = 0;
                 for (let k = 0; k < 4; k++) {
-                    sum += a[k * 4 + j] * b[i * 4 + k];
+                    sum += aD[k * 4 + j] * bD[i * 4 + k];
                 }
-                out[i * 4 + j] = sum;
+                oD[i * 4 + j] = sum;
             }
         }
-        const res = new Mat4();
-        res.data = out;
-        return res;
+        return out;
     }
 
-    static translation(x, y, z) {
-        const m = new Mat4();
-        m.data[12] = x;
-        m.data[13] = y;
-        m.data[14] = z;
-        return m;
+    static translation(x, y, z, out = new Mat4()) {
+        out.identity();
+        out.data[12] = x;
+        out.data[13] = y;
+        out.data[14] = z;
+        return out;
     }
 
-    static scale(x, y, z) {
-        const m = new Mat4();
-        m.data[0] = x;
-        m.data[5] = y;
-        m.data[10] = z;
-        return m;
+    static scale(x, y, z, out = new Mat4()) {
+        out.identity();
+        out.data[0] = x;
+        out.data[5] = y;
+        out.data[10] = z;
+        return out;
     }
 
-    static perspective(fovy, aspect, near, far) {
-        const m = new Mat4();
+    static perspective(fovy, aspect, near, far, out = new Mat4()) {
         const f = 1.0 / Math.tan(fovy / 2);
         const nf = 1 / (near - far);
 
-        m.data[0] = f / aspect;
-        m.data[1] = 0;
-        m.data[2] = 0;
-        m.data[3] = 0;
+        out.data[0] = f / aspect;
+        out.data[1] = 0;
+        out.data[2] = 0;
+        out.data[3] = 0;
 
-        m.data[4] = 0;
-        m.data[5] = f;
-        m.data[6] = 0;
-        m.data[7] = 0;
+        out.data[4] = 0;
+        out.data[5] = f;
+        out.data[6] = 0;
+        out.data[7] = 0;
 
-        m.data[8] = 0;
-        m.data[9] = 0;
-        m.data[10] = (far + near) * nf;
-        m.data[11] = -1;
+        out.data[8] = 0;
+        out.data[9] = 0;
+        out.data[10] = (far + near) * nf;
+        out.data[11] = -1;
 
-        m.data[12] = 0;
-        m.data[13] = 0;
-        m.data[14] = (2 * far * near) * nf;
-        m.data[15] = 0;
+        out.data[12] = 0;
+        out.data[13] = 0;
+        out.data[14] = (2 * far * near) * nf;
+        out.data[15] = 0;
 
-        return m;
+        return out;
     }
 }
