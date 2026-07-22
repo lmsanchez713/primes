@@ -1,8 +1,9 @@
 Agent Recommendations
 
-1: Cache Uniform Locations: Modify Material to store a map of location to uniformName so you only call getUniformLocation once during initialization.
+1 (done): Cache Uniform Locations: Modify Material to store a map of location to uniformName so you only call getUniformLocation once during initialization. 
 
-2: Implement "Out" Parameters: Update math.js to allow operations to write into an existing matrix rather than returning a new Mat4().
+
+2 (done): Implement "Out" Parameters: Update math.js to allow operations to write into an existing matrix rather than returning a new Mat4().
 Example: static multiply(a, b, target) { ... }
 
 3: Standardize Math: Fix the multiplication order in the vertex shader to align with standard Column-Major math.
