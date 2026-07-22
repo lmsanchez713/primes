@@ -63,22 +63,26 @@ export class Texture {
         this.gl = gl;
         this.texture = gl.createTexture();
         this.isReady = false;
-        this._load(url);
+        this.promise = this._load(url);
     }
 
     _load(url) {
-        const gl = this.gl;
-        const image = new Image();
-        image.onload = () => {
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            this.isReady = true;
-        };
-        image.src = url;
+        return new Promise((resolve, reject) => {
+            const gl = this.gl;
+            const image = new Image();
+            image.onload = () => {
+                gl.bindTexture(gl.TEXTURE_2D, this.texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                this.isReady = true;
+                resolve();
+            };
+            image.onerror = () => reject(new Error(`Failed to load texture: ${url}`));
+            image.src = url;
+        });
     }
 
     bind(unit = 0) {
@@ -155,6 +159,10 @@ export class Material {
         this.uniforms.set(name, value);
     }
 
+    isReady() {
+        return this.textures.every(t => t.texture.isReady);
+    }
+
     apply() {
         const gl = this.gl;
         gl.useProgram(this.shader.program);
@@ -216,12 +224,17 @@ export class Entity {
         }
     }
 
+    isReady() {
+        if (this.material && !this.material.isReady()) return false;
+        return true; // Geometry is assumed ready if provided
+    }
+
     render(gl, parentWorldMatrix) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         this.pre_render(gl);
 
-        if (this.geometry && this.material) {
+        if (this.geometry && this.material && this.material.isReady()) {
             this.material.apply();
             this.material.setUniform('u_modelMatrix', this.worldMatrix);
             this.geometry.bind();
