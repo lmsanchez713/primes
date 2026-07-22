@@ -84,7 +84,7 @@ export function InitApp() {
 
     // Add a child to demonstrate hierarchy
     const childEntity = new Entity(geometry, material);
-    childEntity.transform = Mat4.translation(0.5, 0.5, 0.0);
+    childEntity.transform = Mat4.translation(0.1, 0.1, 0.0);
     triangleEntity.add(childEntity);
 
     // --- 4. START ENGINE ---
