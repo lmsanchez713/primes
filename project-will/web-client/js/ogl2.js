@@ -4,6 +4,7 @@ export class Shader {
     constructor(gl, vsSource, fsSource) {
         this.gl = gl;
         this.program = this._initProgram(vsSource, fsSource);
+        this.uniformLocations = new Map();
     }
 
     _initShader(gl, type, source) {
@@ -33,6 +34,13 @@ export class Shader {
             return null;
         }
         return program;
+    }
+
+    getUniformLocation(name) {
+        if (!this.uniformLocations.has(name)) {
+            this.uniformLocations.set(name, this.gl.getUniformLocation(this.program, name));
+        }
+        return this.uniformLocations.get(name);
     }
 }
 
@@ -154,12 +162,12 @@ export class Material {
         this.textures.forEach((texData, index) => {
             const unit = index;
             texData.texture.bind(unit);
-            const loc = gl.getUniformLocation(this.shader.program, texData.name);
+            const loc = this.shader.getUniformLocation(texData.name);
             if (loc) gl.uniform1i(loc, unit);
         });
 
         this.uniforms.forEach((value, name) => {
-            const loc = gl.getUniformLocation(this.shader.program, name);
+            const loc = this.shader.getUniformLocation(name);
             if (!loc) return;
 
             let data = value;
@@ -214,7 +222,6 @@ export class Entity {
 
         if (this.geometry && this.material) {
             this.material.apply();
-            // Now we can pass the Mat4 object itself because Material.apply handles it
             this.material.setUniform('u_modelMatrix', worldMatrix);
             this.geometry.bind();
             this.geometry.draw();
