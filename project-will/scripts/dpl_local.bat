@@ -13,4 +13,4 @@ xcopy "%SRC%" "%DEST%" /E /Y
 
 echo Deployment complete!
 ::pause
-cmd /c start "" "http://127.0.0.1"
+cmd /c start "" "http://127.0.0.1:8080"
