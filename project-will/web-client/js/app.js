@@ -55,9 +55,9 @@ export function InitApp() {
     ]);
 
     const texCoords = new Float32Array([
-        0.5, 1.0,
-        0.0, 0.0,
-        1.0, 0.0,
+        0.5, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
     ]);
 
     const posBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
@@ -71,7 +71,7 @@ export function InitApp() {
     geometry.addAttribute(texBuffer, texLoc, 2);
     geometry.setCount(3);
 
-    const woodTexture = new Texture(gl, 'img/wood-box.png');
+    const woodTexture = new Texture(gl, 'img/lumi.png');
     const material = new Material(gl, shader);
     material.setTexture('uSampler', woodTexture);
 
