@@ -4,31 +4,7 @@
 
 This section tracks the identified issues and their current status within the codebase.
 
-### 🔴 High Risk: Performance Bottlenecks
 
-* **Uniform Location Lookup in Render Loop (`Material.apply`)**
-  - **Status**: ✅ [RESOLVED]
-  - **Details**: The `Shader` class now implements a caching mechanism using a `Map` for uniform locations via `getUniformLocation()`.
-
-* **Matrix Multiplication Inconsistency (Shader vs Math)**
-  - **Status**: ✅ [RESOLVED]
-  - **Details**: The shader in `app.js` uses column-major multiplication (`u_modelMatrix * aVertexPosition`), aligning with the `Mat4` class implementation.
-
-* **Redundant Matrix Allocation & GC Pressure (`Mat4`)**
-  - **Status**: ✅ [RESOLVED]
-  - **Details**: The API has been refactored to make the `out` parameter mandatory in all transformation and multiplication methods, eliminating implicit object creation and reducing garbage collection pressure.
-
-### 🟡 Medium Risk: Memory and Resource Management
-
-* **Asynchronous Texture Loading (`Texture`)**
-  - **Status**: ✅ [RESOLVED]
-  - **Details**: Implemented a centralized `AssetManager` to handle texture loading, deduplication of requests, and progress tracking.
-
-### 🟢 Low Risk: API Design
-
-* **API Redundancy (`Entity.render`)**
-  - **Status**: ⚠️ [STILL PRESENT]
-  - **Details**: The `gl` context is passed through the hierarchy in `Entity.render(gl, ...)`, even though child components like `Geometry` and `Material` already hold a reference to it.
 
 ---
 
