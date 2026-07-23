@@ -21,6 +21,15 @@ export function InitApp() {
     window.addEventListener('resize', resize);
     resize();
 
+    // Listen for key press to toggle projection mode
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'p' || event.key === 'P') {
+            const newMode = engine.projectionMode === 'perspective' ? 'ortho' : 'perspective';
+            engine.setProjectionMode(newMode);
+            console.log(`Projection mode changed to: ${newMode}`);
+        }
+    });
+
     // --- 1. SHADERS ---
     const vsSource = `
         attribute vec4 aVertexPosition;

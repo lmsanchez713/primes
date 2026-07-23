@@ -19,6 +19,7 @@ export class Engine {
         this.assets = new AssetManager();
         this.camera = new Camera(); 
         this.isRunning = false;
+        this.projectionMode = 'perspective'; // 'perspective' or 'ortho'
     }
 
     start() {
@@ -29,6 +30,14 @@ export class Engine {
 
     stop() {
         this.isRunning = false;
+    }
+
+    setProjectionMode(mode) {
+        if (mode === 'perspective' || mode === 'ortho') {
+            this.projectionMode = mode;
+        } else {
+            console.error("Invalid projection mode: " + mode);
+        }
     }
 
     _loop() {
@@ -50,9 +59,20 @@ export class Engine {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Update projection if canvas resized (simplification: just pass it)
+        // Update projection based on mode and canvas aspect ratio
         const aspect = this.canvas.width / this.canvas.height;
-        this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
+
+        if (this.projectionMode === 'perspective') {
+            this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
+        } else if (this.projectionMode === 'ortho') {
+            // Use a fixed orthographic view size for now
+            const size = 2.0;
+            const left = -aspect * size / 2;
+            const right = aspect * size / 2;
+            const bottom = -size / 2;
+            const top = size / 2;
+            this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
+        }
 
         this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
     }
