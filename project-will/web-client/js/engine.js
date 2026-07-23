@@ -10,6 +10,9 @@ export class Engine {
             return;
         }
 
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+
         this.scene = new Scene(this.gl);
         this.assets = new AssetManager();
         this.isRunning = false;

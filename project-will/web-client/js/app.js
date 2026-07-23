@@ -91,6 +91,6 @@ export function InitApp() {
     childEntity.transform = childTransform;
 
     // --- 4. START ENGINE ---
-    gl.clearColor(0.127, 0.127, 0.827, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     engine.start();
 }
