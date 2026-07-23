@@ -17,6 +17,10 @@ export class Camera {
         Mat4.perspective(fovy, aspect, near, far, this.projectionMatrix);
     }
 
+    updateOrthographic(left, right, bottom, top, near, far) {
+        Mat4.ortho(left, right, bottom, top, near, far, this.projectionMatrix);
+    }
+
     getViewMatrix() {
         return this.viewMatrix;
     }

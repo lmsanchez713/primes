@@ -107,37 +107,25 @@ export class Mat4 {
         return out;
     }
 
+    static ortho(left, right, bottom, top, near, far, out) {
+        if (!out) throw new Error("Mat4.ortho: 'out' parameter is mandatory to prevent object creation.");
+        const rl = 1 / (right - left);
+        const tb = 1 / (top - bottom);
+        const fn = 1 / (far - near);
+
+        out.identity();
+        out.data[0] = 2 * rl;
+        out.data[5] = 2 * tb;
+        out.data[10] = -2 * fn;
+        out.data[12] = -(right + left) * rl;
+        out.data[13] = -(top + bottom) * tb;
+        out.data[14] = -(far + near) * fn;
+
+        return out;
+    }
+
     static lookAt(eye, target, up, out) {
         if (!out) throw new Error("Mat4.lookAt: 'out' parameter is mandatory to prevent object creation.");
-        const z = new Vec3();
-        Vec3.sub(target, eye, z); // forward = target - eye
-        z.normalize();
-
-        const x = new Vec3();
-        Vec3.cross(up, z, x); // right = cross(up, forward)
-        x.normalize();
-
-        const y = new Vec3();
-        Vec3.cross(z, x, y); // up_actual = cross(forward, right) - wait, order matters for handedness
-
-        // Let's use standard: 
-        // z axis is -forward (pointing towards camera)
-        // x axis is right
-        // y axis is up
-        // Matrix = [x.x, y.x, z.x, 0, x.y, y.y, z.y, 0, x.z, y.z, z.z, 0, -dot(x,eye), -dot(y,eye), -dot(z,eye), 1]
-        // Wait, that's for row-major or column-major?
-
-        // Standard OpenGL LookAt:
-        // z = normalize(eye - target) (points away from scene)
-        // x = normalize(cross(up, z))
-        // y = cross(z, x)
-        // Matrix is [x.x, y.x, z.x, 0,  x.y, y.y, z.y, 0,  x.z, y.z, z.z, 0, -dot(x,eye), -dot(y,eye), -dot(z,eye), 1]
-        // Wait, column major:
-        // data[0] = x.x, data[4] = x.y, data[8] = x.z, data[12] = -dot(x,e)
-        // data[1] = y.x, data[5] = y.y, data[9] = y.z, data[13] = -dot(y,e)
-        // data[2] = z.x, data[6] = z.y, data[10] = z.z, data[14] = -dot(z,e)
-        // data[3] = 0,   data[7] = 0,  data[11] = 0,  data[15] = 1
-
         const ez = new Vec3();
         Vec3.sub(eye, target, ez); // z axis: eye - target
         ez.normalize();
