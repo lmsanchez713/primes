@@ -1,4 +1,46 @@
 import { Scene } from './ogl2.js';
 import { AssetManager } from './asset-manager.js';
 
-export class Engine {\r\n    constructor(canvas) {\r\n        this.canvas = canvas;\r\n        this.gl = canvas.getContext('webgl2');\r\n        if (!this.gl) {\r\n            console.error('WebGL2 not supported');\r\n            return;\r\n        }\r\n\r\n        this.scene = new Scene(this.gl);\r\n        this.assets = new AssetManager();\r\n        this.isRunning = false;\r\n    }\r\n\r\n    start() {\r\n        this.isRunning = true;\r\n        this._loop = this._loop.bind(this);\r\n        requestAnimationFrame(this._loop);\r\n    }\r\n\r\n    stop() {\r\n        this.isRunning = false;\r\n    }\r\n\r\n    _loop() {\r\n        if (!this.isRunning) return;\r\n\r\n        this.update();\r\n        this.render();\r\n\r\n        requestAnimationFrame(this._loop);\r\n    }\r\n\r\n    update() {\r\n        // Logic updates (physics, input, etc.) could go here\r\n    }\r\n\r\n    render() {\r\n        // Clear the color buffer using the color set by gl.clearColor()\r\n        this.gl.clear(this.gl.COLOR_BUFFER_BIT);\r\n        this.scene.render();\r\n    }\r\n}
+export class Engine {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.gl = canvas.getContext('webgl2');
+        if (!this.gl) {
+            console.error('WebGL2 not supported');
+            return;
+        }
+
+        this.scene = new Scene(this.gl);
+        this.assets = new AssetManager();
+        this.isRunning = false;
+    }
+
+    start() {
+        this.isRunning = true;
+        this._loop = this._loop.bind(this);
+        requestAnimationFrame(this._loop);
+    }
+
+    stop() {
+        this.isRunning = false;
+    }
+
+    _loop() {
+        if (!this.isRunning) return;
+
+        this.update();
+        this.render();
+
+        requestAnimationFrame(this._loop);
+    }
+
+    update() {
+        // Logic updates (physics, input, etc.) could go here
+    }
+
+    render() {
+        // Clear the color buffer using the color set by gl.clearColor()
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        this.scene.render();
+    }
+}
