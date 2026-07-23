@@ -25,7 +25,8 @@ export class Mat4 {
         return this;
     }
 
-    static multiply(a, b, out = new Mat4()) {
+    static multiply(a, b, out) {
+        if (!out) throw new Error("Mat4.multiply: 'out' parameter is mandatory to prevent object creation.");
         const aD = a.data;
         const bD = b.data;
         const oD = out.data;
@@ -42,7 +43,8 @@ export class Mat4 {
         return out;
     }
 
-    static translation(x, y, z, out = new Mat4()) {
+    static translation(x, y, z, out) {
+        if (!out) throw new Error("Mat4.translation: 'out' parameter is mandatory to prevent object creation.");
         out.identity();
         out.data[12] = x;
         out.data[13] = y;
@@ -50,7 +52,8 @@ export class Mat4 {
         return out;
     }
 
-    static scale(x, y, z, out = new Mat4()) {
+    static scale(x, y, z, out) {
+        if (!out) throw new Error("Mat4.scale: 'out' parameter is mandatory to prevent object creation.");
         out.identity();
         out.data[0] = x;
         out.data[5] = y;
@@ -58,7 +61,8 @@ export class Mat4 {
         return out;
     }
 
-    static perspective(fovy, aspect, near, far, out = new Mat4()) {
+    static perspective(fovy, aspect, near, far, out) {
+        if (!out) throw new Error("Mat4.perspective: 'out' parameter is mandatory to prevent object creation.");
         const f = 1.0 / Math.tan(fovy / 2);
         const nf = 1 / (near - far);
 

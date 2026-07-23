@@ -4,14 +4,12 @@ This document contains a list of identified issues and tasks to be addressed for
 
 ## 🔴 High Priority (Performance & GC)
 
-- [ ] **Optimize Math Library (`math.js`)**:
-    - Refactor `Mat4` static methods (`translation`, `scale`, `perspective`, etc.) to minimize object creation. While they currently support an `out` parameter, the default behavior of creating a `new Mat4()` encourages GC pressure in render loops. 
-    - Ensure all math operations are highly optimized for column-major multiplication.
+- [x] **Optimize Math Library (`math.js`)**: Done. Refactored `Mat4` static methods to make the `out` parameter mandatory, eliminating implicit object creation and reducing GC pressure in render loops.
 
 ## 🟡 Medium Priority (Resource Management)
 
 - [ ] **Improve Texture Loading Synchronization (`ogl2.js`)**:
-    - The current implementation silently skips rendering an entity if its texture is not yet loaded (`Material.isReady()`). 
+    - The current implementation silently skips rendering an entity if its texture is not yet loaded (`Material.isReady()`).
     - Implement a more robust mechanism (e.g., Promises or an Asset Manager) to track loading state and allow the engine to react when resources are ready, instead of just skipping frames.
 
 ## 🟢 Low Priority (API Design)
@@ -22,3 +20,4 @@ This document contains a list of identified issues and tasks to be addressed for
 ## ℹ️ Note on Resolved/Mismatched Issues
 - **Uniform Cache**: The reported issue regarding `gl.getUniformLocation` in the render loop appears to be resolved as `Shader.getUniformLocation` already implements a caching mechanism using a `Map`.
 - **Matrix Convention**: The shader in `app.js` currently uses `u_modelMatrix * aVertexPosition`, which is consistent with the column-major math library; hence, the reported discrepancy may have already been addressed.
+- **Matrix Allocation**: Redundant matrix allocation in `Mat4` has been resolved by making the `out` parameter mandatory.

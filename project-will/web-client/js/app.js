@@ -50,7 +50,7 @@ export function InitApp() {
     // --- 2. GEOMETRY & MATERIAL ---
     const vertices = new Float32Array([
         0.0, 0.5,
-        -0.5, -0.5,
+       -0.5, -0.5,
         0.5, -0.5,
     ]);
 
@@ -80,12 +80,15 @@ export function InitApp() {
     engine.scene.add(triangleEntity);
 
     // Move it slightly to see it's working (using local transform)
-    triangleEntity.transform = Mat4.translation(0.0, 0.0, 0.0); 
+    const triangleTransform = new Mat4();
+    Mat4.translation(0.0, 0.0, 0.0, triangleTransform);
+    triangleEntity.transform = triangleTransform;
 
     // Add a child to demonstrate hierarchy
     const childEntity = new Entity(geometry, material);
-    childEntity.transform = Mat4.translation(0.1, 0.1, 0.0);
-    triangleEntity.add(childEntity);
+    const childTransform = new Mat4();
+    Mat4.translation(0.1, 0.1, 0.0, childTransform);
+    childEntity.transform = childTransform;
 
     // --- 4. START ENGINE ---
     gl.clearColor(0.127, 0.127, 0.827, 1.0);

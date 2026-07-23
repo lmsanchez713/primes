@@ -15,9 +15,8 @@ This section tracks the identified issues and their current status within the co
   - **Details**: The shader in `app.js` uses column-major multiplication (`u_modelMatrix * aVertexPosition`), aligning with the `Mat4` class implementation.
 
 * **Redundant Matrix Allocation & GC Pressure (`Mat4`)**
-  - **Status**: ⚠️ [STILL PRESENT]
-  - **Details**: While `Mat4` methods now accept an `out` parameter, they default to creating a `new Mat4()` if one is not provided. This still leads to significant garbage collection pressure when used inside the render loop without careful management.
-  - **Recommendation**: Refactor API to make "out" parameters mandatory or more strictly enforced in hot paths.
+  - **Status**: ✅ [RESOLVED]
+  - **Details**: The API has been refactored to make the `out` parameter mandatory in all transformation and multiplication methods, eliminating implicit object creation and reducing garbage collection pressure.
 
 ### 🟡 Medium Risk: Memory and Resource Management
 
@@ -83,7 +82,7 @@ Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 A high-level scene object combining geometry and material. Supports parent-child hierarchies.
 * **`constructor(geometry = null, material = null)`**: Creates an entity with a specific shape and appearance.
 * **`add(child)`**: Adds a child entity to the hierarchy.
-* **`remove(child)`**: Removes a child entity.
+* **`remove(child)``: Removes a child entity.
 * **`render(gl, parentWorldMatrix)`**: Recursively renders the entity and its children.
 
 ### 2.3 High-Level Abstractions (Engine Core)
@@ -99,7 +98,7 @@ The main controller for the WebGL2 lifecycle.
 * **`constructor(canvas)`**: Initializes the engine with a canvas element and sets up the WebGL2 context.
 * **`start()`**: Starts the animation loop.
 * **`stop()`**: Stops the animation loop.
-* **`render()`**: Renders the current state of the scene.
+* **`render()``: Renders the current state of the scene.
 
 ---
 
@@ -112,7 +111,7 @@ A basic 3D vector container with `x`, `y`, and `z` components.
 A 4x4 Matrix class using **Column-Major** order.
 * **`constructor()`**: Initializes an identity matrix.
 * **`identity()`**: Resets the matrix to the identity matrix.
-* **`static multiply(a, b, out = new Mat4())`**: Performs matrix multiplication ($A \times B$). Supports `out` parameter to prevent GC pressure.
-* **`static translation(x, y, z, out = new Mat4())`**: Returns a translation matrix.
-* **`static scale(x, y, z, out = new Mat4())`**: Returns a scale matrix.
-* **`static perspective(fovy, aspect, near, far, out = new Mat4())`**: Returns a perspective projection matrix.
+* **`static multiply(a, b, out)`**: Performs matrix multiplication ($A \\times B$). The `out` parameter is mandatory.
+* **`static translation(x, y, z, out)`**: Returns a translation matrix. The `out` parameter is mandatory.
+* **`static scale(x, y, z, out)`**: Returns a scale matrix. The `out` parameter is mandatory.
+* **`static perspective(fovy, aspect, near, far, out)`**: Returns a perspective projection matrix. The `out` parameter is mandatory.
