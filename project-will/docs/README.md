@@ -21,8 +21,8 @@ This section tracks the identified issues and their current status within the co
 ### 🟡 Medium Risk: Memory and Resource Management
 
 * **Asynchronous Texture Loading (`Texture`)**
-  - **Status**: ⚠️ [STILL PRESENT]
-  - **Details**: The current implementation uses an `isReady` flag to skip rendering entities with unfinished textures. This prevents crashes but lacks a robust synchronization mechanism (like Promises or an Asset Manager) to handle loading states more gracefully within the scene graph.
+  - **Status**: ✅ [RESOLVED]
+  - **Details**: Implemented a centralized `AssetManager` to handle texture loading, deduplication of requests, and progress tracking.
 
 ### 🟢 Low Risk: API Design
 
@@ -65,15 +65,15 @@ Defines mesh shape using Vertex Array Objects (VAO) and Buffers.
 #### `VertexArray`
 A container for WebGL Vertex Array Object (VAO) state.
 * **`constructor(gl)`**: Creates a new VAO.
-* **`bind()`**: Binds the VAO.
-* **`unbind()`**: Binds `null` to unbind the VAO.
+* **`bind()`**: Binds the associated VAO.
+* **`unbind()`**: Binds `null` to unbind the current VAO.
 
 ### 2.2 Mid-Level Abstractions (Scene Graph Components)
 
 #### `Material`
 Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 * **`constructor(gl, shader)`**: Links a `Shader` instance to this material.
-* **`setTexture(name, textureInstance)`**: Maps a `Texture` to a `sampler2D` uniform name.
+* **`setTexture(name, textureInstance)`**: Maps a `sampler2D` uniform name to a texture.
 * **`setUniform(name, value)`**: Sets a uniform value (float, vec2, vec3, vec4, or matrix).
 * **`apply()`**: Binds the shader, binds all textures, and uploads uniforms.
 * **`isReady()`**: Returns true if all associated textures are loaded.
@@ -82,10 +82,8 @@ Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 A high-level scene object combining geometry and material. Supports parent-child hierarchies.
 * **`constructor(geometry = null, material = null)`**: Creates an entity with a specific shape and appearance.
 * **`add(child)`**: Adds a child entity to the hierarchy.
-* **`remove(child)``: Removes a child entity.
+* **`remove(child)`**: Removes a child entity.
 * **`render(gl, parentWorldMatrix)`**: Recursively renders the entity and its children.
-
-### 2.3 High-Level Abstractions (Engine Core)
 
 #### `Scene`
 A container for all entities to be rendered in a scene.
@@ -93,12 +91,21 @@ A container for all entities to be rendered in a scene.
 * **`add(entity)`**: Adds an entity to the root of the scene.
 * **`render()`**: Triggers the recursive rendering of the scene graph.
 
+### 2.3 High-Level Abstractions (Engine Core)
+
+#### `AssetManager`
+A centralized manager for resource loading and lifecycle management.
+* **`loadTexture(gl, url)`**: Asynchronously loads a texture and returns it as a Promise. Prevents duplicate downloads.
+* **`getProgress()`**: Returns the current load progress (0 to 1).
+* **`isAllLoaded()`**: Checks if all requested assets have finished loading.
+* **`waitUntilLoaded()`**: A promise that resolves when all currently requested assets are loaded.
+
 #### `Engine`
 The main controller for the WebGL2 lifecycle.
-* **`constructor(canvas)`**: Initializes the engine with a canvas element and sets up the WebGL2 context.
+* **`constructor(canvas)`**: Initializes the engine and creates a new `AssetManager`.
 * **`start()`**: Starts the animation loop.
 * **`stop()`**: Stops the animation loop.
-* **`render()``: Renders the current state of the scene.
+* **`render()`**: Renders the current state of the scene.
 
 ---
 

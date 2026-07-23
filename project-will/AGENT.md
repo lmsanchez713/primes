@@ -8,13 +8,11 @@ This document contains a list of identified issues and tasks to be addressed for
 
 ## 🟡 Medium Priority (Resource Management)
 
-- [ ] **Improve Texture Loading Synchronization (`ogl2.js`)**:
-    - The current implementation silently skips rendering an entity if its texture is not yet loaded (`Material.isReady()`).
-    - Implement a more robust mechanism (e.g., Promises or an Asset Manager) to track loading state and allow the engine to react when resources are ready, instead of just skipping frames.
+- [x] **Improve Texture Loading Synchronization (`ogl2.js`)**: Done. Implemented a centralized `AssetManager` class to handle asynchronous loading, prevent duplicate requests, and provide progress tracking via `getProgress()`.
 
 ## 🟢 Low Priority (API Design)
 
-- [ ] **Clean up Redundant API Parameters**:
+- [ ] **Clean up Redundant API Parameters**
     - Remove the redundant `gl` parameter from `Entity.render(gl, parentWorldMatrix)` and its recursive calls. Since `Geometry`, `Material`, and `Shader` already hold a reference to the `gl` context, passing it through every layer of the scene graph is unnecessary.
 
 ## ℹ️ Note on Resolved/Mismatched Issues
