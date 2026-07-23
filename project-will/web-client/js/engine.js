@@ -1,5 +1,6 @@
 import { Scene } from './ogl2.js';
 import { AssetManager } from './asset-manager.js';
+import { Camera } from './camera.js';
 
 export class Engine {
     constructor(canvas) {
@@ -12,9 +13,11 @@ export class Engine {
 
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+        this.gl.enable(this.gl.DEPTH_TEST); // Added depth test
 
         this.scene = new Scene(this.gl);
         this.assets = new AssetManager();
+        this.camera = new Camera(); 
         this.isRunning = false;
     }
 
@@ -39,11 +42,18 @@ export class Engine {
 
     update() {
         // Logic updates (physics, input, etc.) could go here
+        this.camera.updateView();
     }
 
     render() {
-        // Clear the color buffer using the color set by gl.clearColor()
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        this.scene.render();
+        const gl = this.gl;
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // Update projection if canvas resized (simplification: just pass it)
+        const aspect = this.canvas.width / this.canvas.height;
+        this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
+
+        this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
     }
 }

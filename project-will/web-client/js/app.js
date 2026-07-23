@@ -26,10 +26,12 @@ export function InitApp() {
         attribute vec4 aVertexPosition;
         attribute vec2 aTextureCoord;
         uniform mat4 u_modelMatrix;
+        uniform mat4 u_viewMatrix;
+        uniform mat4 u_projectionMatrix;
         varying vec2 vTextureCoord;
 
         void main() {
-            gl_Position = u_modelMatrix * aVertexPosition;
+            gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * aVertexPosition;
             vTextureCoord = aTextureCoord;
         }
     `;
@@ -48,13 +50,13 @@ export function InitApp() {
     if (!shader) return;
 
     // --- 2. GEOMETRY & MATERIAL ---
-    const vertices = new Float32Array([
+    const vertices = new Float32Array([ 
         0.0, 0.5,
        -0.5, -0.5,
         0.5, -0.5,
     ]);
 
-    const texCoords = new Float32Array([
+    const texCoords = new Float32Array([ 
         0.5, 0.0,
         0.0, 1.0,
         1.0, 1.0,
@@ -81,13 +83,13 @@ export function InitApp() {
 
     // Move it slightly to see it's working (using local transform)
     const triangleTransform = new Mat4();
-    Mat4.translation(0.0, 0.0, 0.0, triangleTransform);
+    Mat4.translation(0.0, 0.0, -2.0, triangleTransform); // Moved back so we can see it through camera
     triangleEntity.transform = triangleTransform;
 
     // Add a child to demonstrate hierarchy
     const childEntity = new Entity(geometry, material);
     const childTransform = new Mat4();
-    Mat4.translation(0.1, 0.1, 0.0, childTransform);
+    Mat4.translation(0.5, 0.0, -1.0, childTransform); // Relative to parent
     childEntity.transform = childTransform;
 
     // --- 4. START ENGINE ---

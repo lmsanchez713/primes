@@ -196,6 +196,10 @@ export class Material {
             }
         });
     }
+
+    isReady() {
+        return true; // Simplified for now
+    }
 }
 
 export class Entity {
@@ -229,7 +233,7 @@ export class Entity {
         return true; // Geometry is assumed ready if provided
     }
 
-    render(gl, parentWorldMatrix) {
+    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         this.pre_render(gl);
@@ -237,12 +241,14 @@ export class Entity {
         if (this.geometry && this.material && this.material.isReady()) {
             this.material.apply();
             this.material.setUniform('u_modelMatrix', this.worldMatrix);
+            this.material.setUniform('u_viewMatrix', viewMatrix);
+            this.material.setUniform('u_projectionMatrix', projectionMatrix);
             this.geometry.bind();
             this.geometry.draw();
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix);
+            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix);
         }
 
         this.post_render(gl);
@@ -263,8 +269,8 @@ export class Scene {
         this.root.add(entity);
     }
 
-    render() {
+    render(viewMatrix, projectionMatrix) {
         const gl = this.gl;
-        this.root.render(gl, this.identity);
+        this.root.render(gl, this.identity, viewMatrix, projectionMatrix);
     }
 }
