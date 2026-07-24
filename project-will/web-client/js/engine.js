@@ -18,8 +18,13 @@ export class Engine {
         this.scene = new Scene(this.gl);
         this.assets = new AssetManager();
         this.camera = new Camera(); 
+        this.controller = null;
         this.isRunning = false;
         this.projectionMode = 'perspective'; // 'perspective' or 'ortho'
+    }
+
+    setController(controller) {
+        this.controller = controller;
     }
 
     start() {
@@ -51,7 +56,11 @@ export class Engine {
 
     update() {
         // Logic updates (physics, input, etc.) could go here
-        this.camera.updateView();
+        if (this.controller) {
+            this.controller.update();
+        } else {
+            this.camera.updateView();
+        }
     }
 
     render() {
