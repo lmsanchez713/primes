@@ -7,9 +7,9 @@
 #### `Shader`
 Wraps a WebGLProgram to simplify shader compilation and linking.
 * **`constructor(gl, vsSource, fsSource)`**: Initializes a new shader program using vertex and fragment shader source code.
-* **`_initShader(gl, type, source)`**: Internal method to compile individual shader stages.
-* **`_initProgram(vsSource, fsSource)`**: Internal method to link the vertex and fragment shaders into a program.
-* `getUniformLocation(name)`: Retrieves/caches uniform locations.
+* `_initShader(gl, type, source)`: Internal method to compile individual shader stages.
+* `_initProgram(vsSource, fsSource)`: Internal method to link the vertex and fragment shaders into a program.
+`getUniformLocation(name)`: Retrieves/caches uniform locations.
 
 #### `Buffer`
 A wrapper for `WebGLBuffer` objects.
@@ -55,7 +55,7 @@ A high-level scene object combining geometry and material. Supports parent-child
 
 #### `Scene`
 A container for all entities to be rendered in a scene.
-* **`constructor(gl)`**: Initializes a scene with a default root `Entity`.
+* `constructor(gl)`: Initializes a scene with a default root `Entity`.
 * `add(entity)`: Adds an entity to the root of the scene.
 * `render(viewMatrix, projectionMatrix)`: Triggers recursive rendering using provided matrices.
 
@@ -125,7 +125,7 @@ This document outlines the planned development phases for the engine, transition
 *Goal: Implement a way to view the scene from different perspectives.*
 - [x] **Camera Class**: Implement View and Projection matrices.
 - [x] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
-- [ ] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
+- [x] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
 
 ## Phase 3: Advanced Rendering & Materials
 *Goal: Move beyond simple textures to realistic lighting.*
@@ -146,4 +146,4 @@ This document outlines the planned development phases for the engine, transition
 - [ ] **Physics/Collision (Optional)**: Basic AABB or Sphere collision detection between entities.
 
 ---
-*Last updated: 2024-05-22*
+*Last updated: 2024-05-22*"
