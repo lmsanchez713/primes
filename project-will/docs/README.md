@@ -124,7 +124,7 @@ This document outlines the planned development phases for the engine, transition
 ## Phase 2: Camera & Viewport Control
 *Goal: Implement a way to view the scene from different perspectives.*
 - [x] **Camera Class**: Implement View and Projection matrices.
-- [ ] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
+- [x] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
 - [ ] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
 
 ## Phase 3: Advanced Rendering & Materials
