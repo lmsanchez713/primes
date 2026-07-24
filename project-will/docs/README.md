@@ -2,7 +2,7 @@
 
 ## 1. API Documentation
 
-### 2.1 Lower-Level Abstractions (Core WebGL2 Wrappers)
+### 1.1 Lower-Level Abstractions (Core WebGL2 Wrappers)
 
 #### `Shader`
 Wraps a WebGLProgram to simplify shader compilation and linking.
@@ -36,7 +36,7 @@ A container for WebGL Vertex Array Object (VAO) state.
 * `bind()`: Binds the associated VAO.
 * `unbind()`: Binds `null` to unbind the current VAO.
 
-### 2.2 Mid-Level Abstractions (Scene Graph Components)
+### 1.2 Mid-Level Abstractions (Scene Graph Components)
 
 #### `Material`
 Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
@@ -48,18 +48,18 @@ Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 
 #### `Entity`
 A high-level scene object combining geometry and material. Supports parent-child hierarchies.
-* `constructor(geometry = null, material = null)`: Creates an entity with a specific shape and appearance.
+* **`constructor(geometry = null, material = null)`**: Creates an entity with a specific shape and appearance.
 * `add(child)`: Adds a child entity to the hierarchy.
 * `remove(child)`: Removes a child entity.
-* `render(gl, parentWorldMatrix)`: Recursively renders the entity and its children.
+* `render(gl, parentWorldMatrix, viewMatrix, projectionMatrix)`: Recursively renders the entity and its children using provided matrices.
 
 #### `Scene`
 A container for all entities to be rendered in a scene.
-* `constructor(gl)`: Initializes a scene with a default root `Entity`.
+* **`constructor(gl)`**: Initializes a scene with a default root `Entity`.
 * `add(entity)`: Adds an entity to the root of the scene.
-* `render()`: Triggers the recursive rendering of the scene graph.
+* `render(viewMatrix, projectionMatrix)`: Triggers recursive rendering using provided matrices.
 
-### 2.3 High-Level Abstractions (Engine Core)
+### 1.3 High-Level Abstractions (Engine Core)
 
 #### `AssetManager`
 A centralized manager for resource loading and lifecycle management.
@@ -68,14 +68,24 @@ A centralized manager for resource loading and lifecycle management.
 * `isAllLoaded()`: Checks if all requested assets have finished loading.
 * `waitUntilLoaded()`: A promise that resolves when all currently requested assets are loaded.
 
+#### `Camera`
+A component managing camera position, target, and orientation, providing view and projection matrices.
+* **`constructor()`**: Initializes a default camera at (0, 0, 5) looking at (0, 0, 0).
+* `updateView()`: Updates the view matrix using current position and target.
+* `updateProjection(fovy, aspect, near, far)`: Sets up perspective projection.
+* `updateOrthographic(left, right, bottom, top, near, far)`: Sets up orthographic projection.
+* `getViewMatrix()`: Returns the current view matrix.
+* `getProjectionMatrix()`: Returns the current projection matrix.
+
 #### `Engine`
 The main controller for the WebGL2 lifecycle.
-* `constructor(canvas)`: Initializes the engine and creates a new `AssetManager`.
+* **`constructor(canvas)`**: Initializes the engine and creates a new AssetManager, Scene, and Camera.
 * `start()`: Starts the animation loop.
 * `stop()`: Stops the animation loop.
-* `render()`: Renders the current state of the scene.
+* `setProjectionMode(mode)`: Sets the projection mode to either `'perspective'` or `'ortho'`.
+* `render()`: Renders the current state of the scene using the camera's matrices.
 
-### 3. Math Library API (`math.js`)
+### 2. Math Library API (`math.js`)
 
 #### `Vec3`
 A basic 3D vector container with `x`, `y`, and `z` components.
