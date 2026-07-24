@@ -32,16 +32,44 @@ export function InitApp() {
     });
 
     // --- 1. SHADERS ---
-    const vsSource = `\r\n        attribute vec4 aVertexPosition;\r\n        attribute vec2 aTextureCoord;\r\n        uniform mat4 u_modelMatrix;\r\n        uniform mat4 u_viewMatrix;\r\n        uniform mat4 u_projectionMatrix;\r\n        varying vec2 vTextureCoord;\r\n\r\n        void main() {\r\n            gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * aVertexPosition;\r\n            vTextureCoord = aTextureCoord;\r\n        }\r\n    `;
-    const fsSource = `\r\n        precision mediump float;\r\n        varying vec2 vTextureCoord;\r\n        uniform sampler2D uSampler;\r\n\r\n        void main() {\r\n            gl_FragColor = texture2D(uSampler, vTextureCoord);\r\n        }\r\n    `;
+    const vsSource = `
+        attribute vec4 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        uniform mat4 u_modelMatrix;
+        uniform mat4 u_viewMatrix;
+        uniform mat4 u_projectionMatrix;
+        varying vec2 vTextureCoord;
+
+        void main() {
+            gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * aVertexPosition;
+            vTextureCoord = aTextureCoord;
+        }
+    `;
+    const fsSource = `
+        precision mediump float;
+        varying vec2 vTextureCoord;
+        uniform sampler2D uSampler;
+
+        void main() {
+            gl_FragColor = texture2D(uSampler, vTextureCoord);
+        }
+    `;
 
     const shader = new Shader(gl, vsSource, fsSource);
     if (!shader) return;
 
     // --- 2. GEOMETRY & MATERIAL ---
-    const vertices = new Float32Array([ \r\n        0.0, 0.5,\r\n       -0.5, -0.5,\r\n        0.5, -0.5,\r\n    ]);
+    const vertices = new Float32Array([
+        0.0, 0.5,
+       -0.5, -0.5,
+        0.5, 0.5,
+    ]);
 
-    const texCoords = new Float32Array([ \r\n        0.5, 0.0,\r\n        0.0, 1.0,\r\n        1.0, 1.0,\r\n    ]);
+    const texCoords = new Float32Array([
+        0.5, 0.0,
+        0.0, 1.0,
+        1.0, 1.0,
+    ]);
 
     const posBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
     const texBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
