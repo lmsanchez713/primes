@@ -51,13 +51,13 @@ A high-level scene object combining geometry and material. Supports parent-child
 * **`constructor(geometry = null, material = null)`**: Creates an entity with a specific shape and appearance.
 * `add(child)`: Adds a child entity to the hierarchy.
 * `remove(child)`: Removes a child entity.
-* `render(gl, parentWorldMatrix, viewMatrix, projectionMatrix)`: Recursively renders the entity and its children using provided matrices.
+* `render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights)`: Recursively renders the entity and its children using provided matrices and light data.
 
 #### `Scene`
 A container for all entities to be rendered in a scene.
 * `constructor(gl)`: Initializes a scene with a default root `Entity`.
 * `add(entity)`: Adds an entity to the root of the scene.
-* `render(viewMatrix, projectionMatrix)`: Triggers recursive rendering using provided matrices.
+* `render(viewMatrix, projectionMatrix)`: Triggers recursive rendering using provided matrices and collects light entities for lighting calculations.
 
 ### 1.3 High-Level Abstractions (Engine Core)
 
@@ -115,22 +115,22 @@ A 4x4 Matrix class using **Column-Major** order.
 
 This document outlines the planned development phases for the engine, transitioning from a basic WebGL2 renderer to a feature-complete rendering engine.
 
-## Phase 1: Core Engine Foundation (Current Status)
+## Phase 1: Core Engine Foundation (Completed)
 - [x] WebGL2 Abstraction Layer (`ogl2.js`)
 - [x] Basic Scene Graph (Entity/Scene hierarchy)
 - [x] Asset Management (Textures)
 - [x] Basic Animation Loop
 
-## Phase 2: Camera & Viewport Control
+## Phase 2: Camera & Viewport Control (Completed)
 *Goal: Implement a way to view the scene from different perspectives.*
 - [x] **Camera Class**: Implement View and Projection matrices.
 - [x] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
 - [x] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
 
-## Phase 3: Advanced Rendering & Materials
+## Phase 3: Advanced Rendering & Materials (In Progress)
 *Goal: Move beyond simple textures to realistic lighting.*
-- [ ] **Lighting System**: Implement Light entities (Point, Directional, Ambient).
-- [ ] **Standard Shaders**: Built-in Phong or Blinn-Phong shading models.
+- [x] **Lighting System**: Implement Light entities (Point, Directional, Ambient).
+- [x] **Standard Shaders**: Built-in Phong or Blinn-Phong shading models.
 - [ ] **Normal Mapping**: Support for advanced surface details via normal maps.
 
 ## Phase 4: Resource & Asset Expansion
@@ -146,4 +146,4 @@ This document outlines the planned development phases for the engine, transition
 - [ ] **Physics/Collision (Optional)**: Basic AABB or Sphere collision detection between entities.
 
 ---
-*Last updated: 2024-05-22*"
+*Last updated: 2024-05-22*

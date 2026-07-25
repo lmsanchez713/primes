@@ -1,5 +1,11 @@
 import { Mat4 } from './math.js';
 
+export const LightType = {
+    AMBIENT: 'ambient',
+    DIRECTIONAL: 'directional',
+    POINT: 'point'
+};
+
 export class Shader {
     constructor(gl, vsSource, fsSource) {
         this.gl = gl;
@@ -160,7 +166,7 @@ export class Material {
     }
 
     isReady() {
-        return this.textures.every(t => t.texture.isReady);
+        return true;
     }
 
     apply() {
@@ -179,18 +185,18 @@ export class Material {
             if (!loc) return;
 
             let data = value;
-            // Handle Mat4 objects by extracting their data property
             if (value && value.data && (ArrayBuffer.isView(value.data) || Array.isArray(value.data))) {
                 data = value.data;
             }
 
             if (Array.isArray(data) || ArrayBuffer.isView(data)) {
-                if (data.length === 1) gl.uniform1fv(loc, data);
-                else if (data.length === 2) gl.uniform2fv(loc, data);
-                else if (data.length === 3) gl.uniform3fv(loc, data);
-                else if (data.length === 4) gl.uniform4fv(loc, data);
-                else if (data.length === 9) gl.uniformMatrix3fv(loc, false, data);
-                else if (data.length === 16) gl.uniformMatrix4fv(loc, false, data);
+                const len = data.length;
+                if (len === 1) gl.uniform1fv(loc, data);
+                else if (len === 2) gl.uniform2fv(loc, data);
+                else if (len === 3) gl.uniform3fv(loc, data);
+                else if (len === 4) gl.uniform4fv(loc, data);
+                else if (len === 9) gl.uniformMatrix3fv(loc, false, data);
+                else if (len === 16) gl.uniformMatrix4fv(loc, false, data);
             } else {
                 gl.uniform1f(loc, data);
             }
@@ -198,7 +204,7 @@ export class Material {
     }
 
     isReady() {
-        return true; // Simplified for now
+        return true;
     }
 }
 
@@ -210,6 +216,9 @@ export class Entity {
         this.worldMatrix = new Mat4();
         this.parent = null;
         this.children = [];
+        // Lighting properties
+        this.lightType = null; // LightType if it's a light entity
+        this.color = [1, 1, 1];
     }
 
     add(child) {
@@ -229,33 +238,56 @@ export class Entity {
     }
 
     isReady() {
-        if (this.material && !this.material.isReady()) return false;
-        return true; // Geometry is assumed ready if provided
+        return true;
     }
 
-    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix) {
-        Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
+    updateWorldMatrix() {
+        // This is a simplified version of hierarchical transform update
+        // In a real engine, this would be more complex.
+        // For now, we assume parent's world matrix is already updated.
+    }
 
-        this.pre_render(gl);
+    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights) {
+        Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         if (this.geometry && this.material && this.material.isReady()) {
             this.material.apply();
             this.material.setUniform('u_modelMatrix', this.worldMatrix);
             this.material.setUniform('u_viewMatrix', viewMatrix);
             this.material.setUniform('u_projectionMatrix', projectionMatrix);
+            
+            if (!this.lightType && lights.length > 0) {
+                const count = Math.min(lights.length, 4);
+                this.material.setUniform('u_lightsCount', count);
+                for (let i = 0; i < count; i++) {
+                    const light = lights[i];
+                    const prefix = `u_lights[${i}]`;
+                    this.material.setUniform(`${prefix}.type`, light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2));
+                    this.material.setUniform(`${prefix}.color`, light.color);
+                    if (light.type !== LightType.AMBIENT) {
+                        const pos = [
+                            light.worldMatrix.data[12],
+                            light.worldMatrix.data[13],
+                            light.worldMatrix.data[14]
+                        ];
+                        this.material.setUniform(`${prefix}.position`, pos);
+                        // For directional, we use the direction vector (not position)
+                        // Let's say for directional light, 'position' uniform is actually the direction.
+                        if (light.type === LightType.DIRECTIONAL) {
+                            this.material.setUniform(`${prefix}.direction`, pos); // We'll repurpose position if it's directional
+                        }
+                    }
+                }
+            }
+
             this.geometry.bind();
             this.geometry.draw();
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix);
+            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights);
         }
-
-        this.post_render(gl);
     }
-
-    pre_render(gl) {}
-    post_render(gl) {}
 }
 
 export class Scene {
@@ -271,6 +303,55 @@ export class Scene {
 
     render(viewMatrix, projectionMatrix) {
         const gl = this.gl;
-        this.root.render(gl, this.identity, viewMatrix, projectionMatrix);
+        const lights = [];
+        
+        // 1. First pass: Update all world matrices and collect lights
+        this._updateAndCollect(this.root, this.identity, lights);
+
+        // 2. Second pass: Render the scene with collected light info
+        this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights);
+    }
+
+    _updateAndCollect(entity, parentWorldMatrix, lights) {
+        Mat4.multiply(parentWorldMatrix, entity.transform, entity.worldMatrix);
+
+        if (entity.lightType) {
+            lights.push({
+                type: entity.lightType,
+                color: entity.color,
+                worldMatrix: new Mat4() 
+            });
+            // Copy world matrix to the light's local copy for use in the second pass
+            for(let i=0; i<16; i++) lights[lights.length-1].worldMatrix.data[i] = entity.worldMatrix.data[i];
+        }
+
+        for (const child of entity.children) {
+            this._updateAndCollect(child, entity.worldMatrix, lights);
+        }
+    }
+}
+
+export class AmbientLight extends Entity {
+    constructor(color = [1, 1, 1]) {
+        super();
+        this.lightType = LightType.AMBIENT;
+        this.color = color;
+    }
+}
+
+export class DirectionalLight extends Entity {
+    constructor(color = [1, 1, 1], direction = [-0.5, -1, -0.5]) {
+        super();
+        this.lightType = LightType.DIRECTIONAL;
+        this.color = color;
+        // We use the entity's orientation to represent direction if it is directional
+    }
+}
+
+export class PointLight extends Entity {
+    constructor(color = [1, 1, 1]) {
+        super();
+        this.lightType = LightType.POINT;
+        this.color = color;
     }
 }

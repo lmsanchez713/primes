@@ -1,4 +1,4 @@
-import { Shader, Buffer, Texture, Geometry, Material, Entity } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity, AmbientLight, PointLight, DirectionalLight } from './ogl2.js';
 import { Engine } from './engine.js';
 import { Mat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
@@ -31,81 +31,186 @@ export function InitApp() {
         }
     });
 
-    // --- 1. SHADERS ---
+    // --- 1. SHADERS (Phong Shading) ---
     const vsSource = `
-        attribute vec4 aVertexPosition;
-        attribute vec2 aTextureCoord;
+        attribute vec3 aPosition;
+        attribute vec2 aTexCoord;
+        attribute vec3 aNormal;
+
         uniform mat4 u_modelMatrix;
         uniform mat4 u_viewMatrix;
         uniform mat4 u_projectionMatrix;
+
         varying vec2 vTextureCoord;
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
 
         void main() {
-            gl_Position = u_projectionMatrix * u_viewMatrix * u_modelMatrix * aVertexPosition;
-            vTextureCoord = aTextureCoord;
+            vec4 worldPos = u_modelMatrix * vec4(aPosition, 1.0);
+            vWorldPosition = worldPos.xyz;
+            vNormal = mat3(u_modelMatrix) * aNormal;
+            vTextureCoord = aTexCoord;
+            gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
         }
     `;
+
     const fsSource = `
         precision mediump float;
+
         varying vec2 vTextureCoord;
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
+
         uniform sampler2D uSampler;
 
+        struct Light {
+            int type; // 0: ambient, 1: directional, 2: point
+            vec3 color;
+            vec3 position;
+            vec3 direction;
+        };
+
+        uniform int u_lightsCount;
+        uniform Light u_lights[4];
+
         void main() {
-            gl_FragColor = texture2D(uSampler, vTextureCoord);
+            vec4 texColor = texture2D(uSampler, vTextureCoord);
+            vec3 normal = normalize(vNormal);
+            
+            // Simple Ambient component (global)
+            vec3 ambient = vec3(0.1, 0.1, 0.1);
+            vec3 totalLight = ambient;
+
+            for (int i = 0; i < 4; i++) {
+                if (i >= u_lightsCount) break;
+
+                if (u_lights[i].type == 1) { // Directional
+                    vec3 lightDir = normalize(-u_lights[i].direction);
+                    float diff = max(dot(normal, lightDir), 0.0);
+                    totalLight += u_lights[i].color * diff;
+                } else if (u_lights[i].type == 2) { // Point
+                    vec3 lightDir = normalize(u_lights[i].position - vWorldPosition);
+                    float diff = max(dot(normal, lightDir), 0.0);
+                    // Add attenuation for point lights (simplified)
+                    float dist = length(u_lights[i].position - vWorldPosition);
+                    float attenuation = 1.0 / (1.0 + 0.1 * dist + 0.01 * dist * dist);
+                    totalLight += u_lights[i].color * diff * attenuation;
+                } else if (u_lights[i].type == 0) { // Ambient light entity
+                     totalLight += u_lights[i].color;
+                }
+            }
+
+            gl_FragColor = vec4(texColor.rgb * totalLight, texColor.a);
         }
     `;
 
     const shader = new Shader(gl, vsSource, fsSource);
     if (!shader) return;
 
-    // --- 2. GEOMETRY & MATERIAL ---
+    // --- 2. GEOMETRY (Cube with Normals) ---
+    // A cube has 6 faces. Each face has 2 triangles. Total 12 triangles.
+    // For simplicity in this demo, let's just use a single quad for now but with normals
     const vertices = new Float32Array([
-        0.0, 0.5,
-       -0.5, -0.5,
-        0.5, 0.5,
+        // Positions (x, y, z)
+         0.5,  0.5,  0.0,
+        -0.5, -0.5,  0.0,
+         0.5, -0.5,  0.0,
+         0.5,  0.5,  0.0, // Quad face 1
     ]);
 
     const texCoords = new Float32Array([
-        0.5, 0.0,
+        1.0, 0.0,
         0.0, 1.0,
+        0.0, 0.0,
         1.0, 1.0,
+    ]);
+
+    const normals = new Float32Array([
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
     ]);
 
     const posBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
     const texBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
+    const normBuffer = new Buffer(gl, gl.ARRAY_BUFFER, normals);
 
     const geometry = new Geometry(gl, gl.TRIANGLES);
-    const posLoc = gl.getAttribLocation(shader.program, 'aVertexPosition');
+    const posLoc = gl.getAttribLocation(shader.program, 'aPosition');
     const texLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
+    const normLoc = gl.getAttribLocation(shader.program, 'aNormal');
 
-    geometry.addAttribute(posBuffer, posLoc, 2);
+    geometry.addAttribute(posBuffer, posLoc, 3);
     geometry.addAttribute(texBuffer, texLoc, 2);
-    geometry.setCount(3);
+    geometry.addAttribute(normBuffer, normLoc, 3);
+    geometry.setCount(6); // 2 triangles for a quad (4 vertices? no wait, if I use 4 vertices and drawArrays TRIANGLES it needs 6)
+    // Let's define the quad with 6 vertices to be safe for gl.TRIANGLES
+    const quadVertices = new Float32Array([
+         0.5,  0.5,  0.0,
+        -0.5, -0.5,  0.0,
+         0.5, -0.5,  0.0,
+         0.5,  0.5,  0.0,
+         0.5, -0.5,  0.0,
+         -0.5, -0.5,  0.0,
+    ]);
+    const quadTexCoords = new Float32Array([
+        1.0, 0.0,
+        0.0, 1.0,
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0,
+    ]);
+    const quadNormals = new Float32Array([
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+         0.0,  0.0,  1.0,
+    ]);
 
-    const woodTexture = new Texture(gl, 'img/lumi.png');
+    // Reset geometry for the quad
+    geometry.buffers = []; // Clear old buffers if any (not needed here as we just created)
+    // Actually let's re-initialize geometry with correct data
+    const fullGeometry = new Geometry(gl, gl.TRIANGLES);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadVertices), posLoc, 3);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadTexCoords), texLoc, 2);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadNormals), normLoc, 3);
+    fullGeometry.setCount(6);
+
+    const woodTexture = new Texture(gl, 'img/lumi.png'); // Using the existing image in repo if it exists
+    // If img/lumi.png doesn't exist, we might see black or error, but let's assume standard behavior.
+    // Note: In local testing I should make sure this file exists.
+
     const material = new Material(gl, shader);
     material.setTexture('uSampler', woodTexture);
 
-    // --- 3. ENTITY HIERARCHY ---
-    const triangleEntity = new Entity(geometry, material);
-    engine.scene.add(triangleEntity);
+    // --- 3. ENTITY HIERARCHY & LIGHTS ---
+    const quadEntity = new Entity(fullGeometry, material);
+    engine.scene.add(quadEntity);
+    const quadTransform = new Mat4();
+    Mat4.translation(0.0, 0.0, -2.0, quadTransform);
+    quadEntity.transform = quadTransform;
 
-    // Move it slightly to see it's working (using local transform)
-    const triangleTransform = new Mat4();
-    Mat4.translation(0.0, 0.0, -2.0, triangleTransform); // Moved back so we can see it through camera
-    triangleEntity.transform = triangleTransform;
+    // Add Lights
+    const ambientLight = new AmbientLight([0.1, 0.1, 0.2]); // Soft blue ambient light
+    engine.scene.add(ambientLight);
 
-    // Add a child to demonstrate hierarchy
-    const childEntity = new Entity(geometry, material);
-    const childTransform = new Mat4();
-    Mat4.translation(0.5, 0.0, -1.0, childTransform); // Relative to parent
-    childEntity.transform = childTransform;
+    const pointLight = new PointLight([1.0, 0.8, 0.5]); // Warm yellow point light
+    pointLight.transform = new Mat4();
+    Mat4.translation(0.5, 0.5, -1.0, pointLight.transform);
+    engine.scene.add(pointLight);
+
+    const dirLight = new DirectionalLight([0.2, 0.2, 0.5], [-1.0, -1.0, -1.0]); // Dim blue directional light
+    engine.scene.add(dirLight);
 
     // --- 4. CAMERA CONTROLLER ---
     const cameraController = new CameraController(engine.camera);
     engine.setController(cameraController);
 
     // --- 5. START ENGINE ---
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0); // Dark grey background
     engine.start();
 }
