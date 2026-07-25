@@ -85,20 +85,6 @@ The main controller for the WebGL2 lifecycle.
 * `setProjectionMode(mode)`: Sets the projection mode to either `'perspective'` or `'ortho'`.
 * `render()`: Renders the current state of the scene using the camera's matrices.
 
-### 2. Math Library API (`math.js`)
-
-#### `Vec3`
-A basic 3D vector container with `x`, `y`, and `z` components.
-
-#### `Mat4`
-A 4x4 Matrix class using **Column-Major** order.
-* `constructor()`: Initializes an identity matrix.
-* `identity()`: Resets the matrix to the identity matrix.
-* `static multiply(a, b, out)`: Performs matrix multiplication ($A \\times B$). The `out` parameter is mandatory.
-* `static translation(x, y, z, out)`: Returns a translation matrix.
-* `static scale(x, y, z, out)`: Returns a scale matrix.
-* `static perspective(fovy, aspect, near, far, out)`: Returns a perspective projection matrix.
-
 ---
 
 ## 2. Risk Report & Improvement Opportunities
@@ -110,8 +96,6 @@ A 4x4 Matrix class using **Column-Major** order.
 ---
 
 ## 3. Development Roadmap (Plan)
-
-# Project Will - Development Roadmap
 
 This document outlines the planned development phases for the engine, transitioning from a basic WebGL2 renderer to a feature-complete rendering engine.
 
@@ -127,11 +111,11 @@ This document outlines the planned development phases for the engine, transition
 - [x] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
 - [x] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
 
-## Phase 3: Advanced Rendering & Materials (In Progress)
+## Phase 3: Advanced Rendering & Materials (Completed)
 *Goal: Move beyond simple textures to realistic lighting.*
 - [x] **Lighting System**: Implement Light entities (Point, Directional, Ambient).
 - [x] **Standard Shaders**: Built-in Phong or Blinn-Phong shading models.
-- [ ] **Normal Mapping**: Support for advanced surface details via normal maps.
+- [x] **Normal Mapping**: Support for advanced surface details via normal maps.
 
 ## Phase 4: Resource & Asset Expansion
 *Goal: Scale the engine to handle complex external content.*

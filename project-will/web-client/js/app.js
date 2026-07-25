@@ -31,25 +31,37 @@ export function InitApp() {
         }
     });
 
-    // --- 1. SHADERS (Phong Shading) ---
+    // --- 1. SHADERS (Phong Shading with Normal Mapping Support) ---
     const vsSource = `
         attribute vec3 aPosition;
         attribute vec2 aTexCoord;
         attribute vec3 aNormal;
+        attribute vec4 aTangent;
 
         uniform mat4 u_modelMatrix;
         uniform mat4 u_viewMatrix;
         uniform mat4 u_projectionMatrix;
 
         varying vec2 vTextureCoord;
-        varying vec3 vNormal;
         varying vec3 vWorldPosition;
+        varying vec3 vNormal;
+        varying mat3 vTBN;
 
         void main() {
             vec4 worldPos = u_modelMatrix * vec4(aPosition, 1.0);
             vWorldPosition = worldPos.xyz;
-            vNormal = mat3(u_modelMatrix) * aNormal;
             vTextureCoord = aTexCoord;
+            
+            mat3 normalMatrix = mat3(u_modelMatrix);
+            vec3 N = normalize(normalMatrix * aNormal);
+            vec3 T_raw = normalize(normalMatrix * aTangent.xyz);
+            // Re-orthogonalize to ensure T is perpendicular to N (Gram-Schmidt)
+            vec3 T = normalize(T_raw - dot(T_raw, N) * N);
+            vec3 B = cross(N, T) * aTangent.w;
+            
+            vNormal = N;
+            vTBN = mat3(T, B, N);
+
             gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
         }
     `;
@@ -58,10 +70,13 @@ export function InitApp() {
         precision mediump float;
 
         varying vec2 vTextureCoord;
-        varying vec3 vNormal;
         varying vec3 vWorldPosition;
+        varying vec3 vNormal;
+        varying mat3 vTBN;
 
         uniform sampler2D uSampler;
+        uniform sampler2D uNormalMap;
+        uniform bool uUseNormalMap;
 
         struct Light {
             int type; // 0: ambient, 1: directional, 2: point
@@ -75,8 +90,14 @@ export function InitApp() {
 
         void main() {
             vec4 texColor = texture2D(uSampler, vTextureCoord);
-            vec3 normal = normalize(vNormal);
+            vec3 normal;
             
+            if (uUseNormalMap) {
+                normal = normalize(vTBN * (texture2D(uNormalMap, vTextureCoord).rgb * 2.0 - 1.0));
+            } else {
+                normal = normalize(vNormal);
+            }
+
             // Simple Ambient component (global)
             vec3 ambient = vec3(0.1, 0.1, 0.1);
             vec3 totalLight = ambient;
@@ -107,7 +128,7 @@ export function InitApp() {
     const shader = new Shader(gl, vsSource, fsSource);
     if (!shader) return;
 
-    // --- 2. GEOMETRY (Quad with Normals) ---
+    // --- 2. GEOMETRY (Quad with Normals and Tangents) ---
     const quadVertices = new Float32Array([
          0.5,  0.5,  0.0,
         -0.5, -0.5,  0.0,
@@ -135,16 +156,30 @@ export function InitApp() {
          0.0,  0.0,  1.0,
     ]);
 
+    // Tangent: X-axis (1, 0, 0), Bitangent sign W=1 (since cross(N, T) = Y)
+    const quadTangents = new Float32Array([
+         1.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+         1.0, 0.0, 0.0, 1.0,
+    ]);
+
     const fullGeometry = new Geometry(gl, gl.TRIANGLES);
     fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadVertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
     fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadTexCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
     fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadNormals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadTangents), gl.getAttribLocation(shader.program, 'aTangent'), 4);
     fullGeometry.setCount(6);
 
     const woodTexture = new Texture(gl, 'img/lumi.png'); 
 
     const material = new Material(gl, shader);
     material.setTexture('uSampler', woodTexture);
+    // For demo: use the same texture for normal map to show something happens (though it'll look weird)
+    material.setTextTexture('uNormalMap', woodTexture); 
+    material.setUniform('uUseNormalMap', true);
 
     // --- 3. ENTITY HIERARCHY & LIGHTS ---
     const quadEntity = new Entity(fullGeometry, material);
@@ -163,10 +198,6 @@ export function InitApp() {
     engine.scene.add(pointLight);
 
     const dirLight = new DirectionalLight([0.2, 0.2, 0.5], [-1.0, -1.0, -1.0]); // Dim blue directional light
-    // For directional lights in our current implementation, the 'direction' is actually handled by its transform's rotation or we can just set it via a uniform if we modified Entity.
-    // In our `Entity.render`, we use: 
-    // this.material.setUniform(`${prefix}.direction`, pos); where pos was derived from world matrix.
-    // Let's fix the logic in app.js to match what we expect for directional light.
     engine.scene.add(dirLight);
 
     // --- 4. CAMERA CONTROLLER ---
@@ -177,3 +208,8 @@ export function InitApp() {
     gl.clearColor(0.1, 0.1, 0.1, 1.0); // Dark grey background
     engine.start();
 }
+
+// Helper to allow setting multiple textures by name in app logic if Material doesn't support it well
+Material.prototype.setTextTexture = function(name, textureInstance) {
+    this.setTexture(name, textureInstance);
+};
