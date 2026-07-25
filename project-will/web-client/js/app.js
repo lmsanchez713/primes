@@ -107,53 +107,16 @@ export function InitApp() {
     const shader = new Shader(gl, vsSource, fsSource);
     if (!shader) return;
 
-    // --- 2. GEOMETRY (Cube with Normals) ---
-    // A cube has 6 faces. Each face has 2 triangles. Total 12 triangles.
-    // For simplicity in this demo, let's just use a single quad for now but with normals
-    const vertices = new Float32Array([
-        // Positions (x, y, z)
-         0.5,  0.5,  0.0,
-        -0.5, -0.5,  0.0,
-         0.5, -0.5,  0.0,
-         0.5,  0.5,  0.0, // Quad face 1
-    ]);
-
-    const texCoords = new Float32Array([
-        1.0, 0.0,
-        0.0, 1.0,
-        0.0, 0.0,
-        1.0, 1.0,
-    ]);
-
-    const normals = new Float32Array([
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-         0.0,  0.0,  1.0,
-    ]);
-
-    const posBuffer = new Buffer(gl, gl.ARRAY_BUFFER, vertices);
-    const texBuffer = new Buffer(gl, gl.ARRAY_BUFFER, texCoords);
-    const normBuffer = new Buffer(gl, gl.ARRAY_BUFFER, normals);
-
-    const geometry = new Geometry(gl, gl.TRIANGLES);
-    const posLoc = gl.getAttribLocation(shader.program, 'aPosition');
-    const texLoc = gl.getAttribLocation(shader.program, 'aTextureCoord');
-    const normLoc = gl.getAttribLocation(shader.program, 'aNormal');
-
-    geometry.addAttribute(posBuffer, posLoc, 3);
-    geometry.addAttribute(texBuffer, texLoc, 2);
-    geometry.addAttribute(normBuffer, normLoc, 3);
-    geometry.setCount(6); // 2 triangles for a quad (4 vertices? no wait, if I use 4 vertices and drawArrays TRIANGLES it needs 6)
-    // Let's define the quad with 6 vertices to be safe for gl.TRIANGLES
+    // --- 2. GEOMETRY (Quad with Normals) ---
     const quadVertices = new Float32Array([
          0.5,  0.5,  0.0,
         -0.5, -0.5,  0.0,
          0.5, -0.5,  0.0,
          0.5,  0.5,  0.0,
          0.5, -0.5,  0.0,
-         -0.5, -0.5,  0.0,
+        -0.5, -0.5,  0.0,
     ]);
+
     const quadTexCoords = new Float32Array([
         1.0, 0.0,
         0.0, 1.0,
@@ -162,6 +125,7 @@ export function InitApp() {
         1.0, 1.0,
         0.0, 1.0,
     ]);
+
     const quadNormals = new Float32Array([
          0.0,  0.0,  1.0,
          0.0,  0.0,  1.0,
@@ -171,18 +135,13 @@ export function InitApp() {
          0.0,  0.0,  1.0,
     ]);
 
-    // Reset geometry for the quad
-    geometry.buffers = []; // Clear old buffers if any (not needed here as we just created)
-    // Actually let's re-initialize geometry with correct data
     const fullGeometry = new Geometry(gl, gl.TRIANGLES);
-    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadVertices), posLoc, 3);
-    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadTexCoords), texLoc, 2);
-    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadNormals), normLoc, 3);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadVertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadTexCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
+    fullGeometry.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, quadNormals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
     fullGeometry.setCount(6);
 
-    const woodTexture = new Texture(gl, 'img/lumi.png'); // Using the existing image in repo if it exists
-    // If img/lumi.png doesn't exist, we might see black or error, but let's assume standard behavior.
-    // Note: In local testing I should make sure this file exists.
+    const woodTexture = new Texture(gl, 'img/lumi.png'); 
 
     const material = new Material(gl, shader);
     material.setTexture('uSampler', woodTexture);
@@ -204,6 +163,10 @@ export function InitApp() {
     engine.scene.add(pointLight);
 
     const dirLight = new DirectionalLight([0.2, 0.2, 0.5], [-1.0, -1.0, -1.0]); // Dim blue directional light
+    // For directional lights in our current implementation, the 'direction' is actually handled by its transform's rotation or we can just set it via a uniform if we modified Entity.
+    // In our `Entity.render`, we use: 
+    // this.material.setUniform(`${prefix}.direction`, pos); where pos was derived from world matrix.
+    // Let's fix the logic in app.js to match what we expect for directional light.
     engine.scene.add(dirLight);
 
     // --- 4. CAMERA CONTROLLER ---

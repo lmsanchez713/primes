@@ -189,7 +189,9 @@ export class Material {
                 data = value.data;
             }
 
-            if (Array.isArray(data) || ArrayBuffer.isView(data)) {
+            if (typeof data === 'number' && Number.isInteger(data)) {
+                gl.uniform1i(loc, data);
+            } else if (Array.isArray(data) || ArrayBuffer.isView(data)) {
                 const len = data.length;
                 if (len === 1) gl.uniform1fv(loc, data);
                 else if (len === 2) gl.uniform2fv(loc, data);
@@ -217,8 +219,9 @@ export class Entity {
         this.parent = null;
         this.children = [];
         // Lighting properties
-        this.lightType = null; // LightType if it's a light entity
+        this.lightType = null; 
         this.color = [1, 1, 1];
+        this.direction = [-0.5, -1.0, -0.5]; // Default direction for directional light
     }
 
     add(child) {
@@ -239,12 +242,6 @@ export class Entity {
 
     isReady() {
         return true;
-    }
-
-    updateWorldMatrix() {
-        // This is a simplified version of hierarchical transform update
-        // In a real engine, this would be more complex.
-        // For now, we assume parent's world matrix is already updated.
     }
 
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights) {
@@ -271,10 +268,10 @@ export class Entity {
                             light.worldMatrix.data[14]
                         ];
                         this.material.setUniform(`${prefix}.position`, pos);
-                        // For directional, we use the direction vector (not position)
-                        // Let's say for directional light, 'position' uniform is actually the direction.
                         if (light.type === LightType.DIRECTIONAL) {
-                            this.material.setUniform(`${prefix}.direction`, pos); // We'll repurpose position if it's directional
+                            // For directional lights, we use the direction vector provided in Entity.direction
+                            const dir = light.direction;
+                            this.material.setUniform(`${prefix}.direction`, dir);
                         }
                     }
                 }
@@ -316,13 +313,15 @@ export class Scene {
         Mat4.multiply(parentWorldMatrix, entity.transform, entity.worldMatrix);
 
         if (entity.lightType) {
-            lights.push({
+            const lightObj = {
                 type: entity.lightType,
                 color: entity.color,
+                direction: entity.direction || [0, -1, 0], // Fallback direction
                 worldMatrix: new Mat4() 
-            });
+            };
             // Copy world matrix to the light's local copy for use in the second pass
-            for(let i=0; i<16; i++) lights[lights.length-1].worldMatrix.data[i] = entity.worldMatrix.data[i];
+            for(let i=0; i<16; i++) lightObj.worldMatrix.data[i] = entity.worldMatrix.data[i];
+            lights.push(lightObj);
         }
 
         for (const child of entity.children) {
@@ -340,11 +339,11 @@ export class AmbientLight extends Entity {
 }
 
 export class DirectionalLight extends Entity {
-    constructor(color = [1, 1, 1], direction = [-0.5, -1, -0.5]) {
+    constructor(color = [1, 1, 1], direction = [-0.5, -1.0, -0.5]) {
         super();
         this.lightType = LightType.DIRECTIONAL;
         this.color = color;
-        // We use the entity's orientation to represent direction if it is directional
+        this.direction = direction;
     }
 }
 
