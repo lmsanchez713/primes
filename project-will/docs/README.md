@@ -44,7 +44,7 @@ Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
 * `setTexture(name, textureInstance)`: Maps a `sampler2D` uniform name to a texture.
 * `setUniform(name, value)`: Sets a uniform value (float, vec2, vec3, vec4, or matrix).
 * `apply()`: Binds the shader, binds all textures, and uploads uniforms.
-* `isReady()`: Returns true if all associated textures are loaded.
+* `isReady()`: Returns true (currently always returns true; does not check texture loading status).
 
 #### `Entity`
 A high-level scene object combining geometry and material. Supports parent-child hierarchies.
@@ -52,6 +52,10 @@ A high-level scene object combining geometry and material. Supports parent-child
 * `add(child)`: Adds a child entity to the hierarchy.
 * `remove(child)`: Removes a child entity.
 * `render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights)`: Recursively renders the entity and its children using provided matrices and light data.
+* **Properties (for lighting)**:
+    * `lightType`: Defines if this entity acts as a light source (Ambient, Directional, or Point).
+    * `color`: The color of the light.
+    * `direction`: The direction of the light (primarily for directional lights).
 
 #### `Scene`
 A container for all entities to be rendered in a scene.
