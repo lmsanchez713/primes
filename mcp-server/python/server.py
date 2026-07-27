@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 class McpServer:
-    def __init__(self, server_name: str = "python-mcp-server", server_version: str = "1.0.0"):
+    def __init__(self, server_name: str = "prime-mcp", server_version: str = "1.0.0"):
         self.server_name = server_name
         self.server_version = server_version
         self.tools: Dict[str, Dict[str, Any]] = {}
