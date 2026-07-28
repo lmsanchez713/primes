@@ -19,7 +19,7 @@ To use this server with LM Studio's MCP support, follow these steps:
 3.  Click on **"Add Server"** or the **"+"** icon.
 4.  Configure the server with the following settings:
     *   **Type**: `command`
-    *   **Command**: `python` (or the full path to your python executable, e.g., `/usr/bin/python3` or `C:\Python311\python.exe`)
+    *   **Command**: `python` (or the full path to your python executable, e.g., `/usr/bin/python3` or `C:\\Python311\\python.exe`)
     *   **Arguments**: The absolute path to the `main.py` file in this repository.
         *   Example: `/Users/yourname/projects/mcp-server/python/main.py`
 5.  **Save** the configuration.
@@ -31,6 +31,21 @@ To use this server with LM Studio's MCP support, follow these steps:
 - `git` (for the `list_files` tool)
 - `cmake` (for the `cmake_build` tool)
 - (Optional) A local web server running on port 8080 for the `deploy` tool.
+
+## Sample Claude Desktop Configuration
+
+If you want to use this server with Claude Desktop, add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "python-mcp-server": {
+      "command": "python",
+      "args": ["/absolute/path/to/mcp-server/python/main.py"]
+    }
+  }
+}
+```
 
 ## Security Note
 
