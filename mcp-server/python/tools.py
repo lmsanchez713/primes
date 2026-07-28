@@ -4,7 +4,7 @@ import shutil
 import tempfile
 import webbrowser
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional, List
 import sys
 
 def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
@@ -23,6 +23,13 @@ def is_path_inside_repo(repo_path: Path, target_path: Path) -> bool:
 
 def register_all_tools(server):
     """Registers all the tools for the server."""
+
+    # Helper to get base path
+    def get_base_path():
+        wd = server.get_working_dir()
+        if wd:
+            return wd
+        return server.get_repo_path()
 
     # 1. set_repository_path
     def handle_set_repository_path(args: Dict[str, Any]):
@@ -79,16 +86,15 @@ def register_all_tools(server):
         rel_path_str = args.get("path")
         if not rel_path_str:
             return mcp_text("Missing 'path' argument", True)
-        repo = server.get_repo_path()
-        if not repo:
-            return mcp_text("Repo path not set.", True)
         
-        full_path = (repo / rel_path_str).resolve()
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Base path (repo or working dir) not set.", True)
+        
+        full_path = (base_path / rel_path_str).resolve()
         if not full_path.exists():
             return mcp_text(f"File not found: {full_path}", True)
-        if not is_path_inside_repo(repo, full_path):
-            return mcp_text("Access denied: Path outside repository", True)
-
+        
         try:
             return mcp_text(full_path.read_text(encoding="utf-8"))
         except Exception as e:
@@ -96,11 +102,11 @@ def register_all_tools(server):
 
     server.register_tool(
         "read_file",
-        "Reads the content of a file in the repository",
+        "Reads the content of a file",
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Relative path"}
+                "path": {"type": "string", "description": "Relative path from base directory"}
             },
             "required": ["path"]
         },
@@ -114,14 +120,12 @@ def register_all_tools(server):
         if not rel_path_str or content is None:
             return mcp_text("Missing 'path' or 'content' argument", True)
         
-        repo = server.get_repo_path()
-        if not repo:
-            return mcp_text("Repo path not set.", True)
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Base path (repo or working dir) not set.", True)
 
-        full_path = (repo / rel_path_str).resolve()
-        if not is_path_inside_repo(repo, full_path):
-            return mcp_text("Path must be inside the repository", True)
-
+        full_path = (base_path / rel_path_str).resolve()
+        
         try:
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.write_text(content, encoding="utf-8")
@@ -131,7 +135,7 @@ def register_all_tools(server):
 
     server.register_tool(
         "write_file",
-        "Writes content to a file (validates path to prevent directory traversal)",
+        "Writes content to a file",
         {
             "type": "object",
             "properties": {
@@ -149,13 +153,11 @@ def register_all_tools(server):
         if not rel_path_str:
             return mcp_text("Missing 'path' argument", True)
         
-        repo = server.get_repo_path()
-        if not repo:
-            return mcp_text("Repo path not set.", True)
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Base path (repo or working dir) not set.", True)
 
-        full_path = (repo / rel_path_str).resolve()
-        if not is_path_inside_repo(repo, full_path):
-            return mcp_text("Path must be inside the repository", True)
+        full_path = (base_path / rel_path_str).resolve()
 
         try:
             if full_path.exists():
@@ -168,13 +170,68 @@ def register_all_tools(server):
 
     server.register_tool(
         "delete_file",
-        "Deletes a file from the repository",
+        "Deletes a file from the base directory",
         {
             "type": "object",
             "properties": {"path": {"type": "string"}},
             "required": ["path"]
         },
         handle_delete_file
+    )
+
+    # 6. set_working_dir
+    def handle_set_working_dir(args: Dict[str, Any]):
+        path_str = args.get("path")
+        if not path_str:
+            return mcp_text("Missing path parameter", True)
+        try:
+            abs_path = Path(path_str).resolve()
+            if not abs_path.exists():
+                return mcp_text(f"Path does not exist: {abs_path}", True)
+            server.set_working_dir(str(abs_path))
+            return mcp_text(f"Working directory set to: {abs_path}")
+        except Exception as e:
+            return mcp_text(f"Error setting working dir: {str(e)}", True)
+
+    server.register_tool(
+        "set_working_dir",
+        "Set the working directory",
+        {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Absolute or relative path"}
+            },
+            "required": ["path"]
+        },
+        handle_set_working_dir
+    )
+
+    # 7. list_working_dir_tree
+    def handle_list_working_dir_tree(args: Dict[str, Any]):
+        wd = server.get_working_dir()
+        if not wd:
+            return mcp_text("Working directory not set. Use set_working_dir first.", True)
+        try:
+            # List files in the current directory
+            files = []
+            for entry in wd.iterdir():
+                if entry.is_file():
+                    files.append(entry.name)
+                elif entry.is_dir():
+                    files.append(f"{entry.name}/")
+            
+            if not files:
+                return mcp_text("Directory is empty.")
+            
+            return mcp_text("\n".join(sorted(files)))
+        except Exception as e:
+            return mcp_text(f"Error listing directory: {str(e)}", True)
+
+    server.register_tool(
+        "list_working_dir_tree",
+        "Lists files and directories in the current working directory",
+        {"type": "object", "properties": {}},
+        handle_list_working_dir_tree
     )
 
 def initialize_all_tools(server):
