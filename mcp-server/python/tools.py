@@ -17,19 +17,48 @@ def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
 def is_path_inside_repo(repo_path: Path, target_path: Path) -> bool:
     """Security check: Ensures the target path is inside the repository."""
     try:
-        return Path(target_path).resolve().is_relative_to(repo_path.resolve())
-    except ValueError:
+        # Use resolve() to handle '..' and symlinks before checking relativity
+        return target_path.resolve().is_relative_to(repo_path.resolve())
+    except (ValueError, RuntimeError):
         return False
 
 def register_all_tools(server):
     """Registers all the tools for the server."""
 
-    # Helper to get base path
-    def get_base_path():
+    def get_base_path() -> Optional[Path]:
+        """Returns the repository path if set, otherwise falls back to working dir."""
+        repo_path = server.get_repo_path()
+        if repo_path:
+            return Path(repo_path).resolve()
+        
         wd = server.get_working_dir()
         if wd:
-            return wd
-        return server.get_repo_path()
+            return Path(wd).resolve()
+        return None
+
+    def resolve_safe_path(rel_path_str: str) -> (Optional[Path], Optional[str]):
+        """
+        Sanitizes the input path and ensures it stays within the repository.
+        Returns (Absolute Path, Error Message).
+        """
+        base_path = get_base_path()
+        if not base_path:
+            return None, "Base path (repo or working dir) not set."
+
+        # 1. Sanitize input: Remove leading slashes and './' to prevent Path 
+        # from treating it as an absolute root path.
+        sanitized_rel = rel_path_str.lstrip('./').lstrip('/')
+        if not sanitized_rel:
+            return None, "Invalid relative path provided."
+
+        # 2. Construct full path
+        full_path = (base_path / sanitized_rel).resolve()
+
+        # 3. Security Check: Prevent directory traversal outside the repo
+        if not is_path_inside_repo(base_path, full_path):
+            return None, f"Security error: Path '{rel_path_str}' is outside the repository root."
+
+        return full_path, None
 
     # 1. set_current_path
     def handle_set_current_path(args: Dict[str, Any]):
@@ -65,10 +94,10 @@ def register_all_tools(server):
             return mcp_text("Repo path not set. Call set_current_path first.", True)
         try:
             result = subprocess.run(
-                ["git", "-C", str(repo), "ls-files"],
+                ["git", "-C", str(Path(repo).resolve()), "ls-files"],
                 capture_output=True, text=True, check=True
             )
-            return mcp_text(result.stdout)
+            return mcp_text(result.stdout or "Repository is empty (no versioned files found).")
         except subprocess.CalledProcessError as e:
             return mcp_text(f"Git error: {e.stderr}", True)
         except Exception as e:
@@ -87,11 +116,10 @@ def register_all_tools(server):
         if not rel_path_str:
             return mcp_text("Missing 'path' argument", True)
         
-        base_path = get_base_path()
-        if not base_path:
-            return mcp_text("Base path (repo or working dir) not set.", True)
-        
-        full_path = (base_path / rel_path_str).resolve()
+        full_path, error = resolve_safe_path(rel_path_str)
+        if error:
+            return mcp_text(error, True)
+
         if not full_path.exists():
             return mcp_text(f"File not found: {full_path}", True)
         
@@ -120,12 +148,10 @@ def register_all_tools(server):
         if not rel_path_str or content is None:
             return mcp_text("Missing 'path' or 'content' argument", True)
         
-        base_path = get_base_path()
-        if not base_path:
-            return mcp_text("Base path (repo or working dir) not set.", True)
+        full_path, error = resolve_safe_path(rel_path_str)
+        if error:
+            return mcp_text(error, True)
 
-        full_path = (base_path / rel_path_str).resolve()
-        
         try:
             full_path.parent.mkdir(parents=True, exist_ok=True)
             full_path.write_text(content, encoding="utf-8")
@@ -153,11 +179,9 @@ def register_all_tools(server):
         if not rel_path_str:
             return mcp_text("Missing 'path' argument", True)
         
-        base_path = get_base_path()
-        if not base_path:
-            return mcp_text("Base path (repo or working dir) not set.", True)
-
-        full_path = (base_path / rel_path_str).resolve()
+        full_path, error = resolve_safe_path(rel_path_str)
+        if error:
+            return mcp_text(error, True)
 
         try:
             if full_path.exists():
