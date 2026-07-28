@@ -9,7 +9,7 @@ class McpServer:
         self.server_name = server_name
         self.server_version = server_version
         self.tools: Dict[str, Dict[str, Any]] = {}
-        self.repo_path: Optional[Path] = None
+        self.base_dir: Optional[Path] = None
         self.working_dir: Optional[Path] = None
         self.config_path = Path("mcp-config.json")
 
@@ -27,16 +27,16 @@ class McpServer:
         self.server_version = version
         self.save_state()
 
-    def set_repo_path(self, path: str):
-        self.repo_path = Path(path).resolve()
+    def set_base_dir(self, path: str):
+        self.base_dir = Path(path).resolve()
         self.save_state()
 
     def set_working_dir(self, path: str):
         self.working_dir = Path(path).resolve()
         self.save_state()
 
-    def get_repo_path(self) -> Optional[Path]:
-        return self.repo_path
+    def get_base_dir(self) -> Optional[Path]:
+        return self.base_dir
 
     def get_working_dir(self) -> Optional[Path]:
         return self.working_dir
@@ -46,7 +46,7 @@ class McpServer:
             try:
                 with open(self.config_path, "r") as f:
                     config = json.load(f)
-                    self.repo_path = Path(config.get("repo_path", "")).resolve() if config.get("repo_path") else None
+                    self.base_dir = Path(config.get("base_dir", "")).resolve() if config.get("base_dir") else None
                     self.working_dir = Path(config.get("working_dir", "")).resolve() if config.get("working_dir") else None
                     self.server_name = config.get("server_name", self.server_name)
                     self.server_version = config.get("server_version", self.server_version)
@@ -58,7 +58,7 @@ class McpServer:
 
     def save_state(self):
         state = {
-            "repo_path": str(self.repo_path) if self.repo_path else "",
+            "base_dir": str(self.base_dir) if self.base_dir else "",
             "working_dir": str(self.working_dir) if self.working_dir else "",
             "server_name": self.server_name,
             "server_version": self.server_version,
@@ -149,7 +149,7 @@ class McpServer:
             tool = self.tools[tool_name]
             try:
                 result = tool["handler"](arguments)
-                # Ensure result is wrapped in MCP content block if it's just text
+                # Ensure result is wrapped in an MCP content block if it's just text
                 if isinstance(result, str):
                     result = {"content": [{"type": "text", "text": result}]}
                 self.send_response(request_id, result)

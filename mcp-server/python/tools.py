@@ -1,11 +1,6 @@
-import subprocess
 import os
-import shutil
-import tempfile
-import webbrowser
 from pathlib import Path
 from typing import Any, Dict, Optional, List
-import sys
 
 def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
     """Formats text as an MCP content block."""
@@ -14,11 +9,11 @@ def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
         "isError": is_error
     }
 
-def is_path_inside_repo(repo_path: Path, target_path: Path) -> bool:
-    """Security check: Ensures the target path is inside the repository."""
+def is_path_inside_dir(base_dir: Path, target_path: Path) -> bool:
+    """Security check: Ensures the target path is inside the base directory."""
     try:
         # Use resolve() to handle '..' and symlinks before checking relativity
-        return target_path.resolve().is_relative_to(repo_path.resolve())
+        return target_path.resolve().is_relative_to(base_dir.resolve())
     except (ValueError, RuntimeError):
         return False
 
@@ -26,10 +21,10 @@ def register_all_tools(server):
     """Registers all the tools for the server."""
 
     def get_base_path() -> Optional[Path]:
-        """Returns the repository path if set, otherwise falls back to working dir."""
-        repo_path = server.get_repo_path()
-        if repo_path:
-            return Path(repo_path).resolve()
+        """Returns the base directory if set, otherwise falls back to working dir."""
+        base_path = server.get_base_dir()
+        if base_path:
+            return Path(base_path).resolve()
         
         wd = server.get_working_dir()
         if wd:
@@ -38,12 +33,12 @@ def register_all_tools(server):
 
     def resolve_safe_path(rel_path_str: str) -> (Optional[Path], Optional[str]):
         """
-        Sanitizes the input path and ensures it stays within the repository.
+        Sanitizes the input path and ensures it stays within the base directory.
         Returns (Absolute Path, Error Message).
         """
         base_path = get_base_path()
         if not base_path:
-            return None, "Base path (repo or working dir) not set."
+            return None, "Base directory not set. Call set_current_path first."
 
         # 1. Sanitize input: Remove leading slashes and './' to prevent Path 
         # from treating it as an absolute root path.
@@ -54,9 +49,9 @@ def register_all_tools(server):
         # 2. Construct full path
         full_path = (base_path / sanitized_rel).resolve()
 
-        # 3. Security Check: Prevent directory traversal outside the repo
-        if not is_path_inside_repo(base_path, full_path):
-            return None, f"Security error: Path '{rel_path_str}' is outside the repository root."
+        # 3. Security Check: Prevent directory traversal outside the base directory
+        if not is_path_inside_dir(base_path, full_path):
+            return None, f"Security error: Path '{rel_path_str}' is outside the base directory."
 
         return full_path, None
 
@@ -69,14 +64,14 @@ def register_all_tools(server):
             abs_path = Path(path_str).resolve()
             if not abs_path.exists():
                 return mcp_text(f"Path does not exist: {abs_path}", True)
-            server.set_repo_path(str(abs_path))
-            return mcp_text(f"Repository path set to: {abs_path}")
+            server.set_base_dir(str(abs_path))
+            return mcp_text(f"Base directory set to: {abs_path}")
         except Exception as e:
             return mcp_text(f"Error setting path: {str(e)}", True)
     
     server.register_tool(
         "set_current_path",
-        "Define the root path of the Git repository",
+        "Set the base directory for all file operations",
         {
             "type": "object",
             "properties": {
@@ -89,23 +84,31 @@ def register_all_tools(server):
 
     # 2. show_file_tree
     def handle_show_file_tree(args: Dict[str, Any]):
-        repo = server.get_repo_path()
-        if not repo:
-            return mcp_text("Repo path not set. Call set_current_path first.", True)
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Base directory not set. Call set_current_path first.", True)
         try:
-            result = subprocess.run(
-                ["git", "-C", str(Path(repo).resolve()), "ls-files"],
-                capture_output=True, text=True, check=True
-            )
-            return mcp_text(result.stdout or "Repository is empty (no versioned files found).")
-        except subprocess.CalledProcessError as e:
-            return mcp_text(f"Git error: {e.stderr}", True)
+            file_list = []
+            for root, dirs, filenames in os.walk(base_path):
+                for filename in filenames:
+                    full_path = Path(root) / filename
+                    try:
+                        rel_path = full_path.relative_to(base_path)
+                        file_list.append(str(rel_path))
+                    except ValueError:
+                        # This might happen if there are symlinks outside the base dir
+                        continue
+            
+            if not file_list:
+                return mcp_text("Directory is empty.")
+            
+            return mcp_text("\n".join(sorted(file_list)))
         except Exception as e:
             return mcp_text(f"Error listing files: {str(e)}", True)
 
     server.register_tool(
         "show_file_tree",
-        "Lists all versioned files in the repository",
+        "Lists all files in the directory tree",
         {"type": "object", "properties": {}},
         handle_show_file_tree
     )
