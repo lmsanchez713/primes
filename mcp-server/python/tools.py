@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, List
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import quote_plus
 
 def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
     """Formats text as an MCP content block."""
@@ -235,27 +236,7 @@ def register_all_tools(server):
     )
 
     # 7. google_search
-    def handle_google_search(args: Dict[str, Any]):
-        query = args.get("query")
-        if not query:
-            return mcp_text("Missing 'query' argument", True)
-        
-        # In a real implementation, you would use a Search API (e.g., Serper, Google Custom Search API)
-        # For this demonstration, we'll simulate a search result.
-        return mcp_text(f"Simulated search results for: {query}\n1. Result 1: https://example.com/result1\n2. Result 2: https://example.com/result2")
-
-    server.register_tool(
-        "google_search",
-        "Search Google for a query",
-        {
-            "type": "object",
-            "properties": {
-                "query": { "type": "string", "description": "The search query" }
-            },
-            "required": ["query"]
-        },
-        handle_google_search
-    )
+    # didn't work, have to check the right way (api key?)
 
     # 8. get_web_page
     def handle_get_web_page(args: Dict[str, Any]):
