@@ -1,14 +1,14 @@
 # Python MCP Server
 
-A lightweight, modular MCP (Model Context Protocol) server implemented in Python. This server allows LLMs to interact directly with your local development environment.
+A lightweight, modular MCP (Model Context Protocol) server implemented in Python. This server allows LLMs to interact with local filesystems and directory structures.
 
 ## Features
 
-- **Filesystem Management**: Read, write, and delete files within a specified Git repository with built-in security checks.
-- **Git Integration**: List all versioned files in a repository using `git ls-files`.
-- **Build Automation**: Trigger `cmake` configuration and builds for your projects.
-- **Code Execution**: Execute arbitrary Python code in a temporary, isolated directory.
-- **Web Deployment**: Automatically deploy local web assets to a local development server (e.g., Apache) and open the browser.
+- **Directory Management**: Set the base working directory for all file operations using `set_current_path`.
+- **File Listing**: 
+    - `list_files`: List files and folders in the current directory (non-recursive).
+    - `show_file_tree`: Lists all files in the directory tree recursively.
+- **Filesystem Operations**: Read, write, and delete files within the configured base directory with built-in security checks to prevent directory traversal.
 
 ## How to add to LM Studio
 
@@ -28,9 +28,6 @@ To use this server with LM Studio's MCP support, follow these steps:
 ## Requirements
 
 - Python 3.x
-- `git` (for the `list_files` tool)
-- `cmake` (for the `cmake_build` tool)
-- (Optional) A local web server running on port 8080 for the `deploy` tool.
 
 ## Sample Claude Desktop Configuration
 
@@ -51,4 +48,4 @@ If you want to use this server with Claude Desktop, add the following to your `c
 
 ## Security Note
 
-The `write_file` and `delete_file` tools include security logic to ensure all operations are confined within the configured Git repository path, preventing directory traversal attacks.
+The `write_file`, `read_file`, and `delete_file` tools include security logic to ensure all operations are confined within the configured base directory, preventing directory traversal attacks.
