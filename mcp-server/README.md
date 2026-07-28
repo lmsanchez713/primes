@@ -9,6 +9,9 @@ A lightweight, modular MCP (Model Context Protocol) server implemented in Python
     - `list_files`: List files and folders in the current directory (non-recursive).
     - `show_file_tree`: Lists all files in the directory tree recursively.
 - **Filesystem Operations**: Read, write, and delete files within the configured base directory with built-in security checks to prevent directory traversal.
+- **Web Tools**:
+    - `google_search`: Search Google for a query.
+    - `get_web_page`: Get the content of a web page.
 
 ## How to add to LM Studio
 
@@ -28,6 +31,8 @@ To use this server with LM Studio's MCP support, follow these steps:
 ## Requirements
 
 - Python 3.x
+- `requests`
+- `beautifulsoup4`
 
 ## Sample Claude Desktop Configuration
 
