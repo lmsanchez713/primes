@@ -5,6 +5,7 @@ import tempfile
 import webbrowser
 from pathlib import Path
 from typing import Any, Dict
+import sys
 
 def mcp_text(text: str, is_error: bool = False) -> Dict[str, Any]:
     """Formats text as an MCP content block."""
@@ -23,8 +24,8 @@ def is_path_inside_repo(repo_path: Path, target_path: Path) -> bool:
 def register_all_tools(server):
     """Registers all the tools for the server."""
 
-    # 1. set_repo_path
-    def handle_set_repo_path(args: Dict[str, Any]):
+    # 1. set_repository_path
+    def handle_set_repository_path(args: Dict[str, Any]):
         path_str = args.get("path")
         if not path_str:
             return mcp_text("Missing path parameter", True)
@@ -38,7 +39,7 @@ def register_all_tools(server):
             return mcp_text(f"Error setting path: {str(e)}", True)
     
     server.register_tool(
-        "set_repo_path",
+        "set_repository_path",
         "Define the root path of the Git repository",
         {
             "type": "object",
@@ -47,14 +48,14 @@ def register_all_tools(server):
             },
             "required": ["path"]
         },
-        handle_set_repo_path
+        handle_set_repository_path
     )
 
-    # 2. list_files
-    def handle_list_files(args: Dict[str, Any]):
+    # 2. list_repository_file_tree
+    def handle_list_repository_file_tree(args: Dict[str, Any]):
         repo = server.get_repo_path()
         if not repo:
-            return mcp_text("Repo path not set. Call set_repo_path first.", True)
+            return mcp_text("Repo path not set. Call set_repository_path first.", True)
         try:
             result = subprocess.run(
                 ["git", "-C", str(repo), "ls-files"],
@@ -67,10 +68,10 @@ def register_all_tools(server):
             return mcp_text(f"Error listing files: {str(e)}", True)
 
     server.register_tool(
-        "list_files",
+        "list_repository_file_tree",
         "Lists all versioned files in the repository",
         {"type": "object", "properties": {}},
-        handle_list_files
+        handle_list_repository_file_tree
     )
 
     # 3. read_file
