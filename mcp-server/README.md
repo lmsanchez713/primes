@@ -39,9 +39,11 @@ If you want to use this server with Claude Desktop, add the following to your `c
 ```json
 {
   "mcpServers": {
-    "python-mcp-server": {
+    "primes": {
       "command": "python",
-      "args": ["/absolute/path/to/mcp-server/python/main.py"]
+      "args": [
+        "/absolute/path/to/mcp-server/python/main.py"
+      ]
     }
   }
 }
