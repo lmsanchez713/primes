@@ -75,7 +75,7 @@ def register_all_tools(server):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Absolute or relative path"}
+                "path": { "type": "string", "description": "Absolute or relative path" }
             },
             "required": ["path"]
         },
@@ -113,7 +113,33 @@ def register_all_tools(server):
         handle_show_file_tree
     )
 
-    # 3. read_file
+    # 3. list_files (non-recursive)
+    def handle_list_files(args: Dict[str, Any]):
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Base directory not set. Call set_current_path first.", True)
+        try:
+            if not base_path.is_dir():
+                return mcp_text(f"Base path is not a directory: {base_path}", True)
+            items = []
+            for entry in base_path.iterdir():
+                items.append(entry.name)
+            
+            if not items:
+                return mcp_text("Directory is empty.")
+            
+            return mcp_text("\n".join(sorted(items)))
+        except Exception as e:
+            return mcp_text(f"Error listing directory contents: {str(e)}", True)
+
+    server.register_tool(
+        "list_files",
+        "Lists files and folders in the current directory (non-recursive)",
+        {"type": "object", "properties": {}},
+        handle_list_files
+    )
+
+    # 4. read_file
     def handle_read_file(args: Dict[str, Any]):
         rel_path_str = args.get("path")
         if not rel_path_str:
@@ -137,14 +163,14 @@ def register_all_tools(server):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Relative path from base directory"}
+                "path": { "type": "string", "description": "Relative path from base directory" }
             },
             "required": ["path"]
         },
         handle_read_file
     )
 
-    # 4. write_file
+    # 5. write_file
     def handle_write_file(args: Dict[str, Any]):
         rel_path_str = args.get("path")
         content = args.get("content")
@@ -168,15 +194,15 @@ def register_all_tools(server):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string"},
-                "content": {"type": "string"}
+                "path": { "type": "string" },
+                "content": { "type": "string" }
             },
             "required": ["path", "content"]
         },
         handle_write_file
     )
 
-    # 5. delete_file
+    # 6. delete_file
     def handle_delete_file(args: Dict[str, Any]):
         rel_path_str = args.get("path")
         if not rel_path_str:
@@ -200,7 +226,7 @@ def register_all_tools(server):
         "Deletes a file from the base directory",
         {
             "type": "object",
-            "properties": {"path": {"type": "string"}},
+            "properties": { "path": { "type": "string" } },
             "required": ["path"]
         },
         handle_delete_file
