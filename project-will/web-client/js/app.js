@@ -1,106 +1,89 @@
-import { Shader, Buffer, Texture, Geometry, Material, Entity, AmbientLight, PointLight, DirectionalLight } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity } from './ogl2.js';
 import { Engine } from './engine.js';
-import { Mat4 } from './math.js';
-import { CameraController } from './camera_controller.js';
-
-async function loadShaderSource(path) {
-    const response = await fetch(path);
-    return await response.text();
-}
 
 let engine;
-let gl;
-let shader;
-let woodTexture;
-let mainMaterial;
-let quadGeo;
 
+/**
+ * Initializes the application, setting up the engine, 
+ * a scene with a textured quad, and an orthogonal camera.
+ */
 export async function InitApp() {
     const canvas = document.getElementById('glCanvas');
     engine = new Engine(canvas);
     if (!engine.gl) return;
-    gl = engine.gl;
+    const gl = engine.gl;
 
-    const vsSource = await loadShaderSource('shaders/vertex.glsl');
-    const fsSource = await loadShaderSource('shaders/fragment.glsl');
-    shader = new Shader(gl, vsSource, fsSource);
-    woodTexture = new Texture(gl, 'img/lumi.png');
-    mainMaterial = new Material(gl, shader);
-    mainMaterial.setTexture('uSampler', woodTexture);
-    quadGeo = createQuadGeometry();
-    setupResize(canvas);
-    setupControls();
-    loadBaseScene();
+    // 1. Load Shader
+    const vsSource = await (await fetch('glsl/vertex.glsl')).text();
+    const fsSource = await (await fetch('glsl/fragment.glsl')).text();
+    const shader = new Shader(gl, vsSource, fsSource);
+
+    // 2. Load Texture (using lumi.png as the pre-loaded asset)
+    const texture = new Texture(gl, 'img/lumi.png');
+
+    // 3. Create Quad Geometry (Two Triangles)
+    const quadGeo = createQuadGeometry(gl, shader);
+
+    // 4. Create Material with the loaded texture
+    const material = new Material(gl, shader);
+    material.setTexture('uSampler', texture);
+
+    // 5. Create and add an Entity (the Quad) to the Scene
+    const quadEntity = new Entity(quadGeo, material);
+    engine.scene.add(quadEntity);
+
+    // 6. Set up Orthogonal Camera
+    engine.setProjectionMode('ortho');
+    // Define orthographic bounds: left, right, bottom, top, near, far
+    engine.camera.updateOrthographic(-2, 2, -2, 2, 0.1, 100);
+    engine.camera.updateView();
+
+    // 7. Start the engine loop
     engine.start();
 }
 
-function clearCurrentScene() {
-    const SceneClass = Object.getPrototypeOf(engine.scene).constructor;
-    engine.scene = new SceneClass(gl);
-}
+/**
+ * Helper to create a simple quad geometry
+ */
+function createQuadGeometry(gl, shader) {
+    // Vertices for two triangles forming a quad
+    const vertices = new Float32Array([
+        -0.5, 0.5, 0.0, // v0
+        0.5, 0.5, 0.0, // v1
+        -0.5, -0.5, 0.0, // v2
+        0.5, -0.5, 0.0, // v3
+        -0.5, -0.5, 0.0, // v4
+        0.5, 0.5, 0.0  // v5
+    ]);
 
-function loadBaseScene() {
-    clearCurrentScene();
-    const ent = new Entity(quadGeo, mainMaterial);
-    ent.transform = new Mat4();
-    Mat4.translation(0, 0, -3, ent.transform);
-    engine.scene.add(ent);
-    engine.scene.add(new AmbientLight([0.2, 0.2, 0.3]));
-    const pl = new PointLight([1.0, 1.0, 1.0]);
-    pl.transform = new Mat4();
-    Mat4.translation(1, 1, -1, pl.transform);
-    engine.scene.add(pl);
-    if (!engine.controller) engine.setController(new CameraController(engine.camera));
-}
+    // Texture coordinates
+    const texCoords = new Float32Array([
+        0.0, 1.0, // v0
+        1.0, 1.0, // v1
+        0.0, 0.0, // v2
+        1.0, 0.0, // v3
+        0.0, 0.0, // v4
+        1.0, 1.0  // v5
+    ]);
 
-function loadHierarchyScene() {
-    clearCurrentScene();
-    const pivot = new Entity();
-    engine.scene.add(pivot);
-    const child1 = new Entity(quadGeo, mainMaterial);
-    child1.transform = new Mat4();
-    Mat4.translation(-2, 0, -5, child1.transform);
-    pivot.add(child1);
-    engine.scene.add(new AmbientLight([0.1, 0.1, 0.1]));
-    if (!engine.controller) engine.setController(new CameraController(engine.camera));
-}
+    // Normals (pointing towards the camera)
+    const normals = new Float32Array([
+        0, 0, 1, 0, 0, 1, 0, 0, 1,
+        0, 0, 1, 0, 0, 1, 0, 0, 1
+    ]);
 
-function loadLightingLab() {
-    clearCurrentScene();
-    const ent = new Entity(quadGeo, mainMaterial);
-    ent.transform = new Mat4();
-    Mat4.translation(0, 0, -3, ent.transform);
-    engine.scene.add(ent);
-    engine.scene.add(new AmbientLight([0.3, 0.3, 0.3]));
-}
+    // Tangents (for normal mapping support)
+    const tangents = new Float32Array([
+        1, 0, 0, 1, 0, 0, 1, 0, 0,
+        1, 0, 0, 1, 0, 0, 1, 0, 0
+    ]);
 
-function setupResize(canvas) {
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        gl.viewport(0, 0, canvas.width, canvas.height);
-    });
-}
-
-function setupControls() {
-    window.addEventListener('keydown', (e) => {
-        const key = e.key.toLowerCase();
-        if (key === '1') loadHierarchyScene();
-        else if (key === '2') loadLightingLab();
-        else if (key === '3') loadBaseScene();
-    });
-}
-
-function createQuadGeometry() {
-    const vertices = new Float32Array([0.5, 0.5, 0, -0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, -0.5, 0, -0.5, -0.5, 0]);
-    const texCoords = new Float32Array([1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1]);
-    const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
-    const tangents = new Float32Array([1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1]);
     const geo = new Geometry(gl, gl.TRIANGLES);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 4);
     geo.setCount(6);
+
     return geo;
 }
