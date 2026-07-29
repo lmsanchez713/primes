@@ -80,22 +80,22 @@ export async function InitApp() {
     const quadEntity = new Entity(quadGeo, material);
     engine.scene.add(quadEntity);
 
-    // 6. Add Lighting
-    // Add a Directional Light
-    const dirLight = new DirectionalLight([1.0, 1.0, 1.0], [-0.5, -1.0, -0.5]);
-    engine.scene.add(dirLight);
+    //const ambientLight = new Entity();
+    //ambientLight.lightType = 'Ambient';
+    //ambientLight.color = [1.0, 1.0, 1.0]; // White light
+    //engine.scene.add(ambientLight);
 
-    // Add a Point Light
-    const pointLight = new PointLight([1.0, 0.0, 0.0]); // Red point light
-    Mat4.translation(0, 0, 2, pointLight.transform);
-    engine.scene.add(pointLight);
+    const sunLight = new DirectionalLight(gl); // Assuming DirectionalLight is a subclass of Entity
+    sunLight.color = [1.0, 1.0, 1.0];
+    sunLight.direction = [-0.5, -0.5, -1.0];
+    engine.scene.add(sunLight);
 
     // 7. Set up Camera
-    engine.setProjectionMode('perspective');
-    engine.camera.updateProjection(45, canvas.width / canvas.height, 0.1, 100);
+    engine.setProjectionMode('ortho');
+    engine.camera.updateOrthographic(-1, 1, 1, -1, 0.1, 100);
     engine.camera.updateView();
 
-    engine.setController(new CameraController(engine.camera));
+    // engine.setController(new CameraController(engine.camera));
 
     // 8. Start the engine loop
     engine.start();
