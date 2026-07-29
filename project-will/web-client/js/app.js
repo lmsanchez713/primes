@@ -35,7 +35,7 @@ export async function InitApp() {
     // 6. Set up Orthogonal Camera
     engine.setProjectionMode('ortho');
     // Define orthographic bounds: left, right, bottom, top, near, far
-    engine.camera.updateOrthographic(-2, 2, -2, 2, 0.1, 100);
+    engine.camera.updateOrthographic(-1, 1, 1, -1, 0.1, 100);
     engine.camera.updateView();
 
     // 7. Start the engine loop
@@ -48,22 +48,22 @@ export async function InitApp() {
 function createQuadGeometry(gl, shader) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
-        -0.5, 0.5, 0.0, // v0
-        0.5, 0.5, 0.0, // v1
-        -0.5, -0.5, 0.0, // v2
-        0.5, -0.5, 0.0, // v3
-        -0.5, -0.5, 0.0, // v4
-        0.5, 0.5, 0.0  // v5
+        -1.0, -1.0, 0.0, // v0
+        1.0, 1.0, 0.0, // v1
+        1.0, -1.0, 0.0, // v2
+        -1.0, -1.0, 0.0, // v3
+        -1.0, 1.0, 0.0, // v4
+        1.0, 1.0, 0.0  // v5
     ]);
 
     // Texture coordinates
     const texCoords = new Float32Array([
         0.0, 1.0, // v0
-        1.0, 1.0, // v1
-        0.0, 0.0, // v2
-        1.0, 0.0, // v3
+        1.0, 0.0, // v1
+        1.0, 1.0, // v2
+        0.0, 1.0, // v3
         0.0, 0.0, // v4
-        1.0, 1.0  // v5
+        1.0, 0.0  // v5
     ]);
 
     // Normals (pointing towards the camera)
