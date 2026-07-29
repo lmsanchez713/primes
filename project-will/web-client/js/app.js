@@ -1,5 +1,6 @@
-import { Shader, Buffer, Texture, Geometry, Material, Entity } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight } from './ogl2.js';
 import { Engine } from './engine.js';
+import { Mat4 } from './math.js';
 
 let engine;
 
@@ -18,27 +19,36 @@ export async function InitApp() {
     const fsSource = await (await fetch('glsl/fragment.glsl')).text();
     const shader = new Shader(gl, vsSource, fsSource);
 
-    // 2. Load Texture (using lumi.png as the pre-loaded asset)
+    // 2. Load Texture
     const texture = new Texture(gl, 'img/lumi.png');
 
-    // 3. Create Quad Geometry (Two Triangles)
+    // 3. Create Quad Geometry
     const quadGeo = createQuadGeometry(gl, shader);
 
-    // 4. Create Material with the loaded texture
+    // 4. Create Material
     const material = new Material(gl, shader);
     material.setTexture('uSampler', texture);
 
-    // 5. Create and add an Entity (the Quad) to the Scene
+    // 5. Create and add the Quad Entity
     const quadEntity = new Entity(quadGeo, material);
     engine.scene.add(quadEntity);
 
-    // 6. Set up Orthogonal Camera
-    engine.setProjectionMode('ortho');
-    // Define orthographic bounds: left, right, bottom, top, near, far
-    engine.camera.updateOrthographic(-1, 1, 1, -1, 0.1, 100);
+    // 6. Add Lighting
+    // Add a Directional Light
+    const dirLight = new DirectionalLight([1.0, 1.0, 1.0], [-0.5, -1.0, -0.5]);
+    engine.scene.add(dirLight);
+
+    // Add a Point Light
+    const pointLight = new PointLight([1.0, 0.0, 0.0]); // Red point light
+    Mat4.translation(0, 0, 2, pointLight.transform);
+    engine.scene.add(pointLight);
+
+    // 7. Set up Camera
+    engine.setProjectionMode('perspective');
+    engine.camera.updateProjection(45, canvas.width / canvas.height, 0.1, 100);
     engine.camera.updateView();
 
-    // 7. Start the engine loop
+    // 8. Start the engine loop
     engine.start();
 }
 
@@ -49,11 +59,11 @@ function createQuadGeometry(gl, shader) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
         -1.0, -1.0, 0.0, // v0
-        1.0, 1.0, 0.0, // v1
-        1.0, -1.0, 0.0, // v2
+         1.0,  1.0, 0.0, // v1
+         1.0, -1.0, 0.0, // v2
         -1.0, -1.0, 0.0, // v3
-        -1.0, 1.0, 0.0, // v4
-        1.0, 1.0, 0.0  // v5
+        -1.0,  1.0, 0.0, // v4
+         1.0,  1.0, 0.0  // v5
     ]);
 
     // Texture coordinates
