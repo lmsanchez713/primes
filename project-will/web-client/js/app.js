@@ -1,8 +1,55 @@
 import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight } from './ogl2.js';
 import { Engine } from './engine.js';
 import { Mat4 } from './math.js';
+import { CameraController } from './camera_controller.js';
 
 let engine;
+
+/**
+ * Helper to create a simple quad geometry
+ */
+function createQuadGeometry(gl, shader) {
+    // Vertices for two triangles forming a quad
+    const vertices = new Float32Array([
+        -1.0, -1.0, 0.0, // v0
+        1.0, 1.0, 0.0, // v1
+        1.0, -1.0, 0.0, // v2
+        -1.0, -1.0, 0.0, // v3
+        -1.0, 1.0, 0.0, // v4
+        1.0, 1.0, 0.0  // v5
+    ]);
+
+    // Texture coordinates
+    const texCoords = new Float32Array([
+        0.0, 1.0, // v0
+        1.0, 0.0, // v1
+        1.0, 1.0, // v2
+        0.0, 1.0, // v3
+        0.0, 0.0, // v4
+        1.0, 0.0  // v5
+    ]);
+
+    // Normals (pointing towards the camera)
+    const normals = new Float32Array([
+        0, 0, 1, 0, 0, 1, 0, 0, 1,
+        0, 0, 1, 0, 0, 1, 0, 0, 1
+    ]);
+
+    // Tangents (for normal mapping support)
+    const tangents = new Float32Array([
+        1, 0, 0, 1, 0, 0, 1, 0, 0,
+        1, 0, 0, 1, 0, 0, 1, 0, 0
+    ]);
+
+    const geo = new Geometry(gl, gl.TRIANGLES);
+    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
+    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
+    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
+    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 4);
+    geo.setCount(6);
+
+    return geo;
+}
 
 /**
  * Initializes the application, setting up the engine, 
@@ -48,52 +95,8 @@ export async function InitApp() {
     engine.camera.updateProjection(45, canvas.width / canvas.height, 0.1, 100);
     engine.camera.updateView();
 
+    engine.setController(new CameraController(engine.camera));
+
     // 8. Start the engine loop
     engine.start();
-}
-
-/**
- * Helper to create a simple quad geometry
- */
-function createQuadGeometry(gl, shader) {
-    // Vertices for two triangles forming a quad
-    const vertices = new Float32Array([
-        -1.0, -1.0, 0.0, // v0
-         1.0,  1.0, 0.0, // v1
-         1.0, -1.0, 0.0, // v2
-        -1.0, -1.0, 0.0, // v3
-        -1.0,  1.0, 0.0, // v4
-         1.0,  1.0, 0.0  // v5
-    ]);
-
-    // Texture coordinates
-    const texCoords = new Float32Array([
-        0.0, 1.0, // v0
-        1.0, 0.0, // v1
-        1.0, 1.0, // v2
-        0.0, 1.0, // v3
-        0.0, 0.0, // v4
-        1.0, 0.0  // v5
-    ]);
-
-    // Normals (pointing towards the camera)
-    const normals = new Float32Array([
-        0, 0, 1, 0, 0, 1, 0, 0, 1,
-        0, 0, 1, 0, 0, 1, 0, 0, 1
-    ]);
-
-    // Tangents (for normal mapping support)
-    const tangents = new Float32Array([
-        1, 0, 0, 1, 0, 0, 1, 0, 0,
-        1, 0, 0, 1, 0, 0, 1, 0, 0
-    ]);
-
-    const geo = new Geometry(gl, gl.TRIANGLES);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 4);
-    geo.setCount(6);
-
-    return geo;
 }
