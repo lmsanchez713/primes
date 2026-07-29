@@ -21,6 +21,7 @@ export class Engine {
         this.controller = null;
         this.isRunning = false;
         this.projectionMode = 'perspective'; // 'perspective' or 'ortho'
+        this.lastTimestamp = 0;
     }
 
     setController(controller) {
@@ -45,22 +46,25 @@ export class Engine {
         }
     }
 
-    _loop() {
+    _loop(timestamp) {
         if (!this.isRunning) return;
 
-        this.update();
+        const deltaTime = this.lastTimestamp ? (timestamp - this.lastTimestamp) / 1000 : 0;
+        this.lastTimestamp = timestamp;
+
+        this.update(deltaTime);
         this.render();
 
         requestAnimationFrame(this._loop);
     }
 
-    update() {
-        // Logic updates (physics, input, etc.) could go here
+    update(deltaTime) {
         if (this.controller) {
-            this.controller.update();
+            this.controller.update(deltaTime);
         } else {
             this.camera.updateView();
         }
+        this.scene.update(deltaTime);
     }
 
     render() {

@@ -3,6 +3,8 @@ export class Texture {
         this.gl = gl;
         this.texture = gl.createTexture();
         this.isReady = false;
+        this.width = 0;
+        this.height = 0;
         this.promise = this._load(url);
     }
 
@@ -11,6 +13,8 @@ export class Texture {
             const gl = this.gl;
             const image = new Image();
             image.onload = () => {
+                this.width = image.width;
+                this.height = image.height;
                 gl.bindTexture(gl.TEXTURE_2D, this.texture);
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

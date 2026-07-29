@@ -12,6 +12,10 @@ export class Scene {
         this.root.add(entity);
     }
 
+    update(deltaTime) {
+        this.root.update(deltaTime);
+    }
+
     render(viewMatrix, projectionMatrix) {
         const gl = this.gl;
         const lights = [];

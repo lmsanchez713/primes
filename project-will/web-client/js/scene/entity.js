@@ -13,6 +13,9 @@ export class Entity {
         this.lightType = null; 
         this.color = [1, 1, 1];
         this.direction = [-0.5, -1.0, -0.5]; // Default direction for directional light
+        
+        // Sprite component
+        this.sprite = null;
     }
 
     add(child) {
@@ -35,6 +38,16 @@ export class Entity {
         return true;
     }
 
+    update(deltaTime) {
+        if (this.sprite) {
+            this.sprite.update(deltaTime);
+        }
+
+        for (const child of this.children) {
+            child.update(deltaTime);
+        }
+    }
+
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
@@ -44,6 +57,14 @@ export class Entity {
             this.material.setUniform('u_viewMatrix', viewMatrix);
             this.material.setUniform('u_projectionMatrix', projectionMatrix);
             
+            // Set default UV transform in case it's not set (for non-sprites)
+            this.material.setUniform('u_uvTransform', [0, 0, 1, 1]);
+
+            if (this.sprite) {
+                const uv = this.sprite.getUVRect();
+                this.material.setUniform('u_uvTransform', [uv.u, uv.v, uv.w, uv.h]);
+            }
+
             if (!this.lightType && lights.length > 0) {
                 const count = Math.min(lights.length, 4);
                 this.material.setUniform('u_lightsCount', count);
