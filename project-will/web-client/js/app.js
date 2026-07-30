@@ -23,12 +23,12 @@ function createQuadGeometry(gl, shader) {
 
     // Texture coordinates
     const texCoords = new Float32Array([
-        0.0, 1.0, // v0
-        1.0, 0.0, // v1
-        1.0, 1.0, // v2
-        0.0, 1.0, // v3
-        0.0, 0.0, // v4
-        1.0, 0.0  // v5
+        0.0, 0.0, // v0
+        1.0, 1.0, // v1
+        1.0, 0.0, // v2
+        0.0, 0.0, // v3
+        0.0, 1.0, // v4
+        1.0, 1.0  // v5
     ]);
 
     // Normals (pointing towards the camera)
@@ -78,7 +78,7 @@ export async function InitApp() {
 
     // 4. Create Material
     const material = new Material(gl, shader);
-    material.setTexture('uSampler', wood_texture);
+    material.setTexture('uSampler', lumi_texture);
 
     // 5. Create and add the Quad Entity
     const quadEntity = new Entity(quadGeo, material);
