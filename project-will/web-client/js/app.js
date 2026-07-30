@@ -69,7 +69,8 @@ export async function InitApp() {
     const shader = new Shader(gl, vsSource, fsSource);
 
     // 2. Load Texture
-    const texture = new Texture(gl, 'img/lumi.png');
+    const lumi_texture = new Texture(gl, 'img/lumi.png');
+    const wood_texture = new Texture(gl, 'img/wood-box.png');
     const sprite_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01.png');
 
     // 3. Create Quad Geometry
@@ -77,7 +78,7 @@ export async function InitApp() {
 
     // 4. Create Material
     const material = new Material(gl, shader);
-    material.setTexture('uSampler', texture);
+    material.setTexture('uSampler', wood_texture);
 
     // 5. Create and add the Quad Entity
     const quadEntity = new Entity(quadGeo, material);

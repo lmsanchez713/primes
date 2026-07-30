@@ -22,6 +22,13 @@ export class Engine {
         this.isRunning = false;
         this.projectionMode = 'perspective'; // 'perspective' or 'ortho'
         this.lastTimestamp = 0;
+
+        window.addEventListener('resize', () => {
+            // Update the drawing buffer to match the CSS display size
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        });
+
     }
 
     setController(controller) {
@@ -69,6 +76,10 @@ export class Engine {
 
     render() {
         const gl = this.gl;
+
+        // 1. Update the viewport to match the canvas's internal drawing buffer size
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -78,7 +89,6 @@ export class Engine {
         if (this.projectionMode === 'perspective') {
             this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
         } else if (this.projectionMode === 'ortho') {
-            // Use a fixed orthographic view size for now
             const size = 2.0;
             const left = -aspect * size / 2;
             const right = aspect * size / 2;
@@ -89,4 +99,5 @@ export class Engine {
 
         this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
     }
+
 }
