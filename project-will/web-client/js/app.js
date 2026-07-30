@@ -2,6 +2,8 @@ import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, 
 import { Engine } from './engine.js';
 import { Mat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
+import { TextureSheet } from './core/texture-sheet.js';
+import { Sprite } from './scene/sprite.js';
 
 let engine;
 
@@ -68,6 +70,7 @@ export async function InitApp() {
 
     // 2. Load Texture
     const texture = new Texture(gl, 'img/lumi.png');
+    const sprite_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01.png');
 
     // 3. Create Quad Geometry
     const quadGeo = createQuadGeometry(gl, shader);
@@ -84,6 +87,29 @@ export async function InitApp() {
     //ambientLight.lightType = 'Ambient';
     //ambientLight.color = [1.0, 1.0, 1.0]; // White light
     //engine.scene.add(ambientLight);
+
+    // 1. Setup TextureSheet
+    const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
+
+    // 2. Create Sprite for Fire
+    const fireSprite = new Sprite(sheet);
+    fireSprite.addState('loop', [0, 1, 2], 1.0); // 3 frames, 1 sec each
+
+    // 3. Create Sprite for Creature
+    const creatureSprite = new Sprite(sheet);
+    // Facing right, walking (indices 10, 11, 12)
+    creatureSprite.addState('idle', [5, 6], 1.0);
+    creatureSprite.addState('walk_right', [10, 11, 12], 0.2);
+    creatureSprite.setState('walk_right');
+
+    // 4. Attach to Entity
+    const fireEntity = new Entity(quadGeo, material);
+    fireEntity.sprite = fireSprite;
+    //engine.scene.add(fireEntity);
+
+    //const creatureEntity = new Entity(quadGeo, material);
+    //creatureEntity.sprite = creatureSprite;
+    //engine.scene.add(creatureEntity);
 
     const sunLight = new DirectionalLight(gl); // Assuming DirectionalLight is a subclass of Entity
     sunLight.color = [1.0, 1.0, 1.0];
