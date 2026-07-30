@@ -70,19 +70,19 @@ export async function InitApp() {
 
     // 2. Load Texture
     const lumi_texture = new Texture(gl, 'img/lumi.png');
-    const wood_texture = new Texture(gl, 'img/wood-box.png');
+    const wood_box_texture = new Texture(gl, 'img/wood-box.png');
     const sprite_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01.png');
 
     // 3. Create Quad Geometry
-    const quadGeo = createQuadGeometry(gl, shader);
+    const square_geometry = createQuadGeometry(gl, shader);
 
     // 4. Create Material
-    const material = new Material(gl, shader);
-    material.setTexture('uSampler', lumi_texture);
+    const wood_box_material = new Material(gl, shader);
+    wood_box_material.setTexture('uSampler', wood_box_texture);
 
     // 5. Create and add the Quad Entity
-    const quadEntity = new Entity(quadGeo, material);
-    engine.scene.add(quadEntity);
+    const square_entity = new Entity(square_geometry, wood_box_material);
+    engine.scene.add(square_entity);
 
     //const ambientLight = new Entity();
     //ambientLight.lightType = 'Ambient';
@@ -104,7 +104,7 @@ export async function InitApp() {
     creatureSprite.setState('walk_right');
 
     // 4. Attach to Entity
-    const fireEntity = new Entity(quadGeo, material);
+    const fireEntity = new Entity(square_geometry, wood_box_material);
     fireEntity.sprite = fireSprite;
     //engine.scene.add(fireEntity);
 
