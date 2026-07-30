@@ -94,7 +94,8 @@ export class Engine {
             const right = aspect * size / 2;
             const bottom = -size / 2;
             const top = size / 2;
-            this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
+            // this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
+            this.camera.updateOrthographic(-1.0, 1.0, -1.0, 1.0, 0.1, 100);
         }
 
         this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
