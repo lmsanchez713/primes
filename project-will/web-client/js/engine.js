@@ -78,6 +78,8 @@ export class Engine {
         const gl = this.gl;
 
         // 1. Update the viewport to match the canvas's internal drawing buffer size
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
