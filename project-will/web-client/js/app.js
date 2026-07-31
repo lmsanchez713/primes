@@ -72,6 +72,7 @@ export async function InitApp() {
     const lumi_texture = new Texture(gl, 'img/lumi.png');
     const wood_box_texture = new Texture(gl, 'img/wood-box.png');
     const tile_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01.png');
+    const creatures1_sheet_texture = new Texture(gl, 'img/sprites/otsp_creatures_01.png');
 
     // 3. Create Quad Geometry
     const square_geometry = createQuadGeometry(gl, shader);
@@ -95,7 +96,20 @@ export async function InitApp() {
     tile_sheet_sprite.addState('spritez', arr, 0.25); // 3 frames, 1 sec each
     const tile_entity = new Entity(square_geometry, tile_sheet_material);
     tile_entity.sprite = tile_sheet_sprite;
-    engine.scene.add(tile_entity);
+    //engine.scene.add(tile_entity);
+
+    const creatures1_sheet_material = new Material(gl, shader);
+    creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_texture);
+    const creatures1_sheet = new TextureSheet(creatures1_sheet_texture, 32, 32);
+    const creatures1_sheet_sprite = new Sprite(creatures1_sheet);
+    const arrr = [];
+    for (let c = 16 * 64 - 1; c >= 16 * 32; c--) {
+        arrr.push(c);
+    }
+    creatures1_sheet_sprite.addState('spritez', arrr, 0.25); // 3 frames, 1 sec each
+    const creatures1_entity = new Entity(square_geometry, creatures1_sheet_material);
+    creatures1_entity.sprite = creatures1_sheet_sprite;
+    engine.scene.add(creatures1_entity);
 
     //const ambientLight = new Entity();
     //ambientLight.lightType = 'Ambient';
