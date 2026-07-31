@@ -1,4 +1,4 @@
-import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight, AmbientLight } from './ogl2.js';
 import { Engine } from './engine.js';
 import { Mat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
@@ -111,10 +111,18 @@ export async function InitApp() {
     creatures1_entity.sprite = creatures1_sheet_sprite;
     engine.scene.add(creatures1_entity);
 
-    //const ambientLight = new Entity();
-    //ambientLight.lightType = 'Ambient';
-    //ambientLight.color = [1.0, 1.0, 1.0]; // White light
+    //const ambientLight = new AmbientLight([1.0, 1.0, 1.0]); // White light
     //engine.scene.add(ambientLight);
+
+    const sunLight = new DirectionalLight();
+    sunLight.color = [1.0, 1.0, 1.0];
+    sunLight.direction = [0.0, 0.0, -1.0];
+    engine.scene.add(sunLight);
+
+    // const sunLight = new DirectionalLight(gl); // Assuming DirectionalLight is a subclass of Entity
+    // sunLight.color = [1.0, 1.0, 1.0];
+    // sunLight.direction = [-0.5, -0.5, -1.0];
+    // engine.scene.add(sunLight);
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
@@ -138,11 +146,6 @@ export async function InitApp() {
     //const creatureEntity = new Entity(quadGeo, material);
     //creatureEntity.sprite = creatureSprite;
     //engine.scene.add(creatureEntity);
-
-    const sunLight = new DirectionalLight(gl); // Assuming DirectionalLight is a subclass of Entity
-    sunLight.color = [1.0, 1.0, 1.0];
-    sunLight.direction = [-0.5, -0.5, -1.0];
-    engine.scene.add(sunLight);
 
     // 7. Set up Camera
     engine.setProjectionMode('ortho');

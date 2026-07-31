@@ -70,19 +70,19 @@ export class Entity {
                 this.material.setUniform('u_lightsCount', count);
                 for (let i = 0; i < count; i++) {
                     const light = lights[i];
-                    const prefix = `u_lights[${i}]`;
-                    this.material.setUniform(`${prefix}.type`, light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2));
-                    this.material.setUniform(`${prefix}.color`, light.color);
+                    const type = light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2);
+                    this.material.setUniform(`u_lightTypes[${i}]`, type);
+                    this.material.setUniform(`u_lightColors[${i}]`, light.color);
+                    
                     if (light.type !== LightType.AMBIENT) {
                         const pos = [
                             light.worldMatrix.data[12],
                             light.worldMatrix.data[13],
                             light.worldMatrix.data[14]
                         ];
-                        this.material.setUniform(`${prefix}.position`, pos);
+                        this.material.setUniform(`u_lightPositions[${i}]`, pos);
                         if (light.type === LightType.DIRECTIONAL) {
-                            const dir = light.direction;
-                            this.material.setUniform(`${prefix}.direction`, dir);
+                            this.material.setUniform(`u_lightDirections[${i}]`, light.direction);
                         }
                     }
                 }

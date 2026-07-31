@@ -10,15 +10,11 @@
     uniform bool uUseNormalMap;
     uniform vec4 u_uvTransform; // x: offset_u, y: offset_v, z: scale_u, w: scale_v
 
-    struct Light {
-        int type; // 0: ambient, 1: directional, 2: point
-        vec3 color;
-        vec3 position;
-        vec3 direction;
-    };
-
     uniform int u_lightsCount;
-    uniform Light u_lights[4];
+    uniform int u_lightTypes[4];
+    uniform vec3 u_lightColors[4];
+    uniform vec3 u_lightPositions[4];
+    uniform vec3 u_lightDirections[4];
 
     void main() {
         vec2 uv = vTextureCoord * u_uvTransform.zw + u_uvTransform.xy;
@@ -35,18 +31,19 @@
 
         for (int i = 0; i < 4; i++) {
             if (i >= u_lightsCount) break;
-            if (u_lights[i].type == 1) { // Directional
-                vec3 lightDir = normalize(-u_lights[i].direction);
+            
+            if (u_lightTypes[i] == 1) { // Directional
+                vec3 lightDir = normalize(-u_lightDirections[i]);
                 float diff = max(dot(normal, lightDir), 0.0);
-                totalLight += u_lights[i].color * diff;
-            } else if (u_lights[i].type == 2) { // Point
-                vec3 lightDir = normalize(u_lights[i].position - vWorldPosition);
+                totalLight += u_lightColors[i] * diff;
+            } else if (u_lightTypes[i] == 2) { // Point
+                vec3 lightDir = normalize(u_lightPositions[i] - vWorldPosition);
                 float diff = max(dot(normal, lightDir), 0.0);
-                float dist = length(u_lights[i].position - vWorldPosition);
+                float dist = length(u_lightPositions[i] - vWorldPosition);
                 float attenuation = 1.0 / (1.0 + 0.1 * dist + 0.01 * dist * dist);
-                totalLight += u_lights[i].color * diff * attenuation;
-            } else if (u_lights[i].type == 0) { // Ambient light entity
-                 totalLight += u_lights[i].color;
+                totalLight += u_lightColors[i] * diff * attenuation;
+            } else if (u_lightTypes[i] == 0) { // Ambient light
+                 totalLight += u_lightColors[i];
             }
         }
         gl_FragColor = vec4(texColor.rgb * totalLight, texColor.a);
