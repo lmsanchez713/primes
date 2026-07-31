@@ -71,8 +71,8 @@ export async function InitApp() {
     // 2. Load Texture
     const lumi_texture = new Texture(gl, 'img/lumi.png');
     const wood_box_texture = new Texture(gl, 'img/wood-box.png');
-    const tile_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01.png');
-    const creatures1_sheet_texture = new Texture(gl, 'img/sprites/otsp_creatures_01.png');
+    const tile_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01_alpha.png');
+    const creatures1_sheet_texture = new Texture(gl, 'img/sprites/otsp_creatures_01_alpha.png');
 
     // 3. Create Quad Geometry
     const square_geometry = createQuadGeometry(gl, shader);
