@@ -85,17 +85,26 @@ export class Engine {
 
         // Update projection based on mode and canvas aspect ratio
         const aspect = this.canvas.width / this.canvas.height;
+        let xfactor, yfactor;
+        if (this.canvas.width > this.canvas.height) {
+            xfactor = aspect;
+            yfactor = 1;
+        }
+        else {
+            xfactor = 1;
+            yfactor = 1 / aspect;
+        }
 
         if (this.projectionMode === 'perspective') {
             this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
         } else if (this.projectionMode === 'ortho') {
             const size = 2.0;
-            const left = -aspect * size / 2;
-            const right = aspect * size / 2;
-            const bottom = -size / 2;
-            const top = size / 2;
-            // this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
-            this.camera.updateOrthographic(-1.0, 1.0, -1.0, 1.0, 0.1, 100);
+            const left = -xfactor * size / 2;
+            const right = xfactor * size / 2;
+            const bottom = -yfactor * size / 2;
+            const top = yfactor * size / 2;
+            this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
+            // this.camera.updateOrthographic(-1.0, 1.0, -1.0, 1.0, 0.1, 100);
         }
 
         this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix());
