@@ -119,11 +119,6 @@ export async function InitApp() {
     sunLight.direction = [0.0, 0.0, -1.0];
     engine.scene.add(sunLight);
 
-    // const sunLight = new DirectionalLight(gl); // Assuming DirectionalLight is a subclass of Entity
-    // sunLight.color = [1.0, 1.0, 1.0];
-    // sunLight.direction = [-0.5, -0.5, -1.0];
-    // engine.scene.add(sunLight);
-
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
 
