@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 import requests
@@ -270,6 +271,183 @@ def register_all_tools(server):
         },
         handle_get_web_page
     )
+
+    # 6. cmake_build (Ported from C++)
+    def handle_cmake_build(args: Dict[str, Any]):
+        import subprocess
+        base_path = get_base_path()
+        if not base_path:
+            return mcp_text("Repo path not set. Call set_current_path first.", True)
+
+        build_type = args.get("build_type", "Release")
+        targets = args.get("targets", [])
+        if not isinstance(targets, list):
+            targets = []
+
+        build_dir = Path(r"C:\primes\out\build")
+        cmake_exe = Path(r"C:\code\cmake\bin\cmake.exe")
+
+        if not cmake_exe.exists():
+            return mcp_text(f"CMake executable not found at {cmake_exe}", True)
+
+        config_cmd = [
+            str(cmake_exe),
+            "-B", str(build_dir),
+            f"-DCMAKE_BUILD_TYPE={build_type}",
+            str(base_path)
+        ]
+
+        try:
+            config_proc = subprocess.run(config_cmd, capture_output=True, text=True, shell=False)
+            config_output = config_proc.stdout + config_proc.stderr
+            
+            if "Error" in config_output or "error" in config_output:
+                return mcp_text(f"CMake configuration failed:\n{config_output}", True)
+
+            build_cmd = [str(cmake_exe), "--build", str(build_dir)]
+            for target in targets:
+                build_cmd.extend(["--target", str(target)])
+
+            build_proc = subprocess.run(build_cmd, capture_output=True, text=True, shell=False)
+            build_output = build_proc.stdout + build_proc.stderr
+
+            if "Error" in build_output or "error" in build_output:
+                return mcp_text(f"CMake build failed:\n{build_output}", True)
+
+            return mcp_text(f"Build completed successfully.\n{build_output}")
+
+        except subprocess.CalledProcessError as e:
+            return mcp_text(f"Subprocess error during cmake build: {str(e)}", True)
+        except Exception as e:
+            return mcp_text(f"Unexpected error during cmake build: {str(e)}", True)
+
+    server.register_tool(
+        "cmake_build",
+        "Executa o build do CMake para o repositÃ³rio. Configura e compila os targets especificados.",
+        {
+            "type": "object",
+            "properties": {
+                "build_type": { "type": "string", "description": "Tipo de build (Debug, Release, RelWithDebInfo, MinSizeRel)" },
+                "targets": { "type": "array", "items": { "type": "string" }, "description": "Lista de targets para build. Se vazio, builda tudo." }
+            },
+            "required": []
+        },
+        handle_cmake_build
+    )
+
+    # 7. execute_python_code
+    #def handle_execute_python_code(args: Dict[str, Any]):
+    #    code = args.get("code", "")
+    #    if not code:
+    #        return mcp_text("Missing required 'code' argument", True)
+    #
+    #    files_to_pass = args.get("files", [])
+    #    if not isinstance(files_to_pass, list):
+    #        files_to_pass = []
+    #
+    #    repo_path = get_base_path()
+    #    if not repo_path:
+    #        return mcp_text("Repository path not configured", True)
+    #
+    #    resolved_files = []
+    #    for rel in files_to_pass:
+    #        full = repo_path / rel
+    #        if not full.exists():
+    #            return mcp_text(f"File not found: {rel}", True)
+    #        resolved_files.append(str(full))
+    #
+    #    import tempfile
+    #    import shutil
+    #    with tempfile.TemporaryDirectory(prefix="mcp_py_") as temp_dir:
+    #        temp_dir_path = Path(temp_dir)
+    #        try:
+    #            script_file = temp_dir_path / "script.py"
+    #            script_file.write_text(code, encoding="utf-8")
+    #
+    #            for rel in files_to_pass:
+    #                src = repo_path / rel
+    #                dst = temp_dir_path / rel
+    #                dst.parent.mkdir(parents=True, exist_ok=True)
+    #                shutil.copy2(src, dst)
+    #
+    #            result = subprocess.run(
+    #                ["python", str(script_file)],
+    #                cwd=str(temp_dir_path),
+    #                capture_output=True,
+    #                text=True,
+    #                timeout=30
+    #            )
+    #            
+    #            output = result.stdout
+    #            if result.stderr:
+    #                output += "\n" + result.stderr
+    #            
+    #            return mcp_text(output)
+    #
+    #        except subprocess.TimeoutExpired:
+    #            return mcp_text("Python script timed out.", True)
+    #        except Exception as e:
+    #            return mcp_text(f"Python execution error: {str(e)}", True)
+    #
+    #server.register_tool(
+    #    "execute_python_code",
+    #    "Executa cÃ³digo Python enviado pelo cliente e devolve a saÃ­da",
+    #    {
+    #        "type": "object",
+    #        "properties": {
+    #            "code": { "type": "string", "description": "CÃ³digo Python a ser executado" },
+    #            "files": {
+    #                "type": "array",
+    #                "items": { "type": "string", "description": "Caminhos relativos de arquivos a serem disponibilizados ao script" },
+    #                "default": []
+    #            },
+    #            "args": {
+    #                "type": "object",
+    #                "description": "Argumentos adicionais (opcional)",
+    #                "default": {}
+    #            }
+    #        },
+    #        "required": ["code"]
+    #    },
+    #    handle_execute_python_code
+    #)
+
+    # 8. deploy_web_front_local
+    #def handle_deploy_to_local_web_server(args: Dict[str, Any]):
+    #    path = args.get("path", "/")
+    #    if path and not path.startswith('/'):
+    #        path = '/' + path
+    #
+    #    dest_dir = Path(r"C:\code\httpd\Apache24\htdocs")
+    #    repo_path = get_base_path()
+    #    if not repo_path:
+    #        return mcp_text("Repo path not set.", True)
+    #
+    #    src_dir = repo_path / "project-will/web-client"
+    #    if not src_dir.exists():
+    #        return mcp_text(f"Source directory not found: {src_dir}", True)
+    #
+    #    try:
+    #        import shutil
+    #        import webbrowser
+    #        shutil.copytree(src_dir, dest_dir, dirs_exist_ok=True)
+    #        webbrowser.open(f"http://127.0.0.1:8080{path}")
+    #        return mcp_text(f"Files copied to {dest_dir}. Browser opened at 127.0.0.1{path}")
+    #    except Exception as e:
+    #        return mcp_text(f"Failed to copy files: {str(e)}", True)
+    #
+    #server.register_tool(
+    #    "deploy_to_local_web_server",
+    #    "Copia o conteÃºdo da pasta web_front/html para o servidor web local de desenvolvimento e abre o navegador no endereÃ§o 127.0.0.1.",
+    #    {
+    #        "type": "object",
+    #        "properties": {
+    #            "path": { "type": "string", "description": "Path opcional no site para abrir no navegador" }
+    #        },
+    #        "required": []
+    #    },
+    #    handle_deploy_to_local_web_server
+    #)
 
 def initialize_all_tools(server):
     register_all_tools(server)
