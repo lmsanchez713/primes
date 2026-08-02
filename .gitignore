@@ -1,3 +1,6 @@
 .vs
 __pycache__
 mcp-config.json
+tests/*
+!tests/game_2d_pygame.py
+!tests/game_3d_ursina.py
