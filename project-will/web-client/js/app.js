@@ -90,6 +90,7 @@ export async function InitApp() {
     const tile_sheet_material = new Material(gl, shader);
     tile_sheet_material.setTexture('uSampler', tile_sheet_texture);
     const tile_sheet = new TextureSheet(tile_sheet_texture, 32, 32);
+
     const tile_sheet_sprite = new Sprite(tile_sheet);
     const arr = [];
     for (let c = 500; c < 1000; c++) {
@@ -98,11 +99,12 @@ export async function InitApp() {
     tile_sheet_sprite.addState('spritez', arr, 0.25); // 3 frames, 1 sec each
     const tile_entity = new Entity(square_geometry, tile_sheet_material);
     tile_entity.sprite = tile_sheet_sprite;
-    //engine.scene.add(tile_entity);
+    engine.scene.add(tile_entity);
 
     const creatures1_sheet_material = new Material(gl, shader);
     creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_texture);
     const creatures1_sheet = new TextureSheet(creatures1_sheet_texture, 32, 32);
+
     const creatures1_sheet_sprite = new Sprite(creatures1_sheet);
     const arrr = [];
     for (let c = 16 * 64 - 1; c >= 16 * 32; c--) {
