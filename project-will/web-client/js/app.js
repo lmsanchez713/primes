@@ -129,16 +129,19 @@ export async function InitApp() {
 
     const grass_tile_sprite1 = new Sprite(tile_sheet);
     grass_tile_sprite1.addState('grass1', [61 * 16 + 5], 1.0);
-    const grass_tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0));
-    grass_tile_entity.sprite = grass_tile_sprite1;
+    const grass_tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1);
 
     const cat_sprite1 = new Sprite(creatures1_sheet);
     cat_sprite1.addState('cat1', [63 * 16 + 2, 63 * 16 + 3, 63 * 16 + 1], 1.0);
-    const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0));
-    cat_entity.sprite = cat_sprite1;
+    const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
 
-    const world = new World(3, 3);
-    const chunk = new Chunk(8, 8);
+    const world = new World(1, 1);
+    const chunk = new Chunk(2, 2);
+    chunk.addEntity(0, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1));
+    chunk.addEntity(1, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(2, 0), grass_tile_sprite1));
+    chunk.addEntity(0, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 2), grass_tile_sprite1));
+    chunk.addEntity(1, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(2, 2), grass_tile_sprite1));
+    world.addChunk(0, 0, chunk);
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
@@ -171,7 +174,8 @@ export async function InitApp() {
     // engine.setController(new CameraController(engine.camera));
     //engine.scene.add(tile_entity);
     //engine.scene.add(creatures1_entity);
-    engine.scene.add(grass_tile_entity);
+    //engine.scene.add(grass_tile_entity);
+    engine.scene.add(world);
     engine.scene.add(cat_entity);
 
     // 8. Start the engine loop
