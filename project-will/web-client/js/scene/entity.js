@@ -2,7 +2,7 @@ import { Mat4 } from '../math.js';
 import { LightType } from '../core/shader.js';
 
 export class Entity {
-    constructor(geometry = null, material = null, transform = new Mat4()) {
+    constructor(geometry = null, material = null, transform = new Mat4(), sprite = null) {
         this.geometry = geometry;
         this.material = material;
         this.transform = transform;
@@ -15,7 +15,7 @@ export class Entity {
         this.direction = [-0.5, -1.0, -0.5]; // Default direction for directional light
         
         // Sprite component
-        this.sprite = null;
+        this.sprite = sprite;
     }
 
     add(child) {
