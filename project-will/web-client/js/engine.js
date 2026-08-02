@@ -29,6 +29,16 @@ export class Engine {
             this.canvas.height = window.innerHeight;
         });
 
+        this.orthographic = { left: -1.0, right: 1.0, bottom: -1.0, top: 1.0, near: 0.1, far: 100.0, size: 1.0 };
+
+    }
+
+    setOrthographicParameters(params) {
+        for (const key in params) {
+            if (this.orthographic.hasOwnProperty(key)) {
+                this.orthographic[key] = params[key];
+            }
+        }
     }
 
     setController(controller) {
@@ -100,12 +110,12 @@ export class Engine {
         if (this.projectionMode === 'perspective') {
             this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
         } else if (this.projectionMode === 'ortho') {
-            const size = 2.0;
+            const size = this.orthographic.size * 2.0;
             const left = -xfactor * size / 2;
             const right = xfactor * size / 2;
             const bottom = -yfactor * size / 2;
             const top = yfactor * size / 2;
-            this.camera.updateOrthographic(left, right, bottom, top, 0.1, 100);
+            this.camera.updateOrthographic(left, right, bottom, top, this.orthographic.near, this.orthographic.far);
             // this.camera.updateOrthographic(-1.0, 1.0, -1.0, 1.0, 0.1, 100);
         }
 
