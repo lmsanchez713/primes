@@ -1,7 +1,5 @@
 .vs
 out
-CmakeLists.txt
-project-will/windows-client
 __pycache__
 mcp-config.json
 tests/*
