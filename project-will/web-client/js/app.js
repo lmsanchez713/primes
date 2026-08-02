@@ -55,6 +55,12 @@ function createQuadGeometry(gl, shader) {
     return geo;
 }
 
+function OrthoMat4(x = 0, y = 0, z = 0) {
+    let mat4 = new Mat4();
+    Mat4.translation(x, y, z, mat4);
+    return mat4;
+}
+
 /**
  * Initializes the application, setting up the engine, 
  * a scene with a textured quad, and an orthogonal camera.
@@ -97,9 +103,8 @@ export async function InitApp() {
         arr.push(c);
     }
     tile_sheet_sprite.addState('spritez', arr, 0.25); // 3 frames, 1 sec each
-    const tile_entity = new Entity(square_geometry, tile_sheet_material);
+    const tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0));
     tile_entity.sprite = tile_sheet_sprite;
-    engine.scene.add(tile_entity);
 
     const creatures1_sheet_material = new Material(gl, shader);
     creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_texture);
@@ -113,8 +118,7 @@ export async function InitApp() {
     creatures1_sheet_sprite.addState('spritez', arrr, 0.25); // 3 frames, 1 sec each
     const creatures1_entity = new Entity(square_geometry, creatures1_sheet_material);
     creatures1_entity.sprite = creatures1_sheet_sprite;
-    engine.scene.add(creatures1_entity);
-
+    
     //const ambientLight = new AmbientLight([1.0, 1.0, 1.0]); // White light
     //engine.scene.add(ambientLight);
 
@@ -122,6 +126,16 @@ export async function InitApp() {
     sunLight.color = [1.0, 1.0, 1.0];
     sunLight.direction = [0.0, 0.0, -1.0];
     engine.scene.add(sunLight);
+
+    const grass_tile_sprite1 = new Sprite(tile_sheet);
+    grass_tile_sprite1.addState('grass1', [61 * 16 + 5], 1.0);
+    const grass_tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0));
+    grass_tile_entity.sprite = grass_tile_sprite1;
+
+    const cat_sprite1 = new Sprite(creatures1_sheet);
+    cat_sprite1.addState('cat1', [63 * 16 + 2, 63 * 16 + 3, 63 * 16 + 1], 1.0);
+    const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0));
+    cat_entity.sprite = cat_sprite1;
 
     const world = new World(3, 3);
     const chunk = new Chunk(8, 8);
@@ -155,6 +169,10 @@ export async function InitApp() {
     engine.camera.updateView();
 
     // engine.setController(new CameraController(engine.camera));
+    //engine.scene.add(tile_entity);
+    //engine.scene.add(creatures1_entity);
+    engine.scene.add(grass_tile_entity);
+    engine.scene.add(cat_entity);
 
     // 8. Start the engine loop
     engine.start();
