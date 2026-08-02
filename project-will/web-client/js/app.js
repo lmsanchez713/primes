@@ -4,6 +4,8 @@ import { Mat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
 import { TextureSheet } from './core/texture-sheet.js';
 import { Sprite } from './scene/sprite.js';
+import { World } from './scene/world.js';
+import { Chunk } from './scene/chunk.js';
 
 let engine;
 
@@ -119,6 +121,9 @@ export async function InitApp() {
     sunLight.direction = [0.0, 0.0, -1.0];
     engine.scene.add(sunLight);
 
+    const world = new World(3, 3);
+    const chunk = new Chunk(8, 8);
+
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
 
@@ -144,7 +149,7 @@ export async function InitApp() {
 
     // 7. Set up Camera
     engine.setProjectionMode('ortho');
-    engine.camera.updateOrthographic(-1, 1, 1, -1, 0.1, 100);
+    engine.setOrthographicParameters({ size: 4.0 });
     engine.camera.updateView();
 
     // engine.setController(new CameraController(engine.camera));
