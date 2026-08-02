@@ -2,10 +2,10 @@ import { Mat4 } from '../math.js';
 import { LightType } from '../core/shader.js';
 
 export class Entity {
-    constructor(geometry = null, material = null) {
+    constructor(geometry = null, material = null, transform = new Mat4()) {
         this.geometry = geometry;
         this.material = material;
-        this.transform = new Mat4();
+        this.transform = transform;
         this.worldMatrix = new Mat4();
         this.parent = null;
         this.children = [];
