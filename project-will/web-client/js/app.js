@@ -132,7 +132,7 @@ export async function InitApp() {
     const grass_tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1);
 
     const cat_sprite1 = new Sprite(creatures1_sheet);
-    cat_sprite1.addState('cat1', [63 * 16 + 2, 63 * 16 + 3, 63 * 16 + 1], 1.0);
+    cat_sprite1.addState('cat1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
     const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
 
     const world = new World(1, 1);
