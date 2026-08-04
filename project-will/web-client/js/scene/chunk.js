@@ -2,7 +2,7 @@ import { Entity } from './entity.js';
 import { Mat4 } from '../math.js';
 
 export class Chunk extends Entity {
-    constructor(width, height) {
+    constructor(width, height, transform) {
         // Call Entity constructor to initialize transform and worldMatrix
         super();
         this.width = width;
@@ -10,6 +10,9 @@ export class Chunk extends Entity {
         this.grid = Array.from({ length: width }, () =>
             Array.from({ length: height }, () => [])
         );
+        if (transform) {
+            this.transform = transform;
+        }
     }
 
     addEntity(x, y, entity) {
