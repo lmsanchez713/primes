@@ -110,7 +110,7 @@ export class Engine {
         if (this.projectionMode === 'perspective') {
             this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
         } else if (this.projectionMode === 'ortho') {
-            const size = this.orthographic.size * 2.0;
+            const size = this.orthographic.size;
             const left = -xfactor * size / 2;
             const right = xfactor * size / 2;
             const bottom = -yfactor * size / 2;

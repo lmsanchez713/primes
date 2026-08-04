@@ -15,12 +15,12 @@ let engine;
 function createQuadGeometry(gl, shader) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
-        -1.0, -1.0, 0.0, // v0
-        1.0, 1.0, 0.0, // v1
-        1.0, -1.0, 0.0, // v2
-        -1.0, -1.0, 0.0, // v3
-        -1.0, 1.0, 0.0, // v4
-        1.0, 1.0, 0.0  // v5
+        -0.5, -0.5, 0.0, // v0
+        0.5, 0.5, 0.0, // v1
+        0.5, -0.5, 0.0, // v2
+        -0.5, -0.5, 0.0, // v3
+        -0.5, 0.5, 0.0, // v4
+        0.5, 0.5, 0.0  // v5
     ]);
 
     // Texture coordinates
@@ -135,16 +135,21 @@ export async function InitApp() {
     cat_sprite1.addState('cat1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
     const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
 
-    const world = new World(2, 2);
-    function createChunk() {
-        let chunk = new Chunk(2, 2);
-        chunk.addEntity(0, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1));
-        chunk.addEntity(1, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(2, 0), grass_tile_sprite1));
-        chunk.addEntity(0, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 2), grass_tile_sprite1));
-        chunk.addEntity(1, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(2, 2), grass_tile_sprite1));
+    const world = new World(3, 3);
+    function createChunk(transform = new Mat4()) {
+        let chunk = new Chunk(3, 3, transform);
+        chunk.addEntity(0, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, -1), grass_tile_sprite1));
+        chunk.addEntity(1, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, -1), grass_tile_sprite1));
+        chunk.addEntity(2, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, -1), grass_tile_sprite1));
+        chunk.addEntity(0, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, 0), grass_tile_sprite1));
+        chunk.addEntity(1, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1));
+        chunk.addEntity(2, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 0), grass_tile_sprite1));
+        chunk.addEntity(0, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, 1), grass_tile_sprite1));
+        chunk.addEntity(1, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 1), grass_tile_sprite1));
+        chunk.addEntity(2, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 1), grass_tile_sprite1));
         return chunk;
     }
-    world.addChunk(0, 0, createChunk());
+    world.addChunk(0, 0, createChunk(OrthoMat4(0, 0)));
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
@@ -171,7 +176,7 @@ export async function InitApp() {
 
     // 7. Set up Camera
     engine.setProjectionMode('ortho');
-    engine.setOrthographicParameters({ size: 4.0 });
+    engine.setOrthographicParameters({ size: 9.0 });
     engine.camera.updateView();
 
     // engine.setController(new CameraController(engine.camera));
