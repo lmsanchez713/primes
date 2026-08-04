@@ -2,13 +2,16 @@ import { Entity } from './entity.js';
 import { Mat4 } from '../math.js';
 
 export class World extends Entity {
-    constructor(chunkWidth, chunkHeight) {
+    constructor(chunkWidth, chunkHeight, transform) {
         super();
         this.chunkWidth = chunkWidth;
         this.chunkHeight = chunkHeight;
         this.chunks = Array.from({ length: chunkWidth }, () =>
             Array.from({ length: chunkHeight }, () => null)
         );
+        if (transform) {
+            this.transform = transform;
+        }
     }
 
     addChunk(cx, cy, chunk) {
