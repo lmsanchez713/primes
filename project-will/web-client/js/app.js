@@ -6,6 +6,8 @@ import { TextureSheet } from './core/texture-sheet.js';
 import { Sprite } from './scene/sprite.js';
 import { World } from './scene/world.js';
 import { Chunk } from './scene/chunk.js';
+import { MapLoader } from './scene/map_loader.js';
+import { ItemType } from './scene/item.js';
 
 let engine;
 
@@ -16,11 +18,11 @@ function createQuadGeometry(gl, shader) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
         -0.5, -0.5, 0.0, // v0
-        0.5, 0.5, 0.0, // v1
-        0.5, -0.5, 0.0, // v2
+         0.5,  0.5, 0.0, // v1
+         0.5, -0.5, 0.0, // v2
         -0.5, -0.5, 0.0, // v3
-        -0.5, 0.5, 0.0, // v4
-        0.5, 0.5, 0.0  // v5
+        -0.5,  0.5, 0.0, // v4
+         0.5,  0.5, 0.0  // v5
     ]);
 
     // Texture coordinates
@@ -188,4 +190,69 @@ export async function InitApp() {
 
     // 8. Start the engine loop
     engine.start();
+
+    // --- TEST NEW FEATURES ---
+    console.log("--- Starting Map Loader Test ---");
+    await testMapLoading(world, cat_entity);
+}
+
+async function testMapLoading(world, actor) {
+    const itemRegistry = {
+        'grass': { type: ItemType.TERRAIN, id: 'grass' },
+        'tree': { type: ItemType.FIXED_OBJECT, id: 'tree', callbacks: {
+            on_move_into: (ent, from, to) => console.log(`Entity moved into TREE at ${to.x},${to.y}!`),
+            on_move_from: (ent, from, to) => console.log(`Entity moved away from TREE at ${from.x},${from.y}!`)
+        }},
+        'chest': { type: ItemType.MOVABLE_ITEM, id: 'chest', callbacks: {
+            on_use: (ent, item) => console.log("Chest opened!")
+        }}
+    };
+
+    const loader = new MapLoader(itemRegistry);
+
+    // Mock map: 
+    // Row 0: grass; grass; grass
+    // Row 1: grass, tree; grass; grass, chest
+    // Row 2: grass; grass; grass
+    const testMapText = "grass;grass;grass\ngrass,tree;grass;grass,chest\ngrass;grass;grass";
+
+    console.log("Parsing test map...");
+    const { world: testWorld, grid: testGrid } = loader.parse(testMapText, 1);
+    
+    // Setup test world
+    testWorld.setGrid(testGrid);
+    // Create 3x3 chunks for the test world (to match testMapText)
+    // For the test, we'll just use the world directly.
+    
+    // Add the test world to scene
+    // (In a real app, we'd replace the current world or add it as a child)
+    // For now, we'll just use the provided world and overwrite its grid.
+    world.setGrid(testGrid);
+    // We need to make sure world's dimensions match the test grid.
+    // Since we can't easily resize World, we'll assume the test is small.
+    // Let's just add the actor to the existing world's logic.
+    
+    console.log("Adding actor to grid...");
+    world.addActor(actor, 0, 0);
+    console.log("Actor positioned at (0,0)");
+
+    console.log("Attempting move from (0,0) to (1,0) (empty)...");
+    world.moveEntity(actor, 1, 0);
+
+    console.log("Attempting move from (1,0) to (1,1) (into tree)...");
+    // Note: In our parse, (1,1) is row 1, col 1. 
+    // Let's use row 1, col 0 (tree is at index [1][0])
+    // Wait, testMapText row 1: "grass,tree;grass;grass,chest"
+    // Col 0: grass, tree
+    // Col 1: grass
+    // Col 2: grass, chest
+    
+    // Let's try move to (0,1) -> row 1, col 0
+    world.moveEntity(actor, 0, 1); 
+
+    console.log("Attempting move from (0,1) to (0,2) (into chest?)...");
+    // Col 2 is index 2. Row 1 is index 1.
+    world.moveEntity(actor, 2, 1); 
+
+    console.log("Test Completed. Check console for logs.");
 }
