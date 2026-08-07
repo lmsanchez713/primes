@@ -2,22 +2,23 @@ import { Entity } from './entity.js';
 import { Mat4 } from '../math.js';
 
 export class World extends Entity {
-    constructor(chunkWidth, chunkHeight, transform) {
+    /**
+     * @param {number} chunkWidth 
+     * @param {number} chunkHeight 
+     * @param {Mat4} transform 
+     * @param {number} gridScale - How many world units one tile occupies
+     */
+    constructor(chunkWidth, chunkHeight, transform, gridScale = 1.0) {
         super();
-        // chunkWidth/Height: number of chunks in X and Y directions
-        this.chunkWidth = chunkWidth; 
+        this.chunkWidth = chunkWidth;
         this.chunkHeight = chunkHeight;
+        this.gridScale = gridScale;
         this.chunks = Array.from({ length: chunkWidth }, () =>
             Array.from({ length: chunkHeight }, () => null)
         );
         
-        // The logical grid of tiles (GameItems)
-        // This is the "real" map.
         this.grid = []; // 2D array: [y][x] = [GameItem, GameItem, ...]
-        
-        // Entities that are "walking" on the grid
-        // Map: entity -> {x, y}
-        this.actors = new Map();
+        this.actors = new Map(); // Map: entity -> { x, y }
 
         if (transform) {
             this.transform = transform;
@@ -49,7 +50,10 @@ export class World extends Entity {
      */
     addActor(entity, x, y) {
         this.actors.set(entity, { x, y });
-        // In a real implementation, you'd update the entity's transform here
+        // Set initial visual position
+        const pos = new Mat4();
+        Mat4.translation(x * this.gridScale, -y * this.gridScale, 0, pos);
+        entity.transform = pos;
     }
 
     /**
@@ -70,15 +74,15 @@ export class World extends Entity {
 
         // 1. Check collisions/callbacks at the target tile
         const targetTileItems = this.grid[newY]?.[newX];
-        if (!targetTileItems) return false;
-
-        for (const item of targetTileItems) {
-            if (item.callbacks.on_move_into) {
-                item.callbacks.on_move_into(entity, { x: oldX, y: oldY }, { x: newX, y: newY });
+        if (targetTileItems) {
+            for (const item of targetTileItems) {
+                if (item.callbacks.on_move_into) {
+                    item.callbacks.on_move_into(entity, { x: oldX, y: oldY }, { x: newX, y: newY });
+                }
             }
         }
 
-        // 2. Check callbacks at the current tile (moving away)
+        // 2. Check callbacks at the current tile
         const currentTileItems = this.grid[oldY]?.[oldX];
         if (currentTileItems) {
             for (const item of currentTileItems) {
@@ -88,11 +92,14 @@ export class World extends Entity {
             }
         }
 
-        // 3. Update internal state
+        // 3. Update internal state and VISUAL transform
         actorInfo.x = newX;
         actorInfo.y = newY;
-        // Here you would also update the entity's actual transform for rendering
-        // e.g. entity.transform.setTranslation(newX * tile_size, ...);
+
+        // Create a new transform for the entity to move it
+        const pos = new Mat4();
+        Mat4.translation(newX * this.gridScale, -newY * this.gridScale, 0, pos);
+        entity.transform = pos;
 
         return true;
     }
