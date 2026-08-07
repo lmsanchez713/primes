@@ -1,137 +1,118 @@
-# Project Will - Technical Documentation & Roadmap
+# Project Will - Technical Documentation
 
-## 1. API Documentation
+## 1. Class Hierarchy & Architecture
 
-### 1.1 Lower-Level Abstractions (Core WebGL2 Wrappers)
+Project Will uses a hybrid architecture: a **Scene Graph** for hierarchical transformation and rendering, and a **Component-like composition** for features like animation (Sprites).
 
-#### `Shader`
-Wraps a WebGLProgram to simplify shader compilation and linking.
-* **`constructor(gl, vsSource, fsSource)`**: Initializes a new shader program using vertex and fragment shader source code.
-* `_initShader(gl, type, source)`: Internal method to compile individual shader stages.
-* `_initProgram(vsSource, fsSource)`: Internal method to link the vertex and fragment shaders into a program.
-`getUniformLocation(name)`: Retrieves/caches uniform locations.
+### 1.1 Inheritance Hierarchy
+* **`Entity`** (The base object in the scene)
+    * **`World`** (Manages a grid of tiles and actors)
+    * **`AmbientLight`** (Provides global illumination)
+    * **`DirectionalLight`** (Provides parallel light rays)
+    * **`PointLight`** (Provides light from a specific point)
 
-#### `Buffer`
-A wrapper for `WebGLBuffer` objects.
-* `constructor(gl, type, data)`: Creates a buffer of a specific type (`gl.ARRAY_BUFFER`, `gl.ELEMENT_ARRAY_BUFFER`, etc.) and uploads data to the GPU.
-* `bind()`: Binds this buffer to the WebGL context.
-
-#### `Texture`
-Handles 2D texture creation and asynchronous image loading.
-* `constructor(gl, url)`: Starts loading a texture from a URL.
-* `_load(url)`: Internal method to handle image loading and status management (`isReady`).
-* `bind(unit = 0)`: Binds the texture to a specific texture unit.
-
-#### `Geometry`
-Defines mesh shape using Vertex Array Objects (VAO) and Buffers.
-* `constructor(gl, mode)`: Initializes geometry with a draw mode (e.g., `gl.TRIANGLES`).
-* `addAttribute(buffer, location, size, type)`: Configures a buffer as a vertex attribute within the VAO.
-* `setCount(count)`: Sets the number of vertices to be drawn.
-* `bind()`: Binds the associated VAO.
-* `draw()`: Executes the `gl.drawArrays` command.
-
-#### `VertexArray`
-A container for WebGL Vertex Array Object (VAO) state.
-* `constructor(gl)`: Creates a new VAO.
-* `bind()`: Binds the associated VAO.
-* `unbind()`: Binds `null` to unbind the current VAO.
-
-### 1.2 Mid-Level Abstractions (Scene Graph Components)
-
-#### `Material`
-Manages the visual appearance of an object via Shaders, Uniforms, and Textures.
-* `constructor(gl, shader)`: Links a `Shader` instance to this material.
-* `setTexture(name, textureInstance)`: Maps a `sampler2D` uniform name to a texture.
-* `setUniform(name, value)`: Sets a uniform value (float, vec2, vec3, vec4, or matrix).
-* `apply()`: Binds the shader, binds all textures, and uploads uniforms.
-* `isReady()`: Returns true (currently always returns true; does not check texture loading status).
-
-#### `Entity`
-A high-level scene object combining geometry and material. Supports parent-child hierarchies.
-* **`constructor(geometry = null, material = null)`**: Creates an entity with a specific shape and appearance.
-* `add(child)`: Adds a child entity to the hierarchy.
-* `remove(child)`: Removes a child entity.
-* `render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights)`: Recursively renders the entity and its children using provided matrices and light data.
-* **Properties (for lighting)**:
-    * `lightType`: Defines if this entity acts as a light source (Ambient, Directional, or Point).
-    * `color`: The color of the light.
-    * `direction`: The direction of the light (primarily for directional lights).
-
-#### `Scene`
-A container for all entities to be rendered in a scene.
-* `constructor(gl)`: Initializes a scene with a default root `Entity`.
-* `add(entity)`: Adds an entity to the root of the scene.
-* `render(viewMatrix, projectionMatrix)`: Triggers recursive rendering using provided matrices and collects light entities for lighting calculations.
-
-### 1.3 High-Level Abstractions (Engine Core)
-
-#### `AssetManager`
-A centralized manager for resource loading and lifecycle management.
-* `loadTexture(gl, url)`: Asynchronously loads a texture and returns it as a Promise. Prevents duplicate downloads.
-* `getProgress()`: Returns the current load progress (0 to 1).
-* `isAllLoaded()`: Checks if all requested assets have finished loading.
-* `waitUntilLoaded()`: A promise that resolves when all currently requested assets are loaded.
-
-#### `Camera`
-A component managing camera position, target, and orientation, providing view and projection matrices.
-* **`constructor()`**: Initializes a default camera at (0, 0, 5) looking at (0, 0, 0).
-* `updateView()`: Updates the view matrix using current position and target.
-* `updateProjection(fovy, aspect, near, far)`: Sets up perspective projection.
-* `updateOrthographic(left, right, bottom, top, near, far)`: Sets up orthographic projection.
-* `getViewMatrix()`: Returns the current view matrix.
-* `getProjectionMatrix()`: Returns the current projection matrix.
-
-#### `Engine`
-The main controller for the WebGL2 lifecycle.
-* **`constructor(canvas)`**: Initializes the engine and creates a new AssetManager, Scene, and Camera.
-* `start()`: Starts the animation loop.
-* `stop()`: Stops the animation loop.
-* `setProjectionMode(mode)`: Sets the projection mode to either `'perspective'` or `'ortho'`.
-* `render()`: Renders the current state of the scene using the camera's matrices.
+### 1.2 Composition & Relationships
+* **`Entity`** $\rightarrow$ *has* $\rightarrow$ **`Sprite`** (For frame-based animation)
+* **`Entity`** $\rightarrow$ *has* $\rightarrow$ **`Material`** (For visual properties)
+* **`Entity`** $\rightarrow$ *has* $\rightarrow$ **`Geometry`** (For mesh data)
+* **`Material`** $\rightarrow$ *uses* $\rightarrow$ **`Shader`**
+* **`Engine`** $\rightarrow$ *manages* $\rightarrow$ **`Scene`**, **`Camera`**, **`AssetManager`**
+* **`Scene`** $\rightarrow$ *contains* $\rightarrow$ **`Entity`** (Root)
 
 ---
 
-## 2. Risk Report & Improvement Opportunities
+## 2. API Documentation
+
+### 2.1 Engine Core
+| Class | Description | Key Methods |
+|-------|-------------|-------------|
+| `Engine` | Main entry point. Manages the WebGL loop. | `start()`, `stop()`, `setProjectionMode(mode)`, `setOrthographicParameters(p)` |
+| `Scene` | Container for the entity hierarchy. | `add(entity)`, `render(view, projection)` |
+| `Camera` | Manages view/projection matrices. | `updateView()`, `updateProjection(fovy, aspect, n, f)`, `updateOrthographic(...)`, `getViewMatrix()` |
+| `AssetManager` | Handles asynchronous loading of textures. | `loadTexture(url)`, `isAllLoaded()` |
+
+### 2.2 Graphics Core (WebGL2 Wrappers)
+| Class | Description | Key Methods |
+|-------|-------------|-------------|
+| `Shader` | Wraps WebGLProgram. | `getUniformLocation(name)` |
+| `Texture` | Manages WebGLTexture and image loading. | `bind(unit)`, `isReady()` |
+| `Buffer` | Wraps `WebGLBuffer`. | `bind()` |
+| `Geometry` | Manages VAOs and draw calls. | `addAttribute(buffer, loc, size)`, `setCount(c)`, `draw()` |
+| `Material` | Links shaders, textures, and uniforms. | `setTexture(name, tex)`, `setUniform(name, val)`, `apply()` |
+
+### 2.3 Scene Objects
+| Class | Description | Key Methods |
+|-------|-------------|-------------|
+| `Entity` | A physical object in the world. | `add(child)`, `remove(child)`, `update(dt)`, `render(...)` |
+| `Sprite` | Handles 2D sprite animation. | `addState(name, frames, duration)`, `setState(name)`, `getUVRect()` |
+| `World` | A grid-based spatial container. | `addActor(entity, x, y)`, `moveEntity(entity, x, y)`, `setGrid(grid)` |
+| `GameItem` | Data object representing a grid tile. | (Callback driven) |
+
+---
+
+## 3. Usage Example
+
+Below is a standard initialization flow for a WebGL2 application using Project Will.
+
+```javascript
+import { Engine } from './engine.js';
+import { Shader } from './core/shader.js';
+import { Texture } from './core/texture.js';
+import { Material } from './core/material.js';
+import { Geometry } from './core/geometry.js';
+import { Entity } from './scene/entity.js';
+import { Sprite } from './scene/sprite.js';
+
+async function init() {
+    const canvas = document.getElementById('glCanvas');
+    const engine = new Engine(canvas);
+    const gl = engine.gl;
+
+    // 1. Setup Assets
+    const vs = await (await fetch('glsl/vertex.glsl')).text();
+    const fs = await (await fetch('glsl/fragment.glsl')).text();
+    const shader = new Shader(gl, vs, fs);
+    const tex = new Texture(gl, 'path/to/texture.png');
+    
+    // 2. Setup Material & Geometry
+    const material = new Material(gl, shader);
+    material.setTexture('uSampler', tex);
+    
+    const geo = new Geometry(gl, gl.TRIANGLES);
+    // ... add attributes to geo ...
+
+    // 3. Create Animated Entity
+    const sprite = new Sprite(new TextureSheet(tex, 32, 32));
+    sprite.addState('idle', [0, 1, 2], 0.5);
+    
+    const player = new Entity(geo, material);
+    player.sprite = sprite;
+
+    // 4. Scene Setup
+    engine.scene.add(player);
+    engine.setProjectionMode('ortho');
+    engine.start();
+}
+```
+
+---
+
+## 4. Risk Report & Improvement Opportunities
 
 * **Resource Lifecycle Management**: The engine currently lacks explicit `dispose()` or cleanup methods for GPU-resident resources (`Buffer`, `Texture`, `Shader`). This poses a significant risk of memory leaks as the scene grows in complexity.
 * **Rendering Performance (Uniforms)**: In `Material.apply()`, all uniforms are updated every frame. For complex scenes with many entities, this redundant state change will become a performance bottleneck. Transitioning to Uniform Buffer Objects (UBOs) or tracking dirty states for uniforms is recommended.
 * **Error Handling & Robustness**: While texture loading uses Promises, the `Texture` class lacks robust error propagation back to the high-level engine components, which could lead to silent rendering failures if an asset fails to load.
 
----
+## 5. Development Roadmap
 
-## 3. Development Roadmap (Plan)
+* **Phase 1: Core Engine Foundation** (Completed)
+* **Phase 2: Camera & Viewport Control** (Completed)
+* **Phase 3: Advanced Rendering & Materials** (Completed)
+* **Phase 4: Resource & Asset Expansion** (Planned)
+    * [ ] Model Loading (.obj, .gltf)
+    * [ ] Automated Geometry Generation
+* **Phase 5: Engine Robustness & Interaction** (Planned)
+    * [ ] Input System
+    * [ ] Physics/Collision
 
-This document outlines the planned development phases for the engine, transitioning from a basic WebGL2 renderer to a feature-complete rendering engine.
-
-## Phase 1: Core Engine Foundation (Completed)
-- [x] WebGL2 Abstraction Layer (`ogl2.js`)
-- [x] Basic Scene Graph (Entity/Scene hierarchy)
-- [x] Asset Management (Textures)
-- [x] Basic Animation Loop
-
-## Phase 2: Camera & Viewport Control (Completed)
-*Goal: Implement a way to view the scene from different perspectives.*
-- [x] **Camera Class**: Implement View and Projection matrices.
-- [x] **Perspective/Orthographic Support**: Toggle between 3D perspective and 2D orthographic views.
-- [x] **Camera Controller**: Simple keyboard/mouse controls to navigate through space.
-
-## Phase 3: Advanced Rendering & Materials (Completed)
-*Goal: Move beyond simple textures to realistic lighting.*
-- [x] **Lighting System**: Implement Light entities (Point, Directional, Ambient).
-- [x] **Standard Shaders**: Built-in Phong or Blinn-Phong shading models.
-- [x] **Normal Mapping**: Support for advanced surface details via normal maps.
-
-## Phase 4: Resource & Asset Expansion
-*Goal: Scale the engine to handle complex external content.*
-- [ ] **Model Loading**: Implement loaders for `.obj` or `.gltf` formats.
-- [ ] **Geometry Buffering**: Automated generation of normals and tangents from vertex data.
-- [ ] **Extended Asset Manager**: Support for audio, JSON scene descriptions, and more.
-
-## Phase 5: Engine Robustness & Interaction
-*Goal: Prepare the engine for interactive applications/games.*
-- [ ] **Input System**: Unified handler for Keyboard, Mouse, and Gamepad events.
-- [ ] **Delta Time Integration**: Ensure frame-rate independent updates in `engine.update()`.
-- [ ] **Physics/Collision (Optional)**: Basic AABB or Sphere collision detection between entities.
-
----
 *Last updated: 2024-05-22*
