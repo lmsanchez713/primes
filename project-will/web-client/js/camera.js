@@ -2,7 +2,7 @@ import { Mat4, Vec3 } from './math.js';
 
 export class Camera {
     constructor() {
-        this.position = new Vec3(0, 0, 5);
+        this.position = new Vec3(0, 0, 1);
         this.target = new Vec3(0, 0, 0);
         this.up = new Vec3(0, 1, 0);
         this.viewMatrix = new Mat4();
