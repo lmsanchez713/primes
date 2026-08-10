@@ -151,7 +151,8 @@ export async function InitApp() {
         chunk.addEntity(2, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 1), grass_tile_sprite1));
         return chunk;
     }
-    world.addChunk(0, 0, createChunk(OrthoMat4(0, 0)));
+    world.addChunk(0, 1, createChunk(OrthoMat4(-3, 0)));
+    world.addChunk(1, 1, createChunk(OrthoMat4(0, 0)));
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
@@ -193,7 +194,7 @@ export async function InitApp() {
 
     // --- TEST NEW FEATURES ---
     console.log("--- Starting Map Loader Test ---");
-    await testMapLoading(world, cat_entity);
+    //await testMapLoading(world, cat_entity);
 }
 
 async function testMapLoading(world, actor) {
