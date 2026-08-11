@@ -4,18 +4,18 @@ import { Mat4 } from '../math.js';
 export class World extends Entity {
     constructor(chunkWidth, chunkHeight, transform) {
         super();
-        // chunkWidth/Height: number of chunks in X and Y directions
+        // chunkWidth/Height: number of chunks in X and Y directions (historical/optional)
         this.chunkWidth = chunkWidth; 
         this.chunkHeight = chunkHeight;
-        this.chunks = Array.from({ length: chunkWidth }, () =>
-            Array.from({ length: chunkHeight }, () => null)
-        );
+
+        // Sparse Map<x, Map<y, Chunk>>
+        this.chunks = new Map(); 
         
         // The logical grid of tiles (GameItems)
-        // This is the "real" map.
-        this.grid = []; // 2D array: [y][x] = [GameItem, GameItem, ...]
+        // Map<y, Map<x, [GameItem, ...]>>
+        this.grid = new Map();
         
-        // Entities that are "walking" on the grid
+        // Entities that are "walking" on the grid.
         // Map: entity -> {x, y}
         this.actors = new Map();
 
@@ -29,14 +29,16 @@ export class World extends Entity {
     }
 
     addChunk(cx, cy, chunk) {
-        if (cx >= 0 && cx < this.chunkWidth && cy >= 0 && cy < this.chunkHeight) {
-            this.chunks[cx][cy] = chunk;
+        if (!this.chunks.has(cx)) {
+            this.chunks.set(cx, new Map());
         }
+        this.chunks.get(cx).set(cy, chunk);
     }
 
     getChunk(cx, cy) {
-        if (cx >= 0 && cx < this.chunkWidth && cy >= 0 && cy < this.chunkHeight) {
-            return this.chunks[cx][cy];
+        const col = this.chunks.get(cx);
+        if (col) {
+            return col.get(cy) || null;
         }
         return null;
     }
@@ -49,7 +51,6 @@ export class World extends Entity {
      */
     addActor(entity, x, y) {
         this.actors.set(entity, { x, y });
-        // In a real implementation, you'd update the entity's transform here
     }
 
     /**
@@ -69,20 +70,22 @@ export class World extends Entity {
         if (oldX === newX && oldY === newY) return true;
 
         // 1. Check collisions/callbacks at the target tile
-        const targetTileItems = this.grid[newY]?.[newX];
+        const targetCol = this.grid.get(newY);
+        const targetTileItems = targetCol?.get(newX);
         if (!targetTileItems) return false;
 
         for (const item of targetTileItems) {
-            if (item.callbacks.on_move_into) {
+            if (item.callbacks?.on_move_into) {
                 item.callbacks.on_move_into(entity, { x: oldX, y: oldY }, { x: newX, y: newY });
             }
         }
 
         // 2. Check callbacks at the current tile (moving away)
-        const currentTileItems = this.grid[oldY]?.[oldX];
+        const currentCol = this.grid.get(oldY);
+        const currentTileItems = currentCol?.get(oldX);
         if (currentTileItems) {
             for (const item of currentTileItems) {
-                if (item.callbacks.on_move_from) {
+                if (item.callbacks?.on_move_from) {
                     item.callbacks.on_move_from(entity, { x: oldX, y: oldY }, { x: newX, y: newY });
                 }
             }
@@ -91,16 +94,13 @@ export class World extends Entity {
         // 3. Update internal state
         actorInfo.x = newX;
         actorInfo.y = newY;
-        // Here you would also update the entity's actual transform for rendering
-        // e.g. entity.transform.setTranslation(newX * tile_size, ...);
 
         return true;
     }
 
     update(deltaTime) {
-        for (let x = 0; x < this.chunkWidth; x++) {
-            for (let y = 0; y < this.chunkHeight; y++) {
-                const chunk = this.chunks[x][y];
+        for (const col of this.chunks.values()) {
+            for (const chunk of col.values()) {
                 if (chunk) chunk.update(deltaTime);
             }
         }
@@ -110,9 +110,8 @@ export class World extends Entity {
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
-        for (let x = 0; x < this.chunkWidth; x++) {
-            for (let y = 0; y < this.chunkHeight; y++) {
-                const chunk = this.chunks[x][y];
+        for (const col of this.chunks.values()) {
+            for (const chunk of col.values()) {
                 if (chunk) {
                     chunk.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
                 }
