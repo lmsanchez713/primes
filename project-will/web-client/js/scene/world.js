@@ -107,20 +107,20 @@ export class World extends Entity {
         super.update(deltaTime);
     }
 
-    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights) {
+    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         for (let x = 0; x < this.chunkWidth; x++) {
             for (let y = 0; y < this.chunkHeight; y++) {
                 const chunk = this.chunks[x][y];
                 if (chunk) {
-                    chunk.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights);
+                    chunk.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
                 }
             }
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights);
+            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
         }
     }
 }

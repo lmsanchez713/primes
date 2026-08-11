@@ -16,7 +16,7 @@ export class Scene {
         this.root.update(deltaTime);
     }
 
-    render(viewMatrix, projectionMatrix) {
+    render(viewMatrix, projectionMatrix, engine) {
         const gl = this.gl;
         const lights = [];
         
@@ -24,7 +24,7 @@ export class Scene {
         this._updateAndCollect(this.root, this.identity, lights);
 
         // 2. Second pass: Render the scene with collected light info
-        this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights);
+        this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights, engine);
     }
 
     _updateAndCollect(entity, parentWorldMatrix, lights) {

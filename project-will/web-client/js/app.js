@@ -78,27 +78,36 @@ export async function InitApp() {
     const fsSource = await (await fetch('glsl/fragment.glsl')).text();
     const shader = new Shader(gl, vsSource, fsSource);
 
-    // 2. Load Texture
-    const lumi_texture = new Texture(gl, 'img/lumi.png');
-    const wood_box_texture = new Texture(gl, 'img/wood-box.png');
-    const tile_sheet_texture = new Texture(gl, 'img/sprites/otsp_tiles_01_alpha.png');
-    const creatures1_sheet_texture = new Texture(gl, 'img/sprites/otsp_creatures_01_alpha.png');
-
-    // 3. Create Quad Geometry
+    // 2. Create Quad Geometry
     const square_geometry = createQuadGeometry(gl, shader);
 
-    // 4. Create Material
+    // 3. Create and add the Quad Entity
     const wood_box_material = new Material(gl, shader);
-    wood_box_material.setTexture('uSampler', wood_box_texture);
+    wood_box_material.setTexture('uSampler', 'img/wood-box.png');
 
-    // 5. Create and add the Quad Entity
     const square_entity = new Entity(square_geometry, wood_box_material);
     //engine.scene.add(square_entity);
 
-    const tile_sheet_material = new Material(gl, shader);
-    tile_sheet_material.setTexture('uSampler', tile_sheet_texture);
-    const tile_sheet = new TextureSheet(tile_sheet_texture, 32, 32);
+    // Texture Sheets (for Sprites)
+    const tile_sheet_url = 'img/sprites/otsp_tiles_01_alpha.png';
+    const creatures1_sheet_url = 'img/sprites/otsp_creatures_01_alpha.png';
+    
+    // We still need the actual textures for the TextureSheet/Sprite logic 
+    // because they need the pixel data immediately to calculate UVs/Atlas.
+    // But for standard Material textures, we use the URL lazy loading.
+    const tile_sheet_texture = new Texture(gl, tile_sheet_url);
+    const creatures1_sheet_texture = new Texture(gl, creatures1_sheet_url);
 
+    const tile_sheet = new TextureSheet(tile_sheet_texture, 32, 32);
+    const creatures1_sheet = new TextureSheet(creatures1_sheet_texture, 32, 32);
+
+    const tile_sheet_material = new Material(gl, shader);
+    tile_sheet_material.setTexture('uSampler', tile_sheet_url);
+    
+    const creatures1_sheet_material = new Material(gl, shader);
+    creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_url);
+
+    // Sprites
     const tile_sheet_sprite = new Sprite(tile_sheet);
     const arr = [];
     for (let c = 500; c < 1000; c++) {
@@ -129,6 +138,7 @@ export async function InitApp() {
     sunLight.direction = [0.0, 0.0, -1.0];
     engine.scene.add(sunLight);
 
+    // Sprites / Entities
     const grass_tile_sprite1 = new Sprite(tile_sheet);
     grass_tile_sprite1.addState('grass1', [61 * 16 + 5], 1.0);
     const grass_tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1);

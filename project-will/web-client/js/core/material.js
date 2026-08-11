@@ -8,12 +8,22 @@ export class Material {
         this.uniforms = new Map();
     }
 
-    setTexture(name, textureInstance) {
+    setTexture(name, textureOrUrl) {
         const existingIndex = this.textures.findIndex(t => t.name === name);
         if (existingIndex !== -1) {
-            this.textures[existingIndex].texture = textureInstance;
+            if (typeof textureOrUrl === 'string') {
+                this.textures[existingIndex].url = textureOrUrl;
+                this.textures[existingIndex].texture = null;
+            } else {
+                this.textures[existingIndex].texture = textureOrUrl;
+                this.textures[existingIndex].url = null;
+            }
         } else {
-            this.textures.push({ name: name, texture: textureInstance });
+            if (typeof textureOrUrl === 'string') {
+                this.textures.push({ name: name, texture: null, url: textureOrUrl });
+            } else {
+                this.textures.push({ name: name, texture: textureOrUrl, url: null });
+            }
         }
     }
 
@@ -25,15 +35,27 @@ export class Material {
         return true;
     }
 
-    apply() {
+    apply(engine) {
         const gl = this.gl;
         gl.useProgram(this.shader.program);
 
         this.textures.forEach((texData, index) => {
             const unit = index;
-            texData.texture.bind(unit);
-            const loc = this.shader.getUniformLocation(texData.name);
-            if (loc) gl.uniform1i(loc, unit);
+
+            // Lazy load texture if we have a URL and it hasn't been loaded yet
+            if (texData.url) {
+                const url = texData.url;
+                texData.url = null; // Ensure we only trigger load once
+                engine.assets.loadTexture(gl, url).then(texture => {
+                    texData.texture = texture;
+                });
+            }
+
+            if (texData.texture) {
+                texData.texture.bind(unit);
+                const loc = this.shader.getUniformLocation(texData.name);
+                if (loc) gl.uniform1i(loc, unit);
+            }
         });
 
         this.uniforms.forEach((value, name) => {
@@ -59,9 +81,5 @@ export class Material {
                 gl.uniform1f(loc, data);
             }
         });
-    }
-
-    isReady() {
-        return true;
     }
 }

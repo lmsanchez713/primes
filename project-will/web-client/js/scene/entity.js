@@ -48,11 +48,11 @@ export class Entity {
         }
     }
 
-    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights) {
+    render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         if (this.geometry && this.material && this.material.isReady()) {
-            this.material.apply();
+            this.material.apply(engine);
             this.material.setUniform('u_modelMatrix', this.worldMatrix);
             this.material.setUniform('u_viewMatrix', viewMatrix);
             this.material.setUniform('u_projectionMatrix', projectionMatrix);
@@ -93,7 +93,7 @@ export class Entity {
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights);
+            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
         }
     }
 }
