@@ -137,8 +137,8 @@ export async function InitApp() {
     const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
 
     const world = new World(3, 3);
-    function createChunk(transform = new Mat4()) {
-        let chunk = new Chunk(3, 3, transform);
+    function createChunk() {
+        let chunk = new Chunk(3, 3);
         chunk.addEntity(0, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, -1), grass_tile_sprite1));
         chunk.addEntity(1, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, -1), grass_tile_sprite1));
         chunk.addEntity(2, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, -1), grass_tile_sprite1));
@@ -150,8 +150,8 @@ export async function InitApp() {
         chunk.addEntity(2, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 1), grass_tile_sprite1));
         return chunk;
     }
-    world.addChunk(0, 1, createChunk(OrthoMat4(-3, 0)));
-    world.addChunk(1, 1, createChunk(OrthoMat4(0, 0)));
+    world.addChunk(0, 0, createChunk());
+    world.addChunk(-1, 0, createChunk());
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);

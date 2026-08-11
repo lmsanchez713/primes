@@ -4,17 +4,17 @@ import { Mat4 } from '../math.js';
 export class World extends Entity {
     constructor(chunkWidth, chunkHeight, transform) {
         super();
-        // chunkWidth/Height: number of chunks in X and Y directions (historical/optional)
-        this.chunkWidth = chunkWidth; 
+        // Physical dimensions of a single chunk in world units
+        this.chunkWidth = chunkWidth;
         this.chunkHeight = chunkHeight;
 
         // Sparse Map<x, Map<y, Chunk>>
-        this.chunks = new Map(); 
-        
+        this.chunks = new Map();
+
         // The logical grid of tiles (GameItems)
         // Map<y, Map<x, [GameItem, ...]>>
         this.grid = new Map();
-        
+
         // Entities that are "walking" on the grid.
         // Map: entity -> {x, y}
         this.actors = new Map();
@@ -28,7 +28,24 @@ export class World extends Entity {
         this.grid = grid;
     }
 
+    /**
+     * Adds a chunk to the world and automatically sets its transform 
+     * based on its grid position and the world's chunk dimensions.
+     * 
+     * @param {number} cx - Chunk X coordinate (can be negative)
+     * @param {number} cy - Chunk Y coordinate (can be negative)
+     * @param {Chunk} chunk - The chunk instance
+     */
     addChunk(cx, cy, chunk) {
+        // 1. Calculate the world-space position of this chunk
+        const x = cx * this.chunkWidth;
+        const y = cy * this.chunkHeight;
+
+        // 2. Set the chunk's transform to be a translation to its grid position
+        chunk.transform = new Mat4();
+        Mat4.translation(x, y, 0, chunk.transform);
+
+        // 3. Add to the sparse map
         if (!this.chunks.has(cx)) {
             this.chunks.set(cx, new Map());
         }
@@ -43,23 +60,10 @@ export class World extends Entity {
         return null;
     }
 
-    /**
-     * Register an actor in the world at a specific grid position.
-     * @param {Entity} entity 
-     * @param {number} x 
-     * @param {number} y 
-     */
     addActor(entity, x, y) {
         this.actors.set(entity, { x, y });
     }
 
-    /**
-     * Logic to move an entity from one tile to another
-     * @param {Entity} entity 
-     * @param {number} newX 
-     * @param {number} newY 
-     * @returns {boolean} success
-     */
     moveEntity(entity, newX, newY) {
         const actorInfo = this.actors.get(entity);
         if (!actorInfo) return false;
@@ -69,7 +73,6 @@ export class World extends Entity {
 
         if (oldX === newX && oldY === newY) return true;
 
-        // 1. Check collisions/callbacks at the target tile
         const targetCol = this.grid.get(newY);
         const targetTileItems = targetCol?.get(newX);
         if (!targetTileItems) return false;
@@ -80,7 +83,6 @@ export class World extends Entity {
             }
         }
 
-        // 2. Check callbacks at the current tile (moving away)
         const currentCol = this.grid.get(oldY);
         const currentTileItems = currentCol?.get(oldX);
         if (currentTileItems) {
@@ -91,7 +93,6 @@ export class World extends Entity {
             }
         }
 
-        // 3. Update internal state
         actorInfo.x = newX;
         actorInfo.y = newY;
 
