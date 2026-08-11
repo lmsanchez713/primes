@@ -91,7 +91,7 @@ export async function InitApp() {
     // Texture Sheets (for Sprites)
     const tile_sheet_url = 'img/sprites/otsp_tiles_01_alpha.png';
     const creatures1_sheet_url = 'img/sprites/otsp_creatures_01_alpha.png';
-    
+
     // We still need the actual textures for the TextureSheet/Sprite logic 
     // because they need the pixel data immediately to calculate UVs/Atlas.
     // But for standard Material textures, we use the URL lazy loading.
@@ -103,7 +103,7 @@ export async function InitApp() {
 
     const tile_sheet_material = new Material(gl, shader);
     tile_sheet_material.setTexture('uSampler', tile_sheet_url);
-    
+
     const creatures1_sheet_material = new Material(gl, shader);
     creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_url);
 
@@ -113,25 +113,14 @@ export async function InitApp() {
     for (let c = 500; c < 1000; c++) {
         arr.push(c);
     }
-    tile_sheet_sprite.addState('spritez', arr, 0.25); // 3 frames, 1 sec each
-    const tile_entity = new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0));
-    tile_entity.sprite = tile_sheet_sprite;
-
-    const creatures1_sheet_material = new Material(gl, shader);
-    creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_texture);
-    const creatures1_sheet = new TextureSheet(creatures1_sheet_texture, 32, 32);
+    tile_sheet_sprite.addState('spritez', arr, 0.25);
 
     const creatures1_sheet_sprite = new Sprite(creatures1_sheet);
     const arrr = [];
     for (let c = 16 * 64 - 1; c >= 16 * 32; c--) {
         arrr.push(c);
     }
-    creatures1_sheet_sprite.addState('spritez', arrr, 0.25); // 3 frames, 1 sec each
-    const creatures1_entity = new Entity(square_geometry, creatures1_sheet_material);
-    creatures1_entity.sprite = creatures1_sheet_sprite;
-    
-    //const ambientLight = new AmbientLight([1.0, 1.0, 1.0]); // White light
-    //engine.scene.add(ambientLight);
+    creatures1_sheet_sprite.addState('spritez', arrr, 0.25);
 
     const sunLight = new DirectionalLight();
     sunLight.color = [1.0, 1.0, 1.0];
