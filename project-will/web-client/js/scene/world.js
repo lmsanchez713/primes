@@ -99,6 +99,65 @@ export class World extends Entity {
         return true;
     }
 
+    /**
+ * Gets the array of entities at a specific world coordinate.
+ * @param {number} worldX - The world-space X coordinate.
+ * @param {number} worldY - The world-space Y coordinate.
+ * @returns {Entity[]} An array of entities in that tile.
+ */
+    getTileEntities(worldX, worldY) {
+        const cx = Math.floor(worldX / this.chunkWidth);
+        const cy = Math.floor(worldY / this.chunkHeight);
+        const chunk = this.getChunk(cx, cy);
+
+        if (!chunk) return [];
+
+        // Calculate local coordinates within the chunk
+        const lx = Math.floor(worldX) - cx * this.chunkWidth;
+        const ly = Math.floor(worldY) - cy * this.chunkHeight;
+
+        const col = chunk.grid.get(lx);
+        if (col) {
+            const cell = col.get(ly);
+            if (cell) return cell;
+        }
+
+        return [];
+    }
+
+    /**
+     * Sets (replaces) the array of entities at a specific world coordinate.
+     * If the chunk does not exist, it will be created.
+     * @param {number} worldX - The world-space X coordinate.
+     * @param {number} worldY - The world-space Y coordinate.
+     * @param {Entity[]} entities - The new array of entities for this tile.
+     */
+    setTileEntities(worldX, worldY, entities) {
+        const cx = Math.floor(worldX / this.chunkWidth);
+        const cy = Math.floor(worldY / this.chunkHeight);
+
+        // 1. Check if chunk exists, if not, create it
+        let chunk = this.getChunk(cx, cy);
+        if (!chunk) {
+            chunk = new Chunk(this.chunkWidth, this.chunkHeight);
+            this.addChunk(cx, cy, chunk);
+        }
+
+        // 2. Calculate local coordinates
+        const lx = Math.floor(worldX) - cx * this.chunkWidth;
+        const ly = Math.floor(worldY) - cy * this.chunkHeight;
+
+        // 3. Ensure the inner maps (columns/rows) exist in the chunk's grid
+        if (!chunk.grid.has(lx)) {
+            chunk.grid.set(lx, new Map());
+        }
+        const col = chunk.grid.get(lx);
+
+        // 4. Write the array to the cell
+        col.set(ly, entities);
+    }
+
+
     update(deltaTime) {
         for (const col of this.chunks.values()) {
             for (const chunk of col.values()) {
