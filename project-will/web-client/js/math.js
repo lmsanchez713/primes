@@ -148,3 +148,9 @@ export class Mat4 {
         return out;
     }
 }
+
+export function OrthoMat4(x = 0, y = 0, z = 0) {
+    let mat4 = new Mat4();
+    Mat4.translation(x, y, z, mat4);
+    return mat4;
+}

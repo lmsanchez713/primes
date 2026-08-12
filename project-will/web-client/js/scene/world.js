@@ -1,5 +1,6 @@
 import { Entity } from './entity.js';
-import { Mat4 } from '../math.js';
+import { Chunk } from './chunk.js';
+import { Mat4, OrthoMat4 } from '../math.js';
 
 export class World extends Entity {
     constructor(chunkWidth, chunkHeight, transform) {
@@ -148,6 +149,16 @@ export class World extends Entity {
     addEntityToTile(worldX, worldY, entity) {
         // getTile handles all the creation logic
         const tile = this.getTile(worldX, worldY);
+
+        // Determine which chunk the coordinate belongs to
+        const cx = Math.floor(worldX / this.chunkWidth);
+        const cy = Math.floor(worldY / this.chunkHeight);
+
+        const lx = Math.floor(worldX) - (cx * this.chunkWidth);
+        const ly = Math.floor(worldY) - (cy * this.chunkHeight);
+
+        entity.transform = OrthoMat4(lx, ly);
+
         tile.push(entity);
     }
 

@@ -1,6 +1,6 @@
 import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight, AmbientLight } from './ogl2.js';
 import { Engine } from './engine.js';
-import { Mat4 } from './math.js';
+import { Mat4, OrthoMat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
 import { TextureSheet } from './core/texture-sheet.js';
 import { Sprite } from './scene/sprite.js';
@@ -55,12 +55,6 @@ function createQuadGeometry(gl, shader) {
     geo.setCount(6);
 
     return geo;
-}
-
-function OrthoMat4(x = 0, y = 0, z = 0) {
-    let mat4 = new Mat4();
-    Mat4.translation(x, y, z, mat4);
-    return mat4;
 }
 
 /**
@@ -136,22 +130,15 @@ export async function InitApp() {
     cat_sprite1.addState('cat1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
     const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
 
-    const world = new World(3, 3);
-    function createChunk() {
-        let chunk = new Chunk(3, 3);
-        chunk.addEntity(0, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, -1), grass_tile_sprite1));
-        chunk.addEntity(1, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, -1), grass_tile_sprite1));
-        chunk.addEntity(2, 0, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, -1), grass_tile_sprite1));
-        chunk.addEntity(0, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, 0), grass_tile_sprite1));
-        chunk.addEntity(1, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 0), grass_tile_sprite1));
-        chunk.addEntity(2, 1, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 0), grass_tile_sprite1));
-        chunk.addEntity(0, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(-1, 1), grass_tile_sprite1));
-        chunk.addEntity(1, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(0, 1), grass_tile_sprite1));
-        chunk.addEntity(2, 2, new Entity(square_geometry, tile_sheet_material, OrthoMat4(1, 1), grass_tile_sprite1));
-        return chunk;
+    //const world = new World(3, 3);
+    const world = new World(16, 16);
+
+    for (let x = -8; x <= 8; x++) {
+        for (let y = -8; y <= 8; y++) {
+            if ((x + y) % 2 === 0)
+                world.addEntityToTile(x, y, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
+        }
     }
-    world.addChunk(0, 0, createChunk());
-    world.addChunk(-1, 0, createChunk());
 
     // 1. Setup TextureSheet
     // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
@@ -178,7 +165,8 @@ export async function InitApp() {
 
     // 7. Set up Camera
     engine.setProjectionMode('ortho');
-    engine.setOrthographicParameters({ size: 9.0 });
+    //engine.setOrthographicParameters({ size: 9.0 });
+    engine.setOrthographicParameters({ size: 15.0 });
     engine.camera.updateView();
 
     // engine.setController(new CameraController(engine.camera));
