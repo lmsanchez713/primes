@@ -168,13 +168,20 @@ export async function InitApp() {
 
     world.addEntityToTile(0, 0, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
     world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
-    //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, tile_sheet_material, null, dirt_tile_sprite1));
     world.addEntityToTile(0, 1, new Entity(square_geometry, tile_sheet_material, null, stone_tile_sprite1));
     world.addEntityToTile(1, 0, new Entity(square_geometry, tile_sheet_material, null, water_tile_sprite1));
     world.addEntityToTile(0, -1, new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, misc_sheet_material, null, fire_sprite1));
     world.addEntityToTile(0, 1, new Entity(square_geometry, misc_sheet_material, null, fire_sprite2));
+
+    world.addEntityToTile(-1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    world.addEntityToTile(0, 1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    world.addEntityToTile(1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    world.addEntityToTile(0, -1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    world.addEntityToTile(1, 1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+
+    //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
 
     //const entt = new Entity();
     //entt.children.push(new Entity(square_geometry, tile_sheet_material, new Mat4(), grass_tile_sprite1));
