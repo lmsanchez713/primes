@@ -76,10 +76,10 @@ export async function InitApp() {
     const square_geometry = createQuadGeometry(gl, shader);
 
     // 3. Create and add the Quad Entity
-    const wood_box_material = new Material(gl, shader);
-    wood_box_material.setTexture('uSampler', 'img/wood-box.png');
+    //const wood_box_material = new Material(gl, shader);
+    //wood_box_material.setTexture('uSampler', 'img/wood-box.png');
 
-    const square_entity = new Entity(square_geometry, wood_box_material);
+    //const square_entity = new Entity(square_geometry, wood_box_material);
     //engine.scene.add(square_entity);
 
     // Texture Sheets (for Sprites)
@@ -100,21 +100,6 @@ export async function InitApp() {
 
     const creatures1_sheet_material = new Material(gl, shader);
     creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_url);
-
-    // Sprites
-    const tile_sheet_sprite = new Sprite(tile_sheet);
-    const arr = [];
-    for (let c = 500; c < 1000; c++) {
-        arr.push(c);
-    }
-    tile_sheet_sprite.addState('spritez', arr, 0.25);
-
-    const creatures1_sheet_sprite = new Sprite(creatures1_sheet);
-    const arrr = [];
-    for (let c = 16 * 64 - 1; c >= 16 * 32; c--) {
-        arrr.push(c);
-    }
-    creatures1_sheet_sprite.addState('spritez', arrr, 0.25);
 
     const sunLight = new DirectionalLight();
     sunLight.color = [1.0, 1.0, 1.0];
@@ -140,24 +125,21 @@ export async function InitApp() {
         }
     }
 
-    // 1. Setup TextureSheet
-    // const sheet = new TextureSheet(sprite_sheet_texture, 32, 32);
-
-    // 2. Create Sprite for Fire
+    // Create Sprite for Fire
     // const fireSprite = new Sprite(sheet);
     // fireSprite.addState('loop', [0, 1, 2], 1.0); // 3 frames, 1 sec each
 
-    // 3. Create Sprite for Creature
+    // Attach to Entity
+    //const fireEntity = new Entity(square_geometry, wood_box_material);
+    //fireEntity.sprite = fireSprite;
+    //engine.scene.add(fireEntity);
+
+    // Create Sprite for Creature
     // const creatureSprite = new Sprite(sheet);
     // Facing right, walking (indices 10, 11, 12)
     //creatureSprite.addState('idle', [5, 6], 1.0);
     //creatureSprite.addState('walk_right', [10, 11, 12], 0.2);
     //creatureSprite.setState('walk_right');
-
-    // 4. Attach to Entity
-    //const fireEntity = new Entity(square_geometry, wood_box_material);
-    //fireEntity.sprite = fireSprite;
-    //engine.scene.add(fireEntity);
 
     //const creatureEntity = new Entity(quadGeo, material);
     //creatureEntity.sprite = creatureSprite;
