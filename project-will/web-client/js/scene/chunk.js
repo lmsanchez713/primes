@@ -39,12 +39,15 @@ export class Chunk extends Entity {
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
         // 1. Calculate this chunk's world matrix based on parent (the World)
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
+        //console.log("Rendering chunk at transform:", this.transform);
 
         // 2. Render entities in the grid using this chunk's world matrix
         for (const col of this.grid.values()) {
             for (const cell of col.values()) {
+                //console.log("Rendering cell with entities:", cell);
                 for (const entity of cell) {
                     // Pass the chunk's world matrix as the new parent matrix for the entity
+                    //console.log("Rendering entity with sprite:", entity.sprite.currentState);
                     entity.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
                 }
             }
