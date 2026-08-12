@@ -2,16 +2,14 @@ import { Entity } from './entity.js';
 import { Mat4 } from '../math.js';
 
 export class Chunk extends Entity {
-    constructor(width, height, transform) {
+    constructor(width, height, transform = new Mat4()) {
         // Call Entity constructor to initialize transform and worldMatrix
         super();
         this.width = width;
         this.height = height;
         // Sparse Map<x, Map<y, Entity[]>>
         this.grid = new Map();
-        if (transform) {
-            this.transform = transform;
-        }
+        this.transform = transform;
     }
 
     addEntity(x, y, entity) {
