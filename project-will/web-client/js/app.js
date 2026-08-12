@@ -94,6 +94,12 @@ export async function InitApp() {
     const creatures1_sheet_material = new Material(gl, shader);
     creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_url);
 
+    const misc_sheet_url = 'img/sprites/otsp_misc_01_alpha.png';
+    const misc_sheet_texture = new Texture(gl, misc_sheet_url);
+    const misc_sheet = new TextureSheet(misc_sheet_texture, 32, 32);
+    const misc_sheet_material = new Material(gl, shader);
+    misc_sheet_material.setTexture('uSampler', misc_sheet_url);
+
     // We still need the actual textures for the TextureSheet/Sprite logic 
     // because they need the pixel data immediately to calculate UVs/Atlas.
     // But for standard Material textures, we use the URL lazy loading.
@@ -124,28 +130,33 @@ export async function InitApp() {
     shallow_water_tile_sprite1.addState('shallow_water1', [47 * 16 + 11], 1.0);
     //new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1)
 
-    //const fire_sprite1 = new Sprite(creatures1_sheet);
-    //fire_sprite1.addState('fire1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
-    //new Entity(square_geometry, creatures1_sheet_material, null, fire_sprite1);
+    const fire_sprite1 = new Sprite(misc_sheet);
+    fire_sprite1.addState('fire1', [33 * 16 + 0, 33 * 16 + 1, 33 * 16 + 2,
+                                    33 * 16 + 3, 33 * 16 + 4, 33 * 16 + 5,
+                                    33 * 16 + 6, 33 * 16 + 7, 33 * 16 + 8], 1.0);
+    //new Entity(square_geometry, misc_sheet_material, null, fire_sprite1)
 
     const cat_sprite1 = new Sprite(creatures1_sheet);
     cat_sprite1.addState('cat1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
-    const cat_entity = new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1);
+    //new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1)
 
     //const world = new World(3, 3);
     const world = new World(16, 16);
 
-    for (let x = -8; x <= 8; x++) {
-        for (let y = -8; y <= 8; y++) {
-            if ((x + y) % 2 === 0)
-                world.addEntityToTile(x, y, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
-        }
-    }
+    //for (let x = -8; x <= 8; x++) {
+    //    for (let y = -8; y <= 8; y++) {
+    //        if ((x + y) % 2 === 0)
+    //            world.addEntityToTile(x, y, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
+    //    }
+    //}
 
     world.addEntityToTile(-1, 0, new Entity(square_geometry, tile_sheet_material, null, dirt_tile_sprite1));
     world.addEntityToTile(0, 1, new Entity(square_geometry, tile_sheet_material, null, stone_tile_sprite1));
     world.addEntityToTile(1, 0, new Entity(square_geometry, tile_sheet_material, null, water_tile_sprite1));
     world.addEntityToTile(0, -1, new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1));
+    //world.addEntityToTile(0, -2, new Entity(square_geometry, misc_sheet_material, null, fire_sprite1));
+
+    world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
 
     // Create Sprite for Fire
     // const fireSprite = new Sprite(sheet);
@@ -178,13 +189,13 @@ export async function InitApp() {
     //engine.scene.add(creatures1_entity);
     //engine.scene.add(grass_tile_entity);
     engine.scene.add(world);
-    engine.scene.add(cat_entity);
+    //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1));
 
     // 8. Start the engine loop
     engine.start();
 
     // --- TEST NEW FEATURES ---
-    console.log("--- Starting Map Loader Test ---");
+    //console.log("--- Starting Map Loader Test ---");
     //await testMapLoading(world, cat_entity);
 }
 
