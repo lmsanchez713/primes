@@ -150,13 +150,16 @@ export async function InitApp() {
     //    }
     //}
 
+    world.addEntityToTile(0, 0, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
+    world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, tile_sheet_material, null, dirt_tile_sprite1));
     world.addEntityToTile(0, 1, new Entity(square_geometry, tile_sheet_material, null, stone_tile_sprite1));
     world.addEntityToTile(1, 0, new Entity(square_geometry, tile_sheet_material, null, water_tile_sprite1));
     world.addEntityToTile(0, -1, new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1));
     //world.addEntityToTile(0, -2, new Entity(square_geometry, misc_sheet_material, null, fire_sprite1));
 
-    world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    const tile = world.getTile(0, 0);
+    console.log(tile);
 
     // Create Sprite for Fire
     // const fireSprite = new Sprite(sheet);
