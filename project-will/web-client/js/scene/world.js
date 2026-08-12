@@ -3,7 +3,7 @@ import { Chunk } from './chunk.js';
 import { Mat4, OrthoMat4 } from '../math.js';
 
 export class World extends Entity {
-    constructor(chunkWidth, chunkHeight, transform) {
+    constructor(chunkWidth, chunkHeight, transform = new Mat4()) {
         super();
         // Physical dimensions of a single chunk in world units
         this.chunkWidth = chunkWidth;
@@ -20,9 +20,7 @@ export class World extends Entity {
         // Map: entity -> {x, y}
         this.actors = new Map();
 
-        if (transform) {
-            this.transform = transform;
-        }
+        this.transform = transform;
     }
 
     setGrid(grid) {
