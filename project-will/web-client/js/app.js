@@ -164,8 +164,11 @@ export async function InitApp() {
     //    }
     //}
 
+    engine.scene.add(world);
+
     world.addEntityToTile(0, 0, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
-    world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    //world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1));
+    engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, tile_sheet_material, null, dirt_tile_sprite1));
     world.addEntityToTile(0, 1, new Entity(square_geometry, tile_sheet_material, null, stone_tile_sprite1));
     world.addEntityToTile(1, 0, new Entity(square_geometry, tile_sheet_material, null, water_tile_sprite1));
@@ -203,7 +206,6 @@ export async function InitApp() {
     //engine.scene.add(tile_entity);
     //engine.scene.add(creatures1_entity);
     //engine.scene.add(grass_tile_entity);
-    engine.scene.add(world);
     //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1));
 
     // 8. Start the engine loop
