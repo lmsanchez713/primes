@@ -2,6 +2,37 @@ import { Scene } from './ogl2.js';
 import { AssetManager } from './asset-manager.js';
 import { Camera } from './camera.js';
 
+class GLStateCache {
+    constructor(gl) {
+        this.gl = gl;
+        this.currentProgram = null;
+        this.currentVAO = null;
+        this.boundTextures = {}; // e.g. { [gl.TEXTURE0]: textureObj }
+    }
+
+    useProgram(program) {
+        if (this.currentProgram !== program) {
+            this.gl.useProgram(program);
+            this.currentProgram = program;
+        }
+    }
+
+    bindVertexArray(vao) {
+        if (this.currentVAO !== vao) {
+            this.gl.bindVertexArray(vao);
+            this.currentVAO = vao;
+        }
+    }
+
+    bindTexture(unit, target, texture) {
+        if (this.boundTextures[unit] !== texture) {
+            this.gl.activeTexture(unit);
+            this.gl.bindTexture(target, texture);
+            this.boundTextures[unit] = texture;
+        }
+    }
+}
+
 export class Engine {
     constructor(canvas) {
         this.canvas = canvas;
@@ -31,6 +62,8 @@ export class Engine {
         });
 
         this.orthographic = { left: -1.0, right: 1.0, bottom: -1.0, top: 1.0, near: 0.1, far: 100.0, size: 1.0 };
+
+        this.state = new GLStateCache(this.gl);
 
     }
 

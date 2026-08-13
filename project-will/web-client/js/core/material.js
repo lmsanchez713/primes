@@ -37,7 +37,7 @@ export class Material {
 
     apply(engine) {
         const gl = this.gl;
-        gl.useProgram(this.shader.program);
+        engine.state.useProgram(this.shader.program);
 
         this.textures.forEach((texData, index) => {
             const unit = index;
@@ -52,7 +52,7 @@ export class Material {
             }
 
             if (texData.texture) {
-                texData.texture.bind(unit);
+                texData.texture.bind(engine, unit);
                 const loc = this.shader.getUniformLocation(texData.name);
                 if (loc) gl.uniform1i(loc, unit);
             }

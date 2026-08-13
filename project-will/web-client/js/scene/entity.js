@@ -88,7 +88,7 @@ export class Entity {
                 }
             }
 
-            this.geometry.bind();
+            this.geometry.bind(engine);
             this.geometry.draw();
         }
 

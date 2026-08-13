@@ -30,9 +30,8 @@ export class Texture {
         });
     }
 
-    bind(unit = 0) {
+    bind(engine, unit = 0) {
         if (!this.isReady) return;
-        this.gl.activeTexture(this.gl.TEXTURE0 + unit);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+        engine.state.bindTexture(this.gl.TEXTURE0 + unit, this.gl.TEXTURE_2D, this.texture);
     }
 }

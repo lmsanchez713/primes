@@ -4,12 +4,12 @@ export class VertexArray {
         this.vao = gl.createVertexArray();
     }
 
-    bind() {
-        this.gl.bindVertexArray(this.vao);
+    bind(engine) {
+        engine.state.bindVertexArray(this.vao);
     }
 
     unbind() {
-        this.gl.bindVertexArray(null);
+        //this.gl.state.bindVertexArray(null);
     }
 }
 
@@ -23,7 +23,7 @@ export class Geometry {
     }
 
     addAttribute(buffer, location, size, type = this.gl.FLOAT) {
-        this.vao.bind();
+        this.gl.bindVertexArray(this.vao.vao);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer.buffer);
         this.gl.enableVertexAttribArray(location);
         this.gl.vertexAttribPointer(location, size, type, false, 0, 0);
@@ -34,8 +34,8 @@ export class Geometry {
         this.count = count;
     }
 
-    bind() {
-        this.vao.bind();
+    bind(engine) {
+        this.vao.bind(engine);
     }
 
     draw() {
