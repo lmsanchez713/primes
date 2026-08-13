@@ -1,5 +1,49 @@
 import { Mat4 } from '../math.js';
 import { Entity } from './entity.js';
+import { LightType } from '../core/shader.js';
+
+function render_entity(entity, viewMatrix, projectionMatrix, lights, engine) {
+    if (entity.geometry && entity.material && entity.material.isReady()) {
+        entity.material.apply(engine);
+        entity.material.setUniform('u_modelMatrix', entity.worldMatrix);
+        entity.material.setUniform('u_viewMatrix', viewMatrix);
+        entity.material.setUniform('u_projectionMatrix', projectionMatrix);
+
+        // Set default UV transform in case it's not set (for non-sprites)
+        entity.material.setUniform('u_uvTransform', [0, 0, 1, 1]);
+
+        if (entity.sprite) {
+            const uv = entity.sprite.getUVRect();
+            entity.material.setUniform('u_uvTransform', [uv.u, uv.v, uv.w, uv.h]);
+        }
+
+        if (!entity.lightType && lights.length > 0) {
+            const count = Math.min(lights.length, 4);
+            entity.material.setUniform('u_lightsCount', count);
+            for (let i = 0; i < count; i++) {
+                const light = lights[i];
+                const type = light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2);
+                entity.material.setUniform(`u_lightTypes[${i}]`, type);
+                entity.material.setUniform(`u_lightColors[${i}]`, light.color);
+
+                if (light.type !== LightType.AMBIENT) {
+                    const pos = [
+                        light.worldMatrix.data[12],
+                        light.worldMatrix.data[13],
+                        light.worldMatrix.data[14]
+                    ];
+                    entity.material.setUniform(`u_lightPositions[${i}]`, pos);
+                    if (light.type === LightType.DIRECTIONAL) {
+                        entity.material.setUniform(`u_lightDirections[${i}]`, light.direction);
+                    }
+                }
+            }
+        }
+
+        entity.geometry.bind(engine);
+        entity.geometry.draw();
+    }
+}
 
 export class Scene {
     constructor(gl) {
@@ -24,7 +68,11 @@ export class Scene {
         this._updateAndCollect(this.root, this.identity, lights);
 
         // 2. Second pass: Render the scene with collected light info
-        this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights, engine);
+        const entities = this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights, engine);
+
+        for (const entity of entities) {
+            render_entity(entity, viewMatrix, projectionMatrix, lights, engine);
+        }
     }
 
     _updateAndCollect(entity, parentWorldMatrix, lights) {

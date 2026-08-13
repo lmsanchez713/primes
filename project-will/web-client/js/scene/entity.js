@@ -1,5 +1,4 @@
 import { Mat4 } from '../math.js';
-import { LightType } from '../core/shader.js';
 
 export class Entity {
     constructor(geometry = null, material = null, transform = new Mat4(), sprite = null) {
@@ -49,51 +48,19 @@ export class Entity {
     }
 
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
+        const entities = [];
+
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         if (this.geometry && this.material && this.material.isReady()) {
-            this.material.apply(engine);
-            this.material.setUniform('u_modelMatrix', this.worldMatrix);
-            this.material.setUniform('u_viewMatrix', viewMatrix);
-            this.material.setUniform('u_projectionMatrix', projectionMatrix);
-            
-            // Set default UV transform in case it's not set (for non-sprites)
-            this.material.setUniform('u_uvTransform', [0, 0, 1, 1]);
-
-            if (this.sprite) {
-                const uv = this.sprite.getUVRect();
-                this.material.setUniform('u_uvTransform', [uv.u, uv.v, uv.w, uv.h]);
-            }
-
-            if (!this.lightType && lights.length > 0) {
-                const count = Math.min(lights.length, 4);
-                this.material.setUniform('u_lightsCount', count);
-                for (let i = 0; i < count; i++) {
-                    const light = lights[i];
-                    const type = light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2);
-                    this.material.setUniform(`u_lightTypes[${i}]`, type);
-                    this.material.setUniform(`u_lightColors[${i}]`, light.color);
-                    
-                    if (light.type !== LightType.AMBIENT) {
-                        const pos = [
-                            light.worldMatrix.data[12],
-                            light.worldMatrix.data[13],
-                            light.worldMatrix.data[14]
-                        ];
-                        this.material.setUniform(`u_lightPositions[${i}]`, pos);
-                        if (light.type === LightType.DIRECTIONAL) {
-                            this.material.setUniform(`u_lightDirections[${i}]`, light.direction);
-                        }
-                    }
-                }
-            }
-
-            this.geometry.bind(engine);
-            this.geometry.draw();
+            entities.push(this);
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            const child_entities = child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            if (child_entities.length > 0) entities.push(...child_entities);
         }
+
+        return entities;
     }
 }

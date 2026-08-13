@@ -37,6 +37,7 @@ export class Chunk extends Entity {
     }
 
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
+        const entities = [];
         // 1. Calculate this chunk's world matrix based on parent (the World)
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
         //console.log("Rendering chunk at transform:", this.transform);
@@ -48,14 +49,17 @@ export class Chunk extends Entity {
                 for (const entity of cell) {
                     // Pass the chunk's world matrix as the new parent matrix for the entity
                     //console.log("Rendering entity with sprite:", entity.sprite.currentState);
-                    entity.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+                    const cell_entities = entity.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+                    if (cell_entities.length > 0) entities.push(...cell_entities);
                 }
             }
         }
 
         // 3. Render standard Entity children (if any)
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            const child_entities = child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            if (child_entities.length > 0) entities.push(...child_entities);
         }
+        return entities;
     }
 }

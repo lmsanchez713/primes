@@ -170,18 +170,24 @@ export class World extends Entity {
     }
 
     render(gl, parentWorldMatrix, viewMatrix, projectionMatrix, lights, engine) {
+        const entities = [];
+
         Mat4.multiply(parentWorldMatrix, this.transform, this.worldMatrix);
 
         for (const col of this.chunks.values()) {
             for (const chunk of col.values()) {
                 if (chunk) {
-                    chunk.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+                    const chunk_entities = chunk.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+                    if (chunk_entities.length > 0) entities.push(...chunk_entities);
                 }
             }
         }
 
         for (const child of this.children) {
-            child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            const child_entities = child.render(gl, this.worldMatrix, viewMatrix, projectionMatrix, lights, engine);
+            if (child_entities.length > 0) entities.push(...child_entities);
         }
+
+        return entities;
     }
 }
