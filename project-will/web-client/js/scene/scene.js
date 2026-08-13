@@ -70,6 +70,10 @@ export class Scene {
         // 2. Second pass: Render the scene with collected light info
         const entities = this.root.render(gl, this.identity, viewMatrix, projectionMatrix, lights, engine);
 
+        if (engine.sort_function) {
+            entities.sort(engine.sort_function);
+        }
+
         for (const entity of entities) {
             render_entity(entity, viewMatrix, projectionMatrix, lights, engine);
         }

@@ -1,7 +1,7 @@
 import { Mat4 } from '../math.js';
 
 export class Entity {
-    constructor(geometry = null, material = null, transform = new Mat4(), sprite = null) {
+    constructor(geometry = null, material = null, transform = new Mat4(), sprite = null, priority = 0) {
         this.geometry = geometry;
         this.material = material;
         this.transform = transform;
@@ -15,6 +15,7 @@ export class Entity {
         
         // Sprite component
         this.sprite = sprite;
+        this.priority = priority;
     }
 
     add(child) {

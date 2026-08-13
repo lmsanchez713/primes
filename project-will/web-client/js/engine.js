@@ -65,6 +65,12 @@ export class Engine {
 
         this.state = new GLStateCache(this.gl);
 
+        this.sort_function = (a, b) => a.priority - b.priority;
+
+    }
+
+    setSortFunction(sortFunction) {
+        this.sort_function = sortFunction;
     }
 
     setOrthographicParameters(params) {
