@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "menezes": {
+      "command": "python",
+      "args": [
+        "C:\\menezes\\ai\\mcp_server\\python\\main.py"
+      ]
+    },
+    "primes": {
+      "command": "python",
+      "args": [
+        "C:\\primes\\mcp-server\\python\\main.py"
+      ]
+    }
+  }
+}
