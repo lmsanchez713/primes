@@ -42,6 +42,7 @@ export class Engine {
             return;
         }
 
+        this.gl.enable(this.gl.CULL_FACE);
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         this.gl.disable(this.gl.DEPTH_TEST); // Added depth test

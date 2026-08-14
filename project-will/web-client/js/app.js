@@ -19,9 +19,9 @@ function createQuadGeometry(gl, shader) {
     const vertices = new Float32Array([
         -0.5, -0.5, 0.0, // v0
         0.5, 0.5, 0.0, // v1
-        0.5, -0.5, 0.0, // v2
+        -0.5, 0.5, 0.0, // v2
         -0.5, -0.5, 0.0, // v3
-        -0.5, 0.5, 0.0, // v4
+        0.5, -0.5, 0.0, // v4
         0.5, 0.5, 0.0  // v5
     ]);
 
@@ -29,9 +29,9 @@ function createQuadGeometry(gl, shader) {
     const texCoords = new Float32Array([
         0.0, 0.0, // v0
         1.0, 1.0, // v1
-        1.0, 0.0, // v2
+        0.0, 1.0, // v2
         0.0, 0.0, // v3
-        0.0, 1.0, // v4
+        1.0, 0.0, // v4
         1.0, 1.0  // v5
     ]);
 
