@@ -43,3 +43,7 @@ export class Geometry {
         this.gl.drawArrays(this.mode, 0, this.count);
     }
 }
+
+export function createSquareGeometry(gl, shader) {
+    //
+}
