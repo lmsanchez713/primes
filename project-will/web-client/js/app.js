@@ -8,54 +8,9 @@ import { World } from './scene/world.js';
 import { Chunk } from './scene/chunk.js';
 import { MapLoader } from './scene/map_loader.js';
 import { ItemType } from './scene/item.js';
+import { createSquareGeometry } from './core/geometry.js';
 
 let engine;
-
-/**
- * Helper to create a simple quad geometry
- */
-function createQuadGeometry(gl, shader) {
-    // Vertices for two triangles forming a quad
-    const vertices = new Float32Array([
-        -0.5, -0.5, 0.0, // v0
-        0.5, 0.5, 0.0, // v1
-        -0.5, 0.5, 0.0, // v2
-        -0.5, -0.5, 0.0, // v3
-        0.5, -0.5, 0.0, // v4
-        0.5, 0.5, 0.0  // v5
-    ]);
-
-    // Texture coordinates
-    const texCoords = new Float32Array([
-        0.0, 0.0, // v0
-        1.0, 1.0, // v1
-        0.0, 1.0, // v2
-        0.0, 0.0, // v3
-        1.0, 0.0, // v4
-        1.0, 1.0  // v5
-    ]);
-
-    // Normals (pointing towards the camera)
-    const normals = new Float32Array([
-        0, 0, 1, 0, 0, 1, 0, 0, 1,
-        0, 0, 1, 0, 0, 1, 0, 0, 1
-    ]);
-
-    // Tangents (for normal mapping support)
-    const tangents = new Float32Array([
-        1, 0, 0, 1, 0, 0, 1, 0, 0,
-        1, 0, 0, 1, 0, 0, 1, 0, 0
-    ]);
-
-    const geo = new Geometry(gl, gl.TRIANGLES);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 3);
-    geo.setCount(6);
-
-    return geo;
-}
 
 /**
  * Initializes the application, setting up the engine, 
@@ -68,12 +23,12 @@ export async function InitApp() {
     const gl = engine.gl;
 
     // 1. Load Shader
-    const vsSource = await (await fetch('glsl/vertex.glsl')).text();
-    const fsSource = await (await fetch('glsl/fragment.glsl')).text();
+    const vsSource = await (await fetch('glsl/vtx_phong.glsl')).text();
+    const fsSource = await (await fetch('glsl/frag_phong.glsl')).text();
     const shader = new Shader(gl, vsSource, fsSource);
 
     // 2. Create Quad Geometry
-    const square_geometry = createQuadGeometry(gl, shader);
+    const square_geometry = createSquareGeometry(gl, shader);
 
     // 3. Create and add the Quad Entity
     //const wood_box_material = new Material(gl, shader);
@@ -86,19 +41,19 @@ export async function InitApp() {
     const tile_sheet_texture = new Texture(gl, tile_sheet_url);
     const tile_sheet = new TextureSheet(tile_sheet_texture, 32, 32);
     const tile_sheet_material = new Material(gl, shader);
-    tile_sheet_material.setTexture('uSampler', tile_sheet_url);
+    tile_sheet_material.setTexture('uSampler', tile_sheet_texture);
 
     const creatures1_sheet_url = 'img/sprites/otsp_creatures_01_alpha.png';
     const creatures1_sheet_texture = new Texture(gl, creatures1_sheet_url);
     const creatures1_sheet = new TextureSheet(creatures1_sheet_texture, 32, 32);
     const creatures1_sheet_material = new Material(gl, shader);
-    creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_url);
+    creatures1_sheet_material.setTexture('uSampler', creatures1_sheet_texture);
 
     const misc_sheet_url = 'img/sprites/otsp_misc_01_alpha.png';
     const misc_sheet_texture = new Texture(gl, misc_sheet_url);
     const misc_sheet = new TextureSheet(misc_sheet_texture, 32, 32);
     const misc_sheet_material = new Material(gl, shader);
-    misc_sheet_material.setTexture('uSampler', misc_sheet_url);
+    misc_sheet_material.setTexture('uSampler', misc_sheet_texture);
 
     // We still need the actual textures for the TextureSheet/Sprite logic 
     // because they need the pixel data immediately to calculate UVs/Atlas.
