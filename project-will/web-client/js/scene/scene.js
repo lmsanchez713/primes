@@ -2,44 +2,93 @@ import { Mat4 } from '../math.js';
 import { Entity } from './entity.js';
 import { LightType } from '../core/shader.js';
 
-function render_entity(entity, viewMatrix, projectionMatrix, lights, engine) {
+// Define the structure of our UBO data
+class UBOData {
+    constructor() {
+        // Matrix data (model, view, projection)
+        this.modelMatrix = new Float32Array(16);
+        this.viewMatrix = new Float32Array(16);
+        this.projectionMatrix = new Float32Array(16);
+        
+        // Light data (4 lights max)
+        this.lightsCount = 0;
+        this.lightTypes = new Int32Array(4);
+        this.lightColors = new Float32Array(12); // 4 lights * 3 components
+        this.lightPositions = new Float32Array(12); // 4 lights * 3 components
+        this.lightDirections = new Float32Array(12); // 4 lights * 3 components
+        
+        // UV transform data
+        this.uvTransform = new Float32Array(4); // offset_u, offset_v, scale_u, scale_v
+        
+        // Buffer for all data (aligned to 16-byte boundaries)
+        const totalSize = 
+            16*4 + // model, view, projection matrices
+            4 +    // lightsCount
+            4*4 +  // lightTypes array
+            12*4 + // lightColors array
+            12*4 + // lightPositions array  
+            12*4 + // lightDirections array
+            4*4;   // uvTransform
+        
+        this.buffer = new Float32Array(Math.ceil(totalSize / 4) * 4); // Ensure proper alignment
+    }
+}
+
+function render_entity(entity, viewMatrix, projectionMatrix, lights, engine, uboManager) {
     if (entity.geometry && entity.material && entity.material.isReady()) {
-        entity.material.apply(engine);
-        entity.material.setUniform('u_modelMatrix', entity.worldMatrix);
-        entity.material.setUniform('u_viewMatrix', viewMatrix);
-        entity.material.setUniform('u_projectionMatrix', projectionMatrix);
-
-        // Set default UV transform in case it's not set (for non-sprites)
-        entity.material.setUniform('u_uvTransform', [0, 0, 1, 1]);
-
+        // Update UBO data for this entity
+        const uboData = new UBOData();
+        
+        // Set matrices
+        uboData.modelMatrix.set(entity.worldMatrix.data);
+        uboData.viewMatrix.set(viewMatrix);
+        uboData.projectionMatrix.set(projectionMatrix);
+        
+        // Set UV transform
         if (entity.sprite) {
             const uv = entity.sprite.getUVRect();
-            entity.material.setUniform('u_uvTransform', [uv.u, uv.v, uv.w, uv.h]);
+            uboData.uvTransform[0] = uv.u;  // offset_u
+            uboData.uvTransform[1] = uv.v;  // offset_v  
+            uboData.uvTransform[2] = uv.w;  // scale_u
+            uboData.uvTransform[3] = uv.h;  // scale_v
+        } else {
+            uboData.uvTransform[0] = 0;
+            uboData.uvTransform[1] = 0;
+            uboData.uvTransform[2] = 1;
+            uboData.uvTransform[3] = 1;
         }
-
+        
+        // Set lights
         if (!entity.lightType && lights.length > 0) {
             const count = Math.min(lights.length, 4);
-            entity.material.setUniform('u_lightsCount', count);
+            uboData.lightsCount = count;
+            
             for (let i = 0; i < count; i++) {
                 const light = lights[i];
                 const type = light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2);
-                entity.material.setUniform(`u_lightTypes[${i}]`, type);
-                entity.material.setUniform(`u_lightColors[${i}]`, light.color);
-
+                uboData.lightTypes[i] = type;
+                uboData.lightColors.set(light.color, i * 3);
+                
                 if (light.type !== LightType.AMBIENT) {
                     const pos = [
                         light.worldMatrix.data[12],
                         light.worldMatrix.data[13],
                         light.worldMatrix.data[14]
                     ];
-                    entity.material.setUniform(`u_lightPositions[${i}]`, pos);
+                    uboData.lightPositions.set(pos, i * 3);
                     if (light.type === LightType.DIRECTIONAL) {
-                        entity.material.setUniform(`u_lightDirections[${i}]`, light.direction);
+                        uboData.lightDirections.set(light.direction, i * 3);
                     }
                 }
             }
         }
-
+        
+        // Set UBO data in material
+        entity.material.setUBOData('SceneUBO', uboData.buffer);
+        
+        // Apply the material with UBO support
+        entity.material.applyWithUBOs(engine, uboManager);
+        
         entity.geometry.bind(engine);
         entity.geometry.draw();
     }
@@ -50,6 +99,7 @@ export class Scene {
         this.gl = gl;
         this.root = new Entity();
         this.identity = new Mat4();
+        this.uboManager = null; // Will be initialized in render
     }
 
     add(entity) {
@@ -60,7 +110,7 @@ export class Scene {
         this.root.update(deltaTime);
     }
 
-    render(viewMatrix, projectionMatrix, engine) {
+    async render(viewMatrix, projectionMatrix, engine) {
         const gl = this.gl;
         const lights = [];
         
@@ -74,8 +124,23 @@ export class Scene {
             entities.sort(engine.sort_function);
         }
 
+        // Initialize UBO manager if needed
+        if (!this.uboManager) {
+            const { UBOManager } = await import('../core/ubo.js');
+            this.uboManager = new UBOManager(gl);
+            
+            // Create the main scene UBO with enough space for all data
+            const uboData = new Float32Array(1024); // 1KB buffer - adjust as needed
+            this.uboManager.createUBO('SceneUBO', uboData);
+        }
+        
+        // Bind all UBOs before rendering
+        if (this.uboManager) {
+            this.uboManager.bindAll();
+        }
+
         for (const entity of entities) {
-            render_entity(entity, viewMatrix, projectionMatrix, lights, engine);
+            render_entity(entity, viewMatrix, projectionMatrix, lights, engine, this.uboManager);
         }
     }
 

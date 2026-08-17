@@ -6,3 +6,4 @@ export { Material } from './core/material.js';
 export { Entity } from './scene/entity.js';
 export { Scene } from './scene/scene.js';
 export { AmbientLight, DirectionalLight, PointLight } from './scene/lights.js';
+export { UBOManager } from './core/ubo.js';

@@ -129,7 +129,7 @@ export async function InitApp() {
     world.addEntityToTile(0, -1, new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1, 0));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, misc_sheet_material, null, fire_sprite1, 1000));
     world.addEntityToTile(0, 1, new Entity(square_geometry, misc_sheet_material, null, fire_sprite2, 10));
-
+    
     world.addEntityToTile(-1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
     world.addEntityToTile(0, 1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
     //world.addEntityToTile(1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
@@ -139,11 +139,6 @@ export async function InitApp() {
     // engine.setSortFunction(function (a, b) {});
 
     //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
-
-    //const entt = new Entity();
-    //entt.children.push(new Entity(square_geometry, tile_sheet_material, new Mat4(), grass_tile_sprite1));
-    //entt.children.push(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
-    //engine.scene.add(entt);
 
     // Create Sprite for Fire
     // const fireSprite = new Sprite(sheet);
@@ -155,11 +150,10 @@ export async function InitApp() {
     //engine.scene.add(fireEntity);
 
     // Create Sprite for Creature
-    // const creatureSprite = new Sprite(sheet);
+    // const creatureSprite = new Sprite(sheet;
     // Facing right, walking (indices 10, 11, 12)
     //creatureSprite.addState('idle', [5, 6], 1.0);
     //creatureSprite.addState('walk_right', [10, 11, 12], 0.2);
-    //creatureSprite.setState('walk_right');
 
     //const creatureEntity = new Entity(quadGeo, material);
     //creatureEntity.sprite = creatureSprite;
@@ -220,10 +214,6 @@ async function testMapLoading(world, actor) {
     // Add the test world to scene
     // (In a real app, we'd replace the current world or add it as a child)
     // For now, we'll just use the provided world and overwrite its grid.
-    world.setGrid(testGrid);
-    // We need to make sure world's dimensions match the test grid.
-    // Since we can't easily resize World, we'll assume the test is small.
-    // Let's just add the actor to the existing world's logic.
 
     console.log("Adding actor to grid...");
     world.addActor(actor, 0, 0);

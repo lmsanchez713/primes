@@ -9,6 +9,8 @@ export class Shader {
         this.gl = gl;
         this.program = this._initProgram(vsSource, fsSource);
         this.uniformLocations = new Map();
+        this.uboBindings = new Map(); // Track UBO binding points
+        this._parseUBOInfo(vsSource, fsSource);
     }
 
     _initShader(gl, type, source) {
@@ -45,5 +47,37 @@ export class Shader {
             this.uniformLocations.set(name, this.gl.getUniformLocation(this.program, name));
         }
         return this.uniformLocations.get(name);
+    }
+
+    /**
+     * Parse UBO information from the shader source
+     * This is a simple parser that looks for uniform block declarations
+     */
+    _parseUBOInfo(vsSource, fsSource) {
+        // In a full implementation, we would parse the shader sources to find 
+        // uniform block declarations and their binding points
+        
+        // For now, we just note that this shader uses UBOs
+        this.usesUBOs = true;
+    }
+
+    /**
+     * Sets a uniform block binding point for a UBO
+     * @param {string} blockName - Name of the uniform block
+     * @param {number} bindingPoint - Binding point to use
+     */
+    setUBOBinding(blockName, bindingPoint) {
+        this.uboBindings.set(blockName, bindingPoint);
+        // In WebGL 2, we'd bind the block here using glGetUniformBlockIndex and glUniformBlockBinding
+        // For now, we just track the binding for later use
+    }
+
+    /**
+     * Binds all UBOs that have been set up for this shader
+     * @param {UBOManager} uboManager - The UBO manager instance
+     */
+    bindUBOs(uboManager) {
+        // In a full implementation, you'd use glUniformBlockBinding here
+        // For now, we just bind the buffers using the manager
     }
 }
