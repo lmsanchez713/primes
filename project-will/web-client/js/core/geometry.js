@@ -10,9 +10,9 @@ export class VertexArray {
         engine.state.bindVertexArray(this.vao);
     }
 
-    unbind() {
-        this.gl.state.bindVertexArray(null);
-    }
+    //unbind() {
+    //    this.gl.state.bindVertexArray(null);
+    //}
 }
 
 export class Geometry {
@@ -69,8 +69,12 @@ export function createSquareGeometry(gl, shader) {
 
     // Normals (pointing towards the camera)
     const normals = new Float32Array([
-        0, 0, 1, 0, 0, 1, 0, 0, 1,
-        0, 0, 1, 0, 0, 1, 0, 0, 1
+        0, 0, 1, // v0
+        0, 0, 1, // v1
+        0, 0, 1, // v2
+        0, 0, 1, // v3
+        0, 0, 1, // v4
+        0, 0, 1 // v5
     ]);
 
     // Tangents (for normal mapping support)

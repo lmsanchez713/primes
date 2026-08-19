@@ -16,7 +16,7 @@ let uboManager = null;
 let sceneUBO = null;
 
 function draw_primitive(primitive) {
-    console.log(primitive);
+    //console.log(primitive);
     if (!primitive.enabled) return;
 }
 
@@ -62,7 +62,7 @@ class Primitive_Engine {
     }
 
     _loop(timestamp) {
-        console.log("Loop timestamp:", timestamp);
+        //console.log("Loop timestamp:", timestamp);
         if (!this.is_running) return;
 
         const delta_time = this.last_timestamp ? (timestamp - this.last_timestamp) / 1000 : 0;
