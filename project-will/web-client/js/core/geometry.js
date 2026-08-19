@@ -15,13 +15,20 @@ export class VertexArray {
     //}
 }
 
-export class Geometry {
-    constructor(gl, mode = gl.TRIANGLES) {
-        this.gl = gl;
+class Draw_Interval {
+    constructor(gl, offset, count, mode = gl.TRIANGLES) {
+        this.offset = offset;
+        this.count = count;
         this.mode = mode;
-        this.count = 0;
+    }
+}
+
+export class Geometry {
+    constructor(gl) {
+        this.gl = gl;
         this.vao = new VertexArray(gl);
         this.buffers = [];
+        this.intervals = [];
     }
 
     addAttribute(buffer, location, size, type = this.gl.FLOAT) {
@@ -32,8 +39,8 @@ export class Geometry {
         this.buffers.push(buffer);
     }
 
-    setCount(count) {
-        this.count = count;
+    addInterval(offset, count, mode = this.gl.TRIANGLES) {
+        //
     }
 
     bind(engine) {
@@ -77,18 +84,11 @@ export function createSquareGeometry(gl, shader) {
         0, 0, 1 // v5
     ]);
 
-    // Tangents (for normal mapping support)
-    //const tangents = new Float32Array([
-    //    0, 1, 0, 0, 1, 0, 0, 1, 0,
-    //    0, 1, 0, 0, 1, 0, 0, 1, 0
-    //]);
-
     const geo = new Geometry(gl, gl.TRIANGLES);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
-    //geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 3);
-    geo.setCount(6);
+    //geo.setCount(6);
 
     return geo;
 }
