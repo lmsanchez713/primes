@@ -1,4 +1,4 @@
-import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight, AmbientLight } from './ogl2.js';
+import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight, AmbientLight, loadShaderFromUrl } from './ogl2.js';
 import { Engine } from './engine.js';
 import { Mat4, OrthoMat4 } from './math.js';
 import { CameraController } from './camera_controller.js';
@@ -9,34 +9,137 @@ import { Chunk } from './scene/chunk.js';
 import { MapLoader } from './scene/map_loader.js';
 import { ItemType } from './scene/item.js';
 import { createSquareGeometry } from './core/geometry.js';
+import { UBOManager } from './core/ubo.js';
 
 let engine;
+let uboManager = null;
+let sceneUBO = null;
+
+function draw_primitive(primitive) {
+    console.log(primitive);
+    if (!primitive.enabled) return;
+}
+
+class Primitive {
+    constructor(engine, parameters = {}) {
+        this.engine = engine;
+        this.name = parameters.name ?? "";
+        this.shader_program = parameters.shader_program ?? null;
+        this.vao = parameters.vao ?? null;
+        this.uniforms = parameters.uniforms ?? null;
+        this.uniform_blocks = parameters.uniform_blocks ?? null;
+        this.engine_flags = parameters.engine_flags ?? null;
+        this.draw_intervals = parameters.draw_intervals ?? null;
+        this.draw_algorithm = parameters.draw_algorithm ?? draw_primitive;
+        this.enabled = parameters.enabled ?? true;
+        this.children = parameters.children ?? [];
+    }
+    render() {
+        this.draw_algorithm(this);
+    }
+}
+
+class Primitive_Engine {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.gl = canvas.getContext('webgl2');
+        if (!this.gl) {
+            console.error('WebGL2 not supported');
+            return;
+        }
+        this.is_running = false;
+        this.primitives = [];
+    }
+
+    start() {
+        this.is_running = true;
+        this._loop = this._loop.bind(this);
+        requestAnimationFrame(this._loop);
+    }
+
+    stop() {
+        this.is_running = false;
+    }
+
+    _loop(timestamp) {
+        console.log("Loop timestamp:", timestamp);
+        if (!this.is_running) return;
+
+        const delta_time = this.last_timestamp ? (timestamp - this.last_timestamp) / 1000 : 0;
+        this.last_timestamp = timestamp;
+
+        this.render();
+
+        requestAnimationFrame(this._loop);
+    }
+
+    render() {
+        for (const primitive of this.primitives) {
+            primitive.render();
+        }
+    }
+}
+
+export async function InitApp() {
+    const canvas = document.getElementById('glCanvas');
+    engine = new Primitive_Engine(canvas);
+    if (!engine.gl) return;
+    const gl = engine.gl;
+
+    const shader = await loadShaderFromUrl(gl, 'glsl/vertex.glsl', 'glsl/fragment.glsl');
+
+    const square_geometry = createSquareGeometry(gl, shader);
+
+    engine.primitives.push(new Primitive(engine, {}));
+
+    engine.start();
+}
 
 /**
  * Initializes the application, setting up the engine, 
  * a scene with a textured quad, and an orthogonal camera.
  */
-export async function InitApp() {
+export async function InitApp_old() {
     const canvas = document.getElementById('glCanvas');
     engine = new Engine(canvas);
     if (!engine.gl) return;
     const gl = engine.gl;
 
     // 1. Load Shader
-    const vsSource = await (await fetch('glsl/vtx_phong.glsl')).text();
-    const fsSource = await (await fetch('glsl/frag_phong.glsl')).text();
-    const shader = new Shader(gl, vsSource, fsSource);
+    const shader = await loadShaderFromUrl(gl, 'glsl/vertex.glsl', 'glsl/fragment.glsl');
+
+    // Create UBO Manager
+    uboManager = new UBOManager(gl);
+
+    // Create SceneUBO with proper data structure matching shader layout
+    // The buffer needs to be properly aligned for std140 layout
+    const uboDataBuffer = new Float32Array(4); // 1KB buffer - enough for all data
+
+    // Initialize with default values (important to avoid zero buffer issues)
+    //for (let i = 0; i < uboDataBuffer.length; i++) {
+    //    uboDataBuffer[i] = 0;
+    //}
+
+    //for (let c = 0; c < 3; c++) {
+    //    let matrix_start = c * 16;
+    //    uboDataBuffer[matrix_start]
+    //        = uboDataBuffer[matrix_start + 5]
+    //        = uboDataBuffer[matrix_start + 10]
+    //        = uboDataBuffer[matrix_start + 15] = 1.0;
+    //}
+
+    uboDataBuffer[0] = uboDataBuffer[1] = uboDataBuffer[2] = uboDataBuffer[3] = 1.0; // ambientLightColor.r
+
+    // Create the UBO
+    sceneUBO = uboManager.createUBO('SceneUBO', uboDataBuffer.buffer);
+
+    // Set binding point for the UBO in shader (must match what's in the shader)
+    shader.setUBOBinding('SceneUBO', 0);
 
     // 2. Create Quad Geometry
     const square_geometry = createSquareGeometry(gl, shader);
 
     // 3. Create and add the Quad Entity
-    //const wood_box_material = new Material(gl, shader);
-    //wood_box_material.setTexture('uSampler', 'img/wood-box.png');
-    //const square_entity = new Entity(square_geometry, wood_box_material);
-    //engine.scene.add(square_entity);
-
-    // Texture Sheets (for Sprites)
     const tile_sheet_url = 'img/sprites/otsp_tiles_01_alpha.png';
     const tile_sheet_texture = new Texture(gl, tile_sheet_url);
     const tile_sheet = new TextureSheet(tile_sheet_texture, 32, 32);
@@ -55,35 +158,27 @@ export async function InitApp() {
     const misc_sheet_material = new Material(gl, shader);
     misc_sheet_material.setTexture('uSampler', misc_sheet_texture);
 
-    // We still need the actual textures for the TextureSheet/Sprite logic 
-    // because they need the pixel data immediately to calculate UVs/Atlas.
-    // But for standard Material textures, we use the URL lazy loading.
-
+    // Create and add lights
     const sunLight = new DirectionalLight();
     sunLight.color = [1.0, 1.0, 1.0];
     sunLight.direction = [0.0, 0.0, -1.0];
     engine.scene.add(sunLight);
 
-    // Sprites / Entities
+    // Texture Sheets (for Sprites)
     const grass_tile_sprite1 = new Sprite(tile_sheet);
     grass_tile_sprite1.addState('grass1', [61 * 16 + 5], 1.0);
-    //new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1)
 
     const dirt_tile_sprite1 = new Sprite(tile_sheet);
     dirt_tile_sprite1.addState('dirt1', [53 * 16 + 3], 1.0);
-    //new Entity(square_geometry, tile_sheet_material, null, dirt_tile_sprite1)
 
     const stone_tile_sprite1 = new Sprite(tile_sheet);
     stone_tile_sprite1.addState('stone1', [49 * 16 + 13], 1.0);
-    //new Entity(square_geometry, tile_sheet_material, null, stone_tile_sprite1)
 
     const water_tile_sprite1 = new Sprite(tile_sheet);
     water_tile_sprite1.addState('water1', [16 * 16 + 0], 1.0);
-    //new Entity(square_geometry, tile_sheet_material, null, water_tile_sprite1)
 
     const shallow_water_tile_sprite1 = new Sprite(tile_sheet);
     shallow_water_tile_sprite1.addState('shallow_water1', [47 * 16 + 11], 1.0);
-    //new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1)
 
     const fire_sprite1 = new Sprite(misc_sheet);
     fire_sprite1.addState('fire1',
@@ -92,7 +187,6 @@ export async function InitApp() {
             33 * 16 + 3, 33 * 16 + 4, 33 * 16 + 5,
             33 * 16 + 6, 33 * 16 + 7
         ], 1.0);
-    //new Entity(square_geometry, misc_sheet_material, null, fire_sprite1)
 
     const fire_sprite2 = new Sprite(misc_sheet);
     fire_sprite2.addState('fire2',
@@ -103,23 +197,12 @@ export async function InitApp() {
             36 * 16 + 12, 36 * 16 + 13, 36 * 16 + 14,
             36 * 16 + 15, 36 * 16 + 2
         ], 0.1);
-    //new Entity(square_geometry, misc_sheet_material, null, fire_sprite2)
 
     const cat_sprite1 = new Sprite(creatures1_sheet);
     cat_sprite1.addState('cat1', [60 * 16 + 8, 60 * 16 + 9, 60 * 16 + 7], 1.0);
-    //new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1)
 
-    //const world = new World(3, 3);
+    // Create World
     const world = new World(16, 16);
-
-    //for (let x = -8; x <= 8; x++) {
-    //    for (let y = -8; y <= 8; y++) {
-    //        if ((x + y) % 2 === 0)
-    //            world.addEntityToTile(x, y, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1));
-    //    }
-    //}
-
-    engine.scene.add(world);
 
     world.addEntityToTile(0, 0, new Entity(square_geometry, tile_sheet_material, null, grass_tile_sprite1, 0));
     world.addEntityToTile(0, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
@@ -129,55 +212,65 @@ export async function InitApp() {
     world.addEntityToTile(0, -1, new Entity(square_geometry, tile_sheet_material, null, shallow_water_tile_sprite1, 0));
     world.addEntityToTile(-1, 0, new Entity(square_geometry, misc_sheet_material, null, fire_sprite1, 1000));
     world.addEntityToTile(0, 1, new Entity(square_geometry, misc_sheet_material, null, fire_sprite2, 10));
-    
+
     world.addEntityToTile(-1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
     world.addEntityToTile(0, 1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
-    //world.addEntityToTile(1, 0, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
-    //world.addEntityToTile(0, -1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
-    //world.addEntityToTile(1, 1, new Entity(square_geometry, creatures1_sheet_material, null, cat_sprite1, 100));
 
-    // engine.setSortFunction(function (a, b) {});
-
-    //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, new Mat4(), cat_sprite1));
-
-    // Create Sprite for Fire
-    // const fireSprite = new Sprite(sheet);
-    // fireSprite.addState('loop', [0, 1, 2], 1.0); // 3 frames, 1 sec each
-
-    // Attach to Entity
-    //const fireEntity = new Entity(square_geometry, wood_box_material);
-    //fireEntity.sprite = fireSprite;
-    //engine.scene.add(fireEntity);
-
-    // Create Sprite for Creature
-    // const creatureSprite = new Sprite(sheet;
-    // Facing right, walking (indices 10, 11, 12)
-    //creatureSprite.addState('idle', [5, 6], 1.0);
-    //creatureSprite.addState('walk_right', [10, 11, 12], 0.2);
-
-    //const creatureEntity = new Entity(quadGeo, material);
-    //creatureEntity.sprite = creatureSprite;
-    //engine.scene.add(creatureEntity);
+    engine.scene.add(world);
 
     // 7. Set up Camera
     engine.setProjectionMode('ortho');
-    //engine.setOrthographicParameters({ size: 9.0 });
     engine.setOrthographicParameters({ size: 15.0 });
     engine.camera.updateView();
 
-    // engine.setController(new CameraController(engine.camera));
-    //engine.scene.add(tile_entity);
-    //engine.scene.add(creatures1_entity);
-    //engine.scene.add(grass_tile_entity);
-    //engine.scene.add(new Entity(square_geometry, creatures1_sheet_material, OrthoMat4(0, 0), cat_sprite1));
-
     // 8. Start the engine loop
     engine.start();
-
-    // --- TEST NEW FEATURES ---
-    //console.log("--- Starting Map Loader Test ---");
-    //await testMapLoading(world, cat_entity);
 }
+
+// Override the engine's render method to properly bind UBOs
+const originalRender = Engine.prototype.render;
+Engine.prototype.render = function() {
+    const gl = this.gl;
+    
+    // Update the viewport to match the canvas's internal drawing buffer size
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);// | gl.DEPTH_BUFFER_BIT);
+
+    // Update projection based on mode and canvas aspect ratio
+    const aspect = this.canvas.width / this.canvas.height;
+    let xfactor, yfactor;
+    if (this.canvas.width > this.canvas.height) {
+        xfactor = aspect;
+        yfactor = 1;
+    }
+    else {
+        xfactor = 1;
+        yfactor = 1 / aspect;
+    }
+
+    if (this.projectionMode === 'perspective') {
+        this.camera.updateProjection(45 * Math.PI / 180, aspect, 0.1, 100);
+    } else if (this.projectionMode === 'ortho') {
+        const size = this.orthographic.size;
+        const left = -xfactor * size / 2;
+        const right = xfactor * size / 2;
+        const bottom = -yfactor * size / 2;
+        const top = yfactor * size / 2;
+        this.camera.updateOrthographic(left, right, bottom, top, this.orthographic.near, this.orthographic.far);
+        // this.camera.updateOrthographic(-1.0, 1.0, -1.0, 1.0, 0.1, 100);
+    }
+
+    // Bind UBOs before rendering
+    if (uboManager) {
+        uboManager.bindAll();
+    }
+    
+    this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix(), this);
+};
 
 async function testMapLoading(world, actor) {
     const itemRegistry = {

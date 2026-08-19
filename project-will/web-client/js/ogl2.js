@@ -1,4 +1,4 @@
-export { LightType, Shader } from './core/shader.js';
+export { LightType, Shader, loadShaderFromUrl } from './core/shader.js';
 export { Buffer } from './core/buffer.js';
 export { Texture } from './core/texture.js';
 export { VertexArray, Geometry } from './core/geometry.js';

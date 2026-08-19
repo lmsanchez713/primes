@@ -40,6 +40,6 @@ void main() {
     vNormal = N;
     vTBN = mat3(T, B, N);
 
-    //gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
-    gl_Position = vec4(aPosition, 1.0);
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPos;
+    //gl_Position = vec4(aPosition, 1.0);
 }

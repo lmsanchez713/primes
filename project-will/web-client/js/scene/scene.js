@@ -2,72 +2,58 @@ import { Mat4 } from '../math.js';
 import { Entity } from './entity.js';
 import { LightType } from '../core/shader.js';
 
-// Define the structure of our UBO data
+// Define the structure of our UBO data properly aligned for std140 layout
 class UBOData {
     constructor() {
-        // Matrix data (model, view, projection)
-        this.modelMatrix = new Float32Array(16);
-        this.viewMatrix = new Float32Array(16);
-        this.projectionMatrix = new Float32Array(16);
+        // Create a single buffer that matches std140 layout exactly
+        this.buffer = new Float32Array(256); // 1KB buffer - enough for all data
         
-        // Light data (4 lights max)
-        this.lightsCount = 0;
-        this.lightTypes = new Int32Array(4);
-        this.lightColors = new Float32Array(12); // 4 lights * 3 components
-        this.lightPositions = new Float32Array(12); // 4 lights * 3 components
-        this.lightDirections = new Float32Array(12); // 4 lights * 3 components
+        // Initialize with zeros to prevent garbage data
+        this.buffer.fill(0);
         
-        // UV transform data
-        this.uvTransform = new Float32Array(4); // offset_u, offset_v, scale_u, scale_v
-        
-        // Buffer for all data (aligned to 16-byte boundaries)
-        const totalSize = 
-            16*4 + // model, view, projection matrices
-            4 +    // lightsCount
-            4*4 +  // lightTypes array
-            12*4 + // lightColors array
-            12*4 + // lightPositions array  
-            12*4 + // lightDirections array
-            4*4;   // uvTransform
-        
-        this.buffer = new Float32Array(Math.ceil(totalSize / 4) * 4); // Ensure proper alignment
+        // Store references to different sections of the buffer for easy access
+        this.modelMatrix = this.buffer.subarray(0, 16);
+        this.viewMatrix = this.buffer.subarray(16, 32);
+        this.projectionMatrix = this.buffer.subarray(32, 48);
+        this.lightsCount = this.buffer[48];
+        this.lightTypes = this.buffer.subarray(49, 53); // 4 ints
+        this.lightColors = this.buffer.subarray(53, 65); // 12 floats (4 lights * 3 components)
+        this.lightPositions = this.buffer.subarray(65, 77); // 12 floats (4 lights * 3 components)  
+        this.lightDirections = this.buffer.subarray(77, 89); // 12 floats (4 lights * 3 components)
+        this.uvTransform = this.buffer.subarray(89, 93); // 4 floats
     }
-}
-
-function render_entity(entity, viewMatrix, projectionMatrix, lights, engine, uboManager) {
-    if (entity.geometry && entity.material && entity.material.isReady()) {
-        // Update UBO data for this entity
-        const uboData = new UBOData();
-        
+    
+    // Update the UBO data for a specific entity
+    updateForEntity(entity, viewMatrix, projectionMatrix, lights) {
         // Set matrices
-        uboData.modelMatrix.set(entity.worldMatrix.data);
-        uboData.viewMatrix.set(viewMatrix);
-        uboData.projectionMatrix.set(projectionMatrix);
+        this.modelMatrix.set(entity.worldMatrix.data);
+        this.viewMatrix.set(viewMatrix);
+        this.projectionMatrix.set(projectionMatrix);
         
         // Set UV transform
         if (entity.sprite) {
             const uv = entity.sprite.getUVRect();
-            uboData.uvTransform[0] = uv.u;  // offset_u
-            uboData.uvTransform[1] = uv.v;  // offset_v  
-            uboData.uvTransform[2] = uv.w;  // scale_u
-            uboData.uvTransform[3] = uv.h;  // scale_v
+            this.uvTransform[0] = uv.u;  // offset_u
+            this.uvTransform[1] = uv.v;  // offset_v  
+            this.uvTransform[2] = uv.w;  // scale_u
+            this.uvTransform[3] = uv.h;  // scale_v
         } else {
-            uboData.uvTransform[0] = 0;
-            uboData.uvTransform[1] = 0;
-            uboData.uvTransform[2] = 1;
-            uboData.uvTransform[3] = 1;
+            this.uvTransform[0] = 0;
+            this.uvTransform[1] = 0;
+            this.uvTransform[2] = 1;
+            this.uvTransform[3] = 1;
         }
         
         // Set lights
-        if (!entity.lightType && lights.length > 0) {
+        if (lights.length > 0) {
             const count = Math.min(lights.length, 4);
-            uboData.lightsCount = count;
+            this.lightsCount = count;
             
             for (let i = 0; i < count; i++) {
                 const light = lights[i];
                 const type = light.type === LightType.AMBIENT ? 0 : (light.type === LightType.DIRECTIONAL ? 1 : 2);
-                uboData.lightTypes[i] = type;
-                uboData.lightColors.set(light.color, i * 3);
+                this.lightTypes[i] = type;
+                this.lightColors.set(light.color, i * 3);
                 
                 if (light.type !== LightType.AMBIENT) {
                     const pos = [
@@ -75,13 +61,21 @@ function render_entity(entity, viewMatrix, projectionMatrix, lights, engine, ubo
                         light.worldMatrix.data[13],
                         light.worldMatrix.data[14]
                     ];
-                    uboData.lightPositions.set(pos, i * 3);
+                    this.lightPositions.set(pos, i * 3);
                     if (light.type === LightType.DIRECTIONAL) {
-                        uboData.lightDirections.set(light.direction, i * 3);
+                        this.lightDirections.set(light.direction, i * 3);
                     }
                 }
             }
         }
+    }
+}
+
+function render_entity(entity, viewMatrix, projectionMatrix, lights, engine, uboManager) {
+    if (entity.geometry && entity.material && entity.material.isReady()) {
+        // Create and update UBO data for this entity
+        const uboData = new UBOData();
+        uboData.updateForEntity(entity, viewMatrix, projectionMatrix, lights);
         
         // Set UBO data in material
         entity.material.setUBOData('SceneUBO', uboData.buffer);
@@ -131,6 +125,7 @@ export class Scene {
             
             // Create the main scene UBO with enough space for all data
             const uboData = new Float32Array(1024); // 1KB buffer - adjust as needed
+            uboData.fill(0); // Initialize to prevent garbage data
             this.uboManager.createUBO('SceneUBO', uboData);
         }
         

@@ -74,16 +74,16 @@ export function createSquareGeometry(gl, shader) {
     ]);
 
     // Tangents (for normal mapping support)
-    const tangents = new Float32Array([
-        0, 1, 0, 0, 1, 0, 0, 1, 0,
-        0, 1, 0, 0, 1, 0, 0, 1, 0
-    ]);
+    //const tangents = new Float32Array([
+    //    0, 1, 0, 0, 1, 0, 0, 1, 0,
+    //    0, 1, 0, 0, 1, 0, 0, 1, 0
+    //]);
 
     const geo = new Geometry(gl, gl.TRIANGLES);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
     geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 3);
+    //geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, tangents), gl.getAttribLocation(shader.program, 'aTangent'), 3);
     geo.setCount(6);
 
     return geo;

@@ -134,6 +134,11 @@ export class Material {
             }
         });
 
+        // Bind UBOs to shader program BEFORE updating data
+        if (this.shader.usesUBOs) {
+            this.shader.bindUBOs(uboManager);
+        }
+
         // Handle UBOs
         for (const [uboName, data] of this.uboData.entries()) {
             uboManager.updateUBO(uboName, data);

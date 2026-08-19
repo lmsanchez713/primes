@@ -57,6 +57,6 @@ void main() {
              totalLight += u_lightColors[i];
         }
     }
-    //fragColor = vec4(texColor.rgb * totalLight, texColor.a);
-    fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    fragColor = vec4(texColor.rgb * totalLight, texColor.a);
+    //fragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

@@ -77,7 +77,21 @@ export class Shader {
      * @param {UBOManager} uboManager - The UBO manager instance
      */
     bindUBOs(uboManager) {
-        // In a full implementation, you'd use glUniformBlockBinding here
-        // For now, we just bind the buffers using the manager
+        // Bind each uniform block to its specified binding point
+        for (const [blockName, bindingPoint] of this.uboBindings.entries()) {
+            const blockIndex = this.gl.getUniformBlockIndex(this.program, blockName);
+            if (blockIndex !== WebGLRenderingContext.INVALID_INDEX) {
+                this.gl.uniformBlockBinding(this.program, blockIndex, bindingPoint);
+            }
+        }
+
+        // Bind all UBOs to their binding points
+        uboManager.bindAll();
     }
+}
+
+export async function loadShaderFromUrl(gl, vsUrl, fsUrl) {
+    const vsSource = await(await fetch(vsUrl)).text();
+    const fsSource = await(await fetch(fsUrl)).text();
+    return new Shader(gl, vsSource, fsSource);
 }
