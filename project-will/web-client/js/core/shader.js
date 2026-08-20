@@ -5,12 +5,30 @@ export const LightType = {
 };
 
 export class Shader {
-    constructor(gl, vsSource, fsSource) {
-        this.gl = gl;
+    constructor(engine, vsSource, fsSource, attributes, uniforms, uniform_blocks) {
+        this.engine = engine;
         this.program = this._initProgram(vsSource, fsSource);
-        this.uniformLocations = new Map();
-        this.uboBindings = new Map(); // Track UBO binding points
-        this._parseUBOInfo(vsSource, fsSource);
+        this.attributes = {};
+        for (const name of attributes) {
+            this.attributes[name] = this.engine.gl.getAttribLocation(this.program, name);
+        }
+        this.uniforms = {};
+        for (const name of uniforms) {
+            this.uniforms[name] = this.engine.gl.getUniformLocation(this.program, name);
+        }
+        this.ubos = {};
+        for (const name of uniform_blocks) {
+            this.ubos[name] = this.engine.gl.getUniformBlockIndex(this.program, name);
+        }
+    }
+
+    bind_ubo(ubo_name, binding_point) {
+        const blockIndex = this.ubos[ubo_name];
+        if (blockIndex === this.engine.gl.INVALID_INDEX) {
+            console.warn(`Uniform block ${ubo_name} not found in shader.`);
+            return;
+        }
+        this.engine.gl.uniformBlockBinding(this.program, blockIndex, binding_point);
     }
 
     _initShader(gl, type, source) {
@@ -26,27 +44,20 @@ export class Shader {
     }
 
     _initProgram(vsSource, fsSource) {
-        const vs = this._initShader(this.gl, this.gl.VERTEX_SHADER, vsSource);
-        const fs = this._initShader(this.gl, this.gl.FRAGMENT_SHADER, fsSource);
+        const vs = this._initShader(this.engine.gl, this.engine.gl.VERTEX_SHADER, vsSource);
+        const fs = this._initShader(this.engine.gl, this.engine.gl.FRAGMENT_SHADER, fsSource);
         if (!vs || !fs) return null;
 
-        const program = this.gl.createProgram();
-        this.gl.attachShader(program, vs);
-        this.gl.attachShader(program, fs);
-        this.gl.linkProgram(program);
+        const program = this.engine.gl.createProgram();
+        this.engine.gl.attachShader(program, vs);
+        this.engine.gl.attachShader(program, fs);
+        this.engine.gl.linkProgram(program);
 
-        if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-            console.error('Program linking error:', this.gl.getProgramInfoLog(program));
+        if (!this.engine.gl.getProgramParameter(program, this.engine.gl.LINK_STATUS)) {
+            console.error('Program linking error:', this.engine.gl.getProgramInfoLog(program));
             return null;
         }
         return program;
-    }
-
-    getUniformLocation(name) {
-        if (!this.uniformLocations.has(name)) {
-            this.uniformLocations.set(name, this.gl.getUniformLocation(this.program, name));
-        }
-        return this.uniformLocations.get(name);
     }
 
     /**
@@ -56,7 +67,7 @@ export class Shader {
     _parseUBOInfo(vsSource, fsSource) {
         // In a full implementation, we would parse the shader sources to find 
         // uniform block declarations and their binding points
-        
+
         // For now, we just note that this shader uses UBOs
         this.usesUBOs = true;
     }
@@ -79,9 +90,9 @@ export class Shader {
     bindUBOs(uboManager) {
         // Bind each uniform block to its specified binding point
         for (const [blockName, bindingPoint] of this.uboBindings.entries()) {
-            const blockIndex = this.gl.getUniformBlockIndex(this.program, blockName);
+            const blockIndex = this.engine.gl.getUniformBlockIndex(this.program, blockName);
             if (blockIndex !== WebGLRenderingContext.INVALID_INDEX) {
-                this.gl.uniformBlockBinding(this.program, blockIndex, bindingPoint);
+                this.engine.gl.uniformBlockBinding(this.program, blockIndex, bindingPoint);
             }
         }
 
@@ -90,8 +101,8 @@ export class Shader {
     }
 }
 
-export async function loadShaderFromUrl(gl, vsUrl, fsUrl) {
-    const vsSource = await(await fetch(vsUrl)).text();
-    const fsSource = await(await fetch(fsUrl)).text();
-    return new Shader(gl, vsSource, fsSource);
+export async function loadShaderFromUrl(gl, vsUrl, fsUrl, attributes, uniforms, uniform_blocks) {
+    const vsSource = await (await fetch(vsUrl)).text();
+    const fsSource = await (await fetch(fsUrl)).text();
+    return new Shader(gl, vsSource, fsSource, attributes, uniforms, uniform_blocks);
 }

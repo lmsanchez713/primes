@@ -1,22 +1,7 @@
 import { Buffer } from './buffer.js';
 
-export class VertexArray {
-    constructor(gl) {
-        this.gl = gl;
-        this.vao = gl.createVertexArray();
-    }
-
-    bind(engine) {
-        engine.state.bindVertexArray(this.vao);
-    }
-
-    //unbind() {
-    //    this.gl.state.bindVertexArray(null);
-    //}
-}
-
 class Draw_Interval {
-    constructor(gl, offset, count, mode = gl.TRIANGLES) {
+    constructor(engine, offset, count, mode = engine.gl.TRIANGLES) {
         this.offset = offset;
         this.count = count;
         this.mode = mode;
@@ -24,36 +9,89 @@ class Draw_Interval {
 }
 
 export class Geometry {
-    constructor(gl) {
-        this.gl = gl;
-        this.vao = new VertexArray(gl);
-        this.buffers = [];
-        this.intervals = [];
+    constructor(engine) {
+        this.engine = engine;
+        this.buffers = {};
+        this.shaders = {};
+        this.objects = {};
     }
 
-    addAttribute(buffer, location, size, type = this.gl.FLOAT) {
-        this.gl.bindVertexArray(this.vao.vao);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer.buffer);
-        this.gl.enableVertexAttribArray(location);
-        this.gl.vertexAttribPointer(location, size, type, false, 0, 0);
+    addAttribute(buffer, location, size, type = this.engine.gl.FLOAT) {
+        this.engine.gl.bindVertexArray(this.vao.vao);
+        this.engine.gl.bindBuffer(this.engine.gl.ARRAY_BUFFER, buffer.buffer);
+        this.engine.gl.enableVertexAttribArray(location);
+        this.engine.gl.vertexAttribPointer(location, size, type, false, 0, 0);
         this.buffers.push(buffer);
     }
 
-    addInterval(offset, count, mode = this.gl.TRIANGLES) {
-        //
+    updateBufferBindings(name) {
+        if (Object.hasOwn(this.buffers, name)) {
+            const buffer = this.buffers[name];
+            for (const shader of this.shaders.values()) {
+                if (Object.hasOwn(shader.attributes, name)) {
+                    const location = shader.attributes[name];
+                    this.engine.gl.bindVertexArray(shader.vao);
+                    this.engine.gl.bindBuffer(buffer.type, buffer.buffer);
+                    this.engine.gl.enableVertexAttribArray(location);
+                    this.engine.gl.vertexAttribPointer(location, buffer.size, buffer.type, false, 0, 0);
+                }
+            }
+        }
+        //also update uniform buffer bindings here
     }
 
-    bind(engine) {
-        this.vao.bind(engine);
+    addShader(name, shader) {
+        this.shaders[name] = { shader, vao: this.engine.gl.createVertexArray() };
     }
 
-    draw() {
-        if (this.count === 0) return;
-        this.gl.drawArrays(this.mode, 0, this.count);
+    bind(shader_name) {
+        const shader_vao_pair = this.shaders[shader_name];
+        if (!shader_vao_pair) {
+            console.warn(`Shader ${shader_name} not found in geometry.`);
+            return;
+        }
+        this.engine.gl.useProgram(shader_vao_pair.shader.program);
+        this.engine.gl.bindVertexArray(shader_vao_pair.vao);
+    }
+
+    addBuffer(name, data, size, type = this.engine.gl.FLOAT,
+        usage = this.engine.gl.STATIC_DRAW, buffer_type = this.engine.gl.ARRAY_BUFFER) {
+        this.buffers[name] = { buffer: new Buffer(this.engine, buffer_type, data, usage), size, type };
+    }
+
+    updateBindings() {
+        for (const [shader_name, shader_vao_pair] of Object.entries(this.shaders)) {
+            const shader = shader_vao_pair.shader;
+            this.engine.gl.useProgram(shader.program);
+            this.engine.gl.bindVertexArray(shader_vao_pair.vao);
+            for (const [attribute_name, attribute_location] of Object.entries(shader.attributes)) {
+                if (!Object.hasOwn(this.buffers, attribute_name)) {
+                    console.warn(`Buffer ${attribute_name} not found in geometry for shader ${shader_name}.`);
+                    continue;
+                }
+                const buffer_entry = this.buffers[attribute_name];
+                this.engine.gl.bindBuffer(buffer_entry.buffer.type, buffer_entry.buffer.buffer);
+                this.engine.gl.enableVertexAttribArray(attribute_location);
+                this.engine.gl.vertexAttribPointer(attribute_location, buffer_entry.size, buffer_entry.type, false, 0, 0);
+            }
+        }
+    }
+
+    addObject(name, offset, count, mode = this.engine.gl.TRIANGLES) {
+        this.objects[name] = new Draw_Interval(this.engine, offset, count, mode);
+    }
+
+    drawObject(name) {
+        const obj = this.objects[name];
+        if (!obj) {
+            console.warn(`Object ${name} not found in geometry.`);
+            return;
+        }
+        this.engine.gl.drawArrays(obj.mode, obj.offset, obj.count);
     }
 }
 
-export function createSquareGeometry(gl, shader) {
+export function createSquareGeometry(engine) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
         -0.5, -0.5, 0.0, // v0
@@ -84,11 +122,13 @@ export function createSquareGeometry(gl, shader) {
         0, 0, 1 // v5
     ]);
 
-    const geo = new Geometry(gl, gl.TRIANGLES);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
-    geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
-    //geo.setCount(6);
+    const geo = new Geometry(engine, engine.gl.TRIANGLES);
+    geo.addBuffer('aPosition', vertices, 3);
+    geo.addBuffer('aTexCoord', texCoords, 2);
+    geo.addBuffer('aNormal', normals, 3);
+    //geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, vertices), gl.getAttribLocation(shader.program, 'aPosition'), 3);
+    //geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, texCoords), gl.getAttribLocation(shader.program, 'aTexCoord'), 2);
+    //geo.addAttribute(new Buffer(gl, gl.ARRAY_BUFFER, normals), gl.getAttribLocation(shader.program, 'aNormal'), 3);
 
     return geo;
 }

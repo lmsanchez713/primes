@@ -1,7 +1,7 @@
 export { LightType, Shader, loadShaderFromUrl } from './core/shader.js';
 export { Buffer } from './core/buffer.js';
 export { Texture } from './core/texture.js';
-export { VertexArray, Geometry } from './core/geometry.js';
+export { Geometry } from './core/geometry.js';
 export { Material } from './core/material.js';
 export { Entity } from './scene/entity.js';
 export { Scene } from './scene/scene.js';

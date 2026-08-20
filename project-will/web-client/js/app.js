@@ -49,6 +49,8 @@ class Primitive_Engine {
         }
         this.is_running = false;
         this.primitives = [];
+        this.shaders = {};
+        this.geometries = {};
     }
 
     start() {
@@ -74,6 +76,15 @@ class Primitive_Engine {
     }
 
     render() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);// | gl.DEPTH_BUFFER_BIT);
+
+        // Update projection based on mode and canvas aspect ratio
+        const aspect = this.canvas.width / this.canvas.height;
         for (const primitive of this.primitives) {
             primitive.render();
         }
@@ -86,11 +97,24 @@ export async function InitApp() {
     if (!engine.gl) return;
     const gl = engine.gl;
 
-    const shader = await loadShaderFromUrl(gl, 'glsl/vertex.glsl', 'glsl/fragment.glsl');
+    const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
+        ['aPosition', 'aTexCoord', 'aNormal'], [], ['SceneUBO']);
 
-    const square_geometry = createSquareGeometry(gl, shader);
+    engine.geometries['square'] = createSquareGeometry(engine);
+    engine.geometries['square'].addShader('debug_shader', debug_shader);
+    engine.geometries['square'].updateBindings();
+    engine.geometries['square'].addObject('square', 0, 6, gl.TRIANGLES);
 
-    engine.primitives.push(new Primitive(engine, {}));
+    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(4), gl.DYNAMIC_DRAW);
+    debug_shader.bind_ubo('SceneUBO', 0);
+    ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
+
+    engine.primitives.push(new Primitive(engine, {
+        draw_algorithm: (primitive) => {
+            engine.geometries['square'].bind('debug_shader');
+            engine.geometries['square'].drawObject('square');
+        }
+    }));
 
     engine.start();
 }
@@ -229,9 +253,9 @@ export async function InitApp_old() {
 
 // Override the engine's render method to properly bind UBOs
 const originalRender = Engine.prototype.render;
-Engine.prototype.render = function() {
+Engine.prototype.render = function () {
     const gl = this.gl;
-    
+
     // Update the viewport to match the canvas's internal drawing buffer size
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
@@ -268,7 +292,7 @@ Engine.prototype.render = function() {
     if (uboManager) {
         uboManager.bindAll();
     }
-    
+
     this.scene.render(this.camera.getViewMatrix(), this.camera.getProjectionMatrix(), this);
 };
 
