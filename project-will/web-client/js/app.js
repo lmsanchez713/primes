@@ -23,7 +23,7 @@ export async function InitApp() {
     const gl = engine.gl;
 
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
-        ['aPosition', 'aTexCoord', 'aNormal'], [], ['SceneUBO']);
+        ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['SceneUBO']);
 
     engine.geometries['square'] = createSquareGeometry(engine);
     engine.geometries['square'].addShader('debug_shader', debug_shader);
@@ -33,6 +33,11 @@ export async function InitApp() {
     const float32array = new Float32Array([1.0, 0.0, 1.0, 1.0]);
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, float32array, gl.DYNAMIC_DRAW);
     debug_shader.bind_ubo('SceneUBO', 0);
+
+    const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
+    texture.bind(0);
+    const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
+    texture2.bind(1);
     ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
 
     engine.primitives.push(new Primitive(engine, {
@@ -40,7 +45,10 @@ export async function InitApp() {
             engine.geometries['square'].bind('debug_shader');
             float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
             ubo_buffer.subdata(float32array);
+            debug_shader.uniform1i('u_sampler2d', 0);
             engine.geometries['square'].drawObject('square');
+            //debug_shader.uniform1i('u_sampler2d', 1);
+            //engine.geometries['square'].drawObject('square');
         }
     }));
 

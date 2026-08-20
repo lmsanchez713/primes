@@ -31,6 +31,15 @@ export class Shader {
         this.engine.gl.uniformBlockBinding(this.program, blockIndex, binding_point);
     }
 
+    uniform1i(name, value) {
+        const location = this.uniforms[name] ?? null;
+        if (location === null) {
+            console.warn(`Uniform ${name} not found in shader.`);
+            return;
+        }
+        this.engine.gl.uniform1i(location, value);
+    }
+
     _initShader(gl, type, source) {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);

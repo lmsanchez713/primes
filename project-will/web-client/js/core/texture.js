@@ -1,37 +1,30 @@
 export class Texture {
-    constructor(gl, url) {
-        this.gl = gl;
-        this.texture = gl.createTexture();
+    constructor(engine, url) {
+        this.engine = engine;
+        this.texture = engine.gl.createTexture();
         this.isReady = false;
-        this.width = 0;
-        this.height = 0;
-        this.promise = this._load(url);
+        this._load(url);
     }
 
     _load(url) {
-        return new Promise((resolve, reject) => {
-            const gl = this.gl;
-            const image = new Image();
-            image.onload = () => {
-                this.width = image.width;
-                this.height = image.height;
-                gl.bindTexture(gl.TEXTURE_2D, this.texture);
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);//gl.LINEAR);
-                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);//gl.LINEAR);
-                this.isReady = true;
-                resolve();
-            };
-            image.onerror = () => reject(new Error(`Failed to load texture: ${url}`));
-            image.src = url;
-        });
+        const gl = this.engine.gl;
+        const image = new Image();
+        image.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);//gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);//gl.LINEAR);
+            this.isReady = true;
+        };
+        image.src = url;
     }
 
-    bind(engine, unit = 0) {
+    bind(unit = 0) {
         if (!this.isReady) return;
-        engine.state.bindTexture(this.gl.TEXTURE0 + unit, this.gl.TEXTURE_2D, this.texture);
+        this.engine.gl.activeTexture(this.engine.gl.TEXTURE0 + unit);
+        this.engine.gl.bindTexture(this.engine.gl.TEXTURE_2D, this.texture);
     }
 }
