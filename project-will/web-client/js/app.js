@@ -37,11 +37,10 @@ export async function InitApp() {
     const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
 
-    ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
-
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             engine.geometries['square'].bind('debug_shader');
+            ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
             float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
             ubo_buffer.subdata(float32array);
             texture.bind(0);
