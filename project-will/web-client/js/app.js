@@ -38,7 +38,7 @@ export async function InitApp() {
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             engine.geometries['square'].bind('debug_shader');
-            float32array[1] = (Math.sin(Date.now() * 0.001) + 1) / 2; // Animate green channel
+            float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
             ubo_buffer.subdata(float32array);
             engine.geometries['square'].drawObject('square');
         }

@@ -34,6 +34,7 @@ export class Primitive_Engine {
         this.primitives = [];
         this.shaders = {};
         this.geometries = {};
+        this.time = { current: 0.0, last: 0.0, delta: 0.0 };
     }
 
     start() {
@@ -50,10 +51,12 @@ export class Primitive_Engine {
         //console.log("Loop timestamp:", timestamp);
         if (!this.is_running) return;
 
-        const delta_time = this.last_timestamp ? (timestamp - this.last_timestamp) / 1000 : 0;
-        this.last_timestamp = timestamp;
+        this.time.current = timestamp / 1000;
+        this.time.delta = this.time.current - this.time.last;
 
         this.render();
+
+        this.time.last = this.time.current;
 
         requestAnimationFrame(this._loop);
     }
