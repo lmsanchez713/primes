@@ -18,6 +18,6 @@ out vec4 fragColor;
 
 void main() {
     vec4 texColor = texture(u_sampler2d, vTextureCoord);
-    //fragColor = vec4(vTextureCoord.x, vTextureCoord.y, u_rgbaColor.y, 1.0);
     fragColor = vec4(texColor);
+    //fragColor = vec4(vTextureCoord.x, vTextureCoord.y, u_rgbaColor.y, 1.0);
 }
