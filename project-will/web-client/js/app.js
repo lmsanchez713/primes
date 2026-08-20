@@ -36,7 +36,6 @@ export async function InitApp() {
 
     const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
-    texture2.bind(1);
 
     ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
 
@@ -46,9 +45,9 @@ export async function InitApp() {
             float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
             ubo_buffer.subdata(float32array);
             texture.bind(0);
+            texture2.bind(1);
             debug_shader.uniform1i('u_sampler2d', 0);
             engine.geometries['square'].drawObject('square');
-            texture2.bind(1);
             debug_shader.uniform1i('u_sampler2d', 1);
             engine.geometries['square'].drawObject('square');
         }
