@@ -105,13 +105,16 @@ export async function InitApp() {
     engine.geometries['square'].updateBindings();
     engine.geometries['square'].addObject('square', 0, 6, gl.TRIANGLES);
 
-    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(4), gl.DYNAMIC_DRAW);
+    const float32array = new Float32Array([1.0, 0.0, 1.0, 1.0]);
+    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, float32array, gl.DYNAMIC_DRAW);
     debug_shader.bind_ubo('SceneUBO', 0);
     ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             engine.geometries['square'].bind('debug_shader');
+            float32array[1] = (Math.sin(Date.now() * 0.001) + 1) / 2; // Animate green channel
+            ubo_buffer.subdata(float32array);
             engine.geometries['square'].drawObject('square');
         }
     }));
