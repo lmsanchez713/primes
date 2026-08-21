@@ -11,10 +11,11 @@ layout(std140) uniform UBO {
     mat4 u_modelMatrix;
     mat4 u_viewMatrix;
     mat4 u_projectionMatrix;
+    vec4 u_ambientLight;
     vec4 u_pointLight[32];
     vec4 u_pointLightPos[32];
-    vec4 u_ambientLight;
     uint u_pointLightCount;
+    float u_time;
 };
 
 out vec2 vTextureCoord;
