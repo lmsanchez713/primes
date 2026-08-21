@@ -1,6 +1,6 @@
 import { Shader, Buffer, Texture, Geometry, Material, Entity, DirectionalLight, PointLight, AmbientLight, loadShaderFromUrl } from './ogl2.js';
 import { Engine } from './engine.js';
-import { Mat4, OrthoMat4 } from './math.js';
+import { Mat4, OrthoMat4, Vec3 } from './math.js';
 import { CameraController } from './camera_controller.js';
 import { TextureSheet } from './core/texture-sheet.js';
 import { Sprite } from './scene/sprite.js';
@@ -25,10 +25,10 @@ export async function InitApp() {
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/frag_star.glsl',
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
-    engine.geometries['square'] = createSquareGeometry(engine);
-    engine.geometries['square'].addShader('debug_shader', debug_shader);
-    engine.geometries['square'].updateBindings();
-    engine.geometries['square'].addObject('square', 0, 6, gl.TRIANGLES);
+    const square = engine.geometries['square'] = createSquareGeometry(engine);
+    square.addShader('debug_shader', debug_shader);
+    square.updateBindings();
+    square.addObject('square', 0, 6, gl.TRIANGLES);
 
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW);
@@ -39,17 +39,23 @@ export async function InitApp() {
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
-            engine.geometries['square'].bind('debug_shader');
+            square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 'UBO', 0);
-            //float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
-            //ubo_buffer.subdata(float32array);
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
+            const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
+            const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
+             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
+             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
+            model_matrix.rotateY(engine.time.current);
+            //model_matrix.translate(0.5, 0.0, 0.0);
+            const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
+            ubo_buffer.subdata(matrix_array, 0);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);
-            //engine.geometries['square'].drawObject('square');
+            //square.drawObject('square');
             //debug_shader.uniform1i('u_sampler2d', 1);
-            engine.geometries['square'].drawObject('square');
+            square.drawObject('square');
         }
     }));
 

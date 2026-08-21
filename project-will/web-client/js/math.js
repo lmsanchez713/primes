@@ -55,6 +55,52 @@ export class Mat4 {
         return this;
     }
 
+    // Simple methods that modify the current matrix
+    translate(x, y, z) {
+        const translation = new Mat4();
+        translation.data[12] = x;
+        translation.data[13] = y;
+        translation.data[14] = z;
+        Mat4.multiply(this, translation, this);
+        return this;
+    }
+
+    rotateX(angle) {
+        const rotation = new Mat4();
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        rotation.data[5] = c;
+        rotation.data[6] = s;
+        rotation.data[9] = -s;
+        rotation.data[10] = c;
+        Mat4.multiply(this, rotation, this);
+        return this;
+    }
+
+    rotateY(angle) {
+        const rotation = new Mat4();
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        rotation.data[0] = c;
+        rotation.data[2] = -s;
+        rotation.data[8] = s;
+        rotation.data[10] = c;
+        Mat4.multiply(this, rotation, this);
+        return this;
+    }
+
+    rotateZ(angle) {
+        const rotation = new Mat4();
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        rotation.data[0] = c;
+        rotation.data[1] = s;
+        rotation.data[4] = -s;
+        rotation.data[5] = c;
+        Mat4.multiply(this, rotation, this);
+        return this;
+    }
+
     static multiply(a, b, out) {
         if (!out) throw new Error("Mat4.multiply: 'out' parameter is mandatory to prevent object creation.");
         const aD = a.data;
@@ -144,6 +190,102 @@ export class Mat4 {
         out.data[13] = -Vec3.dot(ey, eye);
         out.data[14] = -Vec3.dot(ez, eye);
         out.data[15] = 1;
+
+        return out;
+    }
+
+    /**
+     * Creates a rotation matrix around the X axis
+     * @param {number} angle - Angle in radians
+     * @param {Mat4} out - Output matrix
+     * @returns {Mat4} The output matrix
+     */
+    static rotateX(angle, out) {
+        if (!out) throw new Error("Mat4.rotateX: 'out' parameter is mandatory to prevent object creation.");
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+
+        out.identity();
+        out.data[5] = c;
+        out.data[6] = s;
+        out.data[9] = -s;
+        out.data[10] = c;
+
+        return out;
+    }
+
+    /**
+     * Creates a rotation matrix around the Y axis
+     * @param {number} angle - Angle in radians
+     * @param {Mat4} out - Output matrix
+     * @returns {Mat4} The output matrix
+     */
+    static rotateY(angle, out) {
+        if (!out) throw new Error("Mat4.rotateY: 'out' parameter is mandatory to prevent object creation.");
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+
+        out.identity();
+        out.data[0] = c;
+        out.data[2] = -s;
+        out.data[8] = s;
+        out.data[10] = c;
+
+        return out;
+    }
+
+    /**
+     * Creates a rotation matrix around the Z axis
+     * @param {number} angle - Angle in radians
+     * @param {Mat4} out - Output matrix
+     * @returns {Mat4} The output matrix
+     */
+    static rotateZ(angle, out) {
+        if (!out) throw new Error("Mat4.rotateZ: 'out' parameter is mandatory to prevent object creation.");
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+
+        out.identity();
+        out.data[0] = c;
+        out.data[1] = s;
+        out.data[4] = -s;
+        out.data[5] = c;
+
+        return out;
+    }
+
+    /**
+     * Creates a rotation matrix around an arbitrary axis
+     * @param {Vec3} axis - The axis to rotate around
+     * @param {number} angle - Angle in radians
+     * @param {Mat4} out - Output matrix
+     * @returns {Mat4} The output matrix
+     */
+    static rotateAxis(axis, angle, out) {
+        if (!out) throw new Error("Mat4.rotateAxis: 'out' parameter is mandatory to prevent object creation.");
+
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        const t = 1 - c;
+
+        // Normalize the axis vector
+        const normalizedAxis = new Vec3(axis.x, axis.y, axis.z);
+        normalizedAxis.normalize();
+
+        const x = normalizedAxis.x;
+        const y = normalizedAxis.y;
+        const z = normalizedAxis.z;
+
+        out.identity();
+        out.data[0] = t * x * x + c;
+        out.data[1] = t * x * y - s * z;
+        out.data[2] = t * x * z + s * y;
+        out.data[4] = t * x * y + s * z;
+        out.data[5] = t * y * y + c;
+        out.data[6] = t * y * z - s * x;
+        out.data[8] = t * x * z - s * y;
+        out.data[9] = t * y * z + s * x;
+        out.data[10] = t * z * z + c;
 
         return out;
     }

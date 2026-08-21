@@ -23,9 +23,10 @@ out vec3 vWorldPosition;
 out vec3 vNormal;
 
 void main() {
-    vWorldPosition = aPosition;
+    vec4 worldPosition = u_modelMatrix * vec4(aPosition, 1.0);
+    vWorldPosition = worldPosition.xyz;
     vTextureCoord = aTexCoord;
     vNormal = aNormal;
 
-    gl_Position = vec4(aPosition, 1.0);
+    gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
 }
