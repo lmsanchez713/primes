@@ -23,16 +23,15 @@ export async function InitApp() {
     const gl = engine.gl;
 
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
-        ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['SceneUBO']);
+        ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     engine.geometries['square'] = createSquareGeometry(engine);
     engine.geometries['square'].addShader('debug_shader', debug_shader);
     engine.geometries['square'].updateBindings();
     engine.geometries['square'].addObject('square', 0, 6, gl.TRIANGLES);
 
-    const float32array = new Float32Array([1.0, 0.0, 1.0, 1.0]);
-    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, float32array, gl.DYNAMIC_DRAW);
-    debug_shader.bind_ubo('SceneUBO', 0);
+    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(16 * 3 + 4 * 32 * 2 + 4 + 1), gl.DYNAMIC_DRAW);
+    debug_shader.bind_ubo('UBO', 0);
 
     const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
@@ -40,9 +39,9 @@ export async function InitApp() {
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             engine.geometries['square'].bind('debug_shader');
-            ubo_buffer.bind_base(debug_shader, 'SceneUBO', 0);
-            float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
-            ubo_buffer.subdata(float32array);
+            ubo_buffer.bind_base(debug_shader, 'UBO', 0);
+            //float32array[1] = (Math.sin(engine.time.current * 10.0) + 1) / 2; // Animate green channel
+            //ubo_buffer.subdata(float32array);
             texture.bind(0);
             texture2.bind(1);
             debug_shader.uniform1i('u_sampler2d', 0);

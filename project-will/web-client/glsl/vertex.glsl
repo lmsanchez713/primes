@@ -7,8 +7,14 @@ layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
 
-layout(std140) uniform SceneUBO {
-    vec4 u_rgbaColor;
+layout(std140) uniform UBO {
+    mat4 u_modelMatrix;
+    mat4 u_viewMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_pointLight[32];
+    vec4 u_pointLightPos[32];
+    vec4 u_ambientLight;
+    uint u_pointLightCount;
 };
 
 out vec2 vTextureCoord;
