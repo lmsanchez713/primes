@@ -55,6 +55,13 @@ export class Mat4 {
         return this;
     }
 
+    multiply(other) {
+        const result = new Mat4();
+        Mat4.multiply(this, other, result);
+        this.data.set(result.data);
+        return this;
+    }
+
     // Simple methods that modify the current matrix
     translate(x, y, z) {
         const translation = new Mat4();

@@ -44,10 +44,12 @@ export async function InitApp() {
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
             const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
-             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
-             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
+            const translation = new Mat4(), rotation = new Mat4();
+            Mat4.translation(0.5, 0.0, 0.0, translation);
+            Mat4.rotateY(engine.time.current, rotation);
             model_matrix.rotateY(engine.time.current);
-            //model_matrix.translate(0.5, 0.0, 0.0);
+            Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
+            Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
             const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
             ubo_buffer.subdata(matrix_array);
             //texture.bind(0);
