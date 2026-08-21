@@ -49,7 +49,7 @@ export async function InitApp() {
             model_matrix.rotateY(engine.time.current);
             //model_matrix.translate(0.5, 0.0, 0.0);
             const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
-            ubo_buffer.subdata(matrix_array, 0);
+            ubo_buffer.subdata(matrix_array);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);
