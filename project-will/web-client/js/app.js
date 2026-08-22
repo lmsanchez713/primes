@@ -11,6 +11,7 @@ import { ItemType } from './scene/item.js';
 import { createSquareGeometry } from './core/geometry.js';
 import { UBOManager } from './core/ubo.js';
 import { Primitive_Engine, Primitive } from './primitive.js';
+import { createCubeGeometry } from './core/shapes.js';
 
 let engine;
 let uboManager = null;
@@ -25,10 +26,10 @@ export async function InitApp() {
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/frag_star.glsl',
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
-    const square = engine.geometries['square'] = createSquareGeometry(engine);
+    const square = engine.geometries['square'] = createCubeGeometry(engine);
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
-    square.addObject('square', 0, 6, gl.TRIANGLES);
+    square.addObject('square', 0, 6 * 6, gl.TRIANGLES);
 
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW);
@@ -44,11 +45,13 @@ export async function InitApp() {
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
             const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
-            const translation = new Mat4(), rotation = new Mat4();
-            Mat4.translation(0.0, 0.0, 1.0, translation);
+            const translation = new Mat4(), rotation = new Mat4(),
+                rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
+            Mat4.translation(0.0, 0.0, 0.5, translation);
             Mat4.rotateY(engine.time.current, rotation);
+            Mat4.rotateY(Math.PI / 2.0, rotationY);
             model_matrix.multiply(rotation);
-            model_matrix.multiply(translation);
+            // model_matrix.multiply(translation);
             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
             const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
@@ -59,6 +62,13 @@ export async function InitApp() {
             //square.drawObject('square');
             //debug_shader.uniform1i('u_sampler2d', 1);
             square.drawObject('square');
+            //model_matrix.identity();
+            //model_matrix.multiply(rotation);
+            //model_matrix.multiply(rotationY);
+            //model_matrix.multiply(translation);
+            //ubo_buffer.subdata(model_matrix.data);
+            //square.drawObject('square');
+            //
         }
     }));
 
