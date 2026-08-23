@@ -47,10 +47,10 @@ export async function InitApp() {
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
             const translation = new Mat4(), rotation = new Mat4(),
                 rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
-            Mat4.translation(0.0, 0.0, 0.5, translation);
-            Mat4.rotateY(engine.time.current, rotation);
-            Mat4.rotateY(Math.PI / 2.0, rotationY);
-            model_matrix.multiply(rotation);
+            //Mat4.translation(0.0, 0.0, 0.5, translation);
+            //Mat4.rotateY(engine.time.current, rotation);
+            //Mat4.rotateY(Math.PI / 2.0, rotationY);
+            //model_matrix.multiply(rotation);
             // model_matrix.multiply(translation);
             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
@@ -61,14 +61,14 @@ export async function InitApp() {
             //debug_shader.uniform1i('u_sampler2d', 0);
             //square.drawObject('square');
             //debug_shader.uniform1i('u_sampler2d', 1);
-            square.drawObject('square');
+            //square.drawObject('square');
             //model_matrix.identity();
             //model_matrix.multiply(rotation);
             //model_matrix.multiply(rotationY);
             //model_matrix.multiply(translation);
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
-            //
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
         }
     }));
 

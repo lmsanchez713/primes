@@ -108,6 +108,13 @@ export class Mat4 {
         return this;
     }
 
+    rotateAxis(axis, angle) {
+        const rotation = new Mat4();
+        Mat4.rotateAxis(axis, angle, rotation);
+        Mat4.multiply(this, rotation, this);
+        return this;
+    }
+
     static multiply(a, b, out) {
         if (!out) throw new Error("Mat4.multiply: 'out' parameter is mandatory to prevent object creation.");
         const aD = a.data;
