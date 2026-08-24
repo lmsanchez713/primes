@@ -55,6 +55,11 @@ export class Mat4 {
         return this;
     }
 
+    copy(other) {
+        this.data.set(other.data);
+        return this;
+    }
+
     multiply(other) {
         const result = new Mat4();
         Mat4.multiply(this, other, result);

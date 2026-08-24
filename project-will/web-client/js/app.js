@@ -51,7 +51,7 @@ export async function InitApp() {
 
             const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
                 rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
-            // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
+            Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             model_matrix.multiply(time_rotation);
@@ -70,20 +70,32 @@ export async function InitApp() {
             //model_matrix.multiply(translation);
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
+            const factor = (Math.sin(engine.time.current) + 1.0) / 2.0;
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
-            function updateMatrices(x, y, z, axis, angle) {
-                model_matrix.identity();
+            function updateMatrices(x, y, z, axis, angle, factor = 1.0, matrix = new Mat4()) {
+                if (factor < 0.0) factor = 0.0;
+                if (factor > 1.0) factor = 1.0;
+                model_matrix.copy(matrix);
                 model_matrix.multiply(time_rotation);
-                Mat4.translation(0.5, 0.0, 0.5, translation);
+                Mat4.translation(-x, -y, -z, translation);
                 model_matrix.multiply(translation);
-                Mat4.rotateAxis(new Vec3(0.0, 1.0, 0.0), Math.PI / 2.0, rotation);
+                Mat4.rotateAxis(axis, angle * factor, rotation);
                 model_matrix.multiply(rotation);
-                Mat4.translation(-0.5, 0.0, -0.5, translation);
+                Mat4.translation(x, y, z, translation);
                 model_matrix.multiply(translation);
                 ubo_buffer.subdata(model_matrix.data);
             }
-            updateMatrices();
+            updateMatrices(-0.5, 0.0, -0.5, new Vec3(0.0, 1.0, 0.0), Math.PI / 2.0, factor);
             engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
+            updateMatrices(0.0, -0.5, -0.5, new Vec3(-1.0, 0.0, 0.0), Math.PI / 2.0, factor);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 12, 6);
+            updateMatrices(0.5, 0.0, -0.5, new Vec3(0.0, -1.0, 0.0), Math.PI / 2.0, factor);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 18, 6);
+            updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0, factor);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 24, 6);
+            //updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0);
+            //updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0, 1.0, model_matrix);
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 30, 6);
         }
     }));
 
