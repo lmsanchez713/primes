@@ -71,13 +71,14 @@ export async function InitApp() {
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
-            // model_matrix.identity();
-            //Mat4.translation(0.0, 0.0, 0.0, translation);
-            //model_matrix.multiply(translation);
-            //Mat4.rotateY(Math.PI / 2.0, rotation);
-            //model_matrix.multiply(rotation);
-            //Mat4.translation(-0.5, 0.0, -0.5, translation);
-            //model_matrix.multiply(translation);
+            model_matrix.identity();
+            model_matrix.multiply(time_rotation);
+            Mat4.translation(0.5, 0.0, 0.5, translation);
+            model_matrix.multiply(translation);
+            Mat4.rotateY(-Math.PI / 2.0, rotation);
+            model_matrix.multiply(rotation);
+            Mat4.translation(-0.5, 0.0, -0.5, translation);
+            model_matrix.multiply(translation);
             ubo_buffer.subdata(model_matrix.data);
             engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
         }
