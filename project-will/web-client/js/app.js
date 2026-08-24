@@ -51,8 +51,8 @@ export async function InitApp() {
 
             const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
                 rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
+            // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
-            Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
@@ -71,15 +71,18 @@ export async function InitApp() {
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
-            model_matrix.identity();
-            model_matrix.multiply(time_rotation);
-            Mat4.translation(0.5, 0.0, 0.5, translation);
-            model_matrix.multiply(translation);
-            Mat4.rotateY(-Math.PI / 2.0, rotation);
-            model_matrix.multiply(rotation);
-            Mat4.translation(-0.5, 0.0, -0.5, translation);
-            model_matrix.multiply(translation);
-            ubo_buffer.subdata(model_matrix.data);
+            function updateMatrices(x, y, z, axis, angle) {
+                model_matrix.identity();
+                model_matrix.multiply(time_rotation);
+                Mat4.translation(0.5, 0.0, 0.5, translation);
+                model_matrix.multiply(translation);
+                Mat4.rotateAxis(new Vec3(0.0, 1.0, 0.0), Math.PI / 2.0, rotation);
+                model_matrix.multiply(rotation);
+                Mat4.translation(-0.5, 0.0, -0.5, translation);
+                model_matrix.multiply(translation);
+                ubo_buffer.subdata(model_matrix.data);
+            }
+            updateMatrices();
             engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
         }
     }));
