@@ -43,17 +43,19 @@ export async function InitApp() {
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 'UBO', 0);
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
+
             const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
-            const translation = new Mat4(), rotation = new Mat4(),
-                rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
-            //Mat4.translation(0.0, 0.0, 0.5, translation);
-            //Mat4.rotateY(engine.time.current, rotation);
-            //Mat4.rotateY(Math.PI / 2.0, rotationY);
-            //model_matrix.multiply(rotation);
-            // model_matrix.multiply(translation);
             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
+
+            const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
+                rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
+            //Mat4.translation(0.0, 0.0, 0.5, translation);
+            Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
+            //Mat4.rotateY(Math.PI / 2.0, rotationY);
+            model_matrix.multiply(time_rotation);
+            // model_matrix.multiply(translation);
             const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
             ubo_buffer.subdata(matrix_array);
             //texture.bind(0);
@@ -69,6 +71,15 @@ export async function InitApp() {
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
+            // model_matrix.identity();
+            //Mat4.translation(0.0, 0.0, 0.0, translation);
+            //model_matrix.multiply(translation);
+            //Mat4.rotateY(Math.PI / 2.0, rotation);
+            //model_matrix.multiply(rotation);
+            //Mat4.translation(-0.5, 0.0, -0.5, translation);
+            //model_matrix.multiply(translation);
+            ubo_buffer.subdata(model_matrix.data);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
         }
     }));
 
