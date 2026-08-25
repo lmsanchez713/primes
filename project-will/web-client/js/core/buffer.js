@@ -27,8 +27,9 @@ export class Buffer {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferData(this.type, new_data, this.usage);
         if (this.keep_on_ram) {
-            this.data = new Float32Array(new_data.length);
-            this.data.set(new_data);
+            this.data = new Float32Array(this.length);
+            if (new_data.length)
+                this.data.set(new_data);
         }
     }
 
