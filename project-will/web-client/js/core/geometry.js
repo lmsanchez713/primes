@@ -9,11 +9,12 @@ class Draw_Interval {
 }
 
 export class Geometry {
-    constructor(engine) {
+    constructor(engine, keep_on_ram = false) {
         this.engine = engine;
         this.buffers = {};
         this.shaders = {};
         this.objects = {};
+        this.keep_on_ram = keep_on_ram;
     }
 
     addAttribute(buffer, location, size, type = this.engine.gl.FLOAT) {
@@ -56,7 +57,8 @@ export class Geometry {
 
     addBuffer(name, data, size, type = this.engine.gl.FLOAT,
         usage = this.engine.gl.STATIC_DRAW, buffer_type = this.engine.gl.ARRAY_BUFFER) {
-        this.buffers[name] = { buffer: new Buffer(this.engine, buffer_type, data, usage), size, type };
+        const buffer_entry = this.buffers[name]
+            = { buffer: new Buffer(this.engine, buffer_type, data, usage, this.keep_on_ram), size, type };
     }
 
     updateBindings() {
