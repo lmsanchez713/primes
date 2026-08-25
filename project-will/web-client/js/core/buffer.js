@@ -1,12 +1,9 @@
 export class Buffer {
-    constructor(engine, type, data, usage = engine.gl.STATIC_DRAW) {
+    constructor(engine, type, new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
         this.engine = engine;
         this.type = type;
-        this.usage = usage;
         this.buffer = this.engine.gl.createBuffer();
-        this.length = data.length ?? data;
-        this.engine.gl.bindBuffer(this.type, this.buffer);
-        this.engine.gl.bufferData(this.type, data, this.usage);
+        this.data(new_data, usage, keep_on_ram);
     }
 
     bind() {
@@ -19,10 +16,26 @@ export class Buffer {
         this.engine.gl.bindBufferBase(this.type, index, this.buffer);
     }
 
-    data(new_data) {
+    data(new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
+        this.usage = usage;
+        this.keep_on_ram = keep_on_ram;
+        this.length = new_data.length ?? new_data;
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferData(this.type, new_data, this.usage);
-        this.length = new_data.length;
+        if (this.keep_on_ram) {
+            this.data = new Float32Array(new_data.length);
+            this.data.set(new_data);
+        }
+    }
+
+    add_data(new_data, usage = engine.gl.DYNAMIC_DRAW) {
+        if (!this.keep_on_ram) {
+            console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
+            return;
+        }
+        this.data = new Float32Array([...this.data, ...new_data]);
+        this.length += this.data.length;
+        this.data(this.data, usage);
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
