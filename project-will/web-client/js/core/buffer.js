@@ -2,10 +2,11 @@ export class Buffer {
     constructor(engine, type, data, usage = engine.gl.STATIC_DRAW) {
         this.engine = engine;
         this.type = type;
+        this.usage = usage;
         this.buffer = this.engine.gl.createBuffer();
         this.length = data.length ?? data;
         this.engine.gl.bindBuffer(this.type, this.buffer);
-        this.engine.gl.bufferData(this.type, data, usage);
+        this.engine.gl.bufferData(this.type, data, this.usage);
     }
 
     bind() {
@@ -16,6 +17,12 @@ export class Buffer {
         const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
         this.engine.gl.uniformBlockBinding(shader.program, blockIndex, 0);
         this.engine.gl.bindBufferBase(this.type, index, this.buffer);
+    }
+
+    data(new_data) {
+        this.engine.gl.bindBuffer(this.type, this.buffer);
+        this.engine.gl.bufferData(this.type, new_data, this.usage);
+        this.length = new_data.length;
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
