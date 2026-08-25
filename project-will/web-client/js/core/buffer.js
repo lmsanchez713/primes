@@ -11,6 +11,10 @@ export class Buffer {
     }
 
     bind_base(shader, name, index) {
+        if (this.type !== this.engine.gl.UNIFORM_BUFFER) {
+            console.warn('bind_base() is only supported for uniform buffers.');
+            return;
+        }
         const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
         this.engine.gl.uniformBlockBinding(shader.program, blockIndex, 0);
         this.engine.gl.bindBufferBase(this.type, index, this.buffer);
