@@ -32,6 +32,13 @@ export class Buffer {
         }
     }
 
+    free_from_ram() {
+        if (this.keep_on_ram) {
+            this.data = null;
+            this.keep_on_ram = false;
+        }
+    }
+
     add_data(new_data, usage = engine.gl.DYNAMIC_DRAW) {
         if (!this.keep_on_ram) {
             console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
