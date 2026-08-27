@@ -61,6 +61,23 @@ export class Geometry {
             = { buffer: new Buffer(this.engine, buffer_type, data, usage, this.keep_on_ram), size, type };
     }
 
+    add_buffer_data(attribute_data_object, usage = engine.gl.DYNAMIC_DRAW) {
+        for (const [attribute_name, buffer_data] of Object.entries(attribute_data_object)) {
+            if (!Object.hasOwn(this.buffers, attribute_name)) {
+                console.warn(`Buffer ${attribute_name} not found in geometry.`);
+                continue;
+            }
+            const buffer_entry = this.buffers[attribute_name];
+            buffer_entry.buffer.add_data(buffer_data, usage);
+        }
+    }
+
+    free_from_ram() {
+        for (const buffer_entry of Object.values(this.buffers)) {
+            buffer_entry.buffer.free_from_ram();
+        }
+    }
+
     updateBindings() {
         for (const [shader_name, shader_vao_pair] of Object.entries(this.shaders)) {
             const shader = shader_vao_pair.shader;
