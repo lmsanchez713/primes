@@ -4,7 +4,7 @@ from mss import mss
 from pynput import keyboard, mouse
 
 # Configuration
-SAVE_DIR = Path("./timelapse_frames")
+SAVE_DIR = Path("C:\\var\\log\\screen-captures")
 SAVE_DIR.mkdir(exist_ok=True)
 MIN_INTERVAL = 1.0  # Minimum seconds between snapshots (prevents spamming during fast typing)
 
