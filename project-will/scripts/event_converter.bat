@@ -1,1 +1,1 @@
-ffmpeg -framerate 30 -i C:\var\log\screen-captures\frame_%%06d.png -vf "setpts=10.0*PTS" -r 30 -c:v libx264 -pix_fmt yuv420p C:\var\log\screen-captures\output_timelapse.mp4
+ffmpeg -framerate 30 -pattern_type glob -i C:\var\log\screen-captures\frame_*.png -vf "setpts=15.0*PTS" -r 30 -c:v libx264 -pix_fmt yuv420p C:\var\log\screen-captures\output_timelapse.mp4
