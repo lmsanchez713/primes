@@ -37,13 +37,16 @@ export async function InitApp() {
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW);
     debug_shader.bind_ubo('UBO', 0);
 
-    const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
+    // const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
+    const texture = new Texture(engine, 'img/sprites/minecraft_world.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 'UBO', 0);
+            texture.bind(0);
+            debug_shader.uniform1i('u_sampler2d', 0);
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
 
             const light_intensity = 25.0;// Math.sin(engine.time.current * 2.666667) * 0.5 + 0.5;
