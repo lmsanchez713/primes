@@ -72,16 +72,16 @@ export class Geometry {
         }
     }
 
-    buffer_sub_data(attribute_subdata_object, offset = 0) {
+    add_buffer_sub_data(attribute_subdata_object, offset = 0, src_offset = 0, length = data.length - src_offset) {
         for (const [attribute_name, buffer_subdata] of Object.entries(attribute_subdata_object)) {
             if (!Object.hasOwn(this.buffers, attribute_name)) {
                 console.warn(`Buffer ${attribute_name} not found in geometry.`);
                 continue;
             }
             const buffer_entry = this.buffers[attribute_name];
-            buffer_entry.buffer.subdata(buffer_subdata.data, buffer_subdata.offset, buffer_subdata.src_offset, buffer_subdata.length);
+            buffer_entry.buffer.subdata(buffer_subdata.data, offset, src_offset, length);
         }
-    }
+    } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 
     free_from_ram() {
         for (const buffer_entry of Object.values(this.buffers)) {
