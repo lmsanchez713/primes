@@ -23,7 +23,7 @@ export async function InitApp() {
     if (!engine.gl) return;
     const gl = engine.gl;
 
-    const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/frag_star.glsl',
+    const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const square = engine.geometries['square'] = createCubeGeometry(engine);
@@ -48,10 +48,11 @@ export async function InitApp() {
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
             Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
             Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
+            // Mat4.ortho(-3.0, 3.0, -2.0, 2.0, 0.1, 100, projection_matrix);
 
             const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
                 rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
-            Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
+            // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             model_matrix.multiply(time_rotation);
