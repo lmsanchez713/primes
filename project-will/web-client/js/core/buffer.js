@@ -53,6 +53,9 @@ export class Buffer {
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
+        if (this.keep_on_ram) {
+            this.data.set(data.subarray(src_offset, src_offset + length), offset);
+        }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 
     bind_to_vao(shader, name, vao) {
