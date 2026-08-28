@@ -6,7 +6,7 @@ from pynput import keyboard, mouse
 # Configuration
 SAVE_DIR = Path(r"C:\var\log\screen-captures")
 SAVE_DIR.mkdir(parents=True, exist_ok=True)
-MIN_INTERVAL = 1.0  # Minimum seconds between snapshots
+MIN_INTERVAL = 0.1  # Minimum seconds between captures (e.g., 0.1 = max 10 frames/sec)
 
 last_capture_time = 0
 frame_count = 0
@@ -19,9 +19,9 @@ def capture_frame():
         last_capture_time = current_time
         frame_count += 1
         
-        # Unix timestamp in filename
-        timestamp = int(current_time)
-        filename = SAVE_DIR / f"frame_{timestamp}.png"
+        # Unix timestamp in milliseconds
+        ms_timestamp = int(current_time * 1000)
+        filename = SAVE_DIR / f"frame_{ms_timestamp}.png"
         
         with mss() as sct:
             sct.shot(mon=-1, output=str(filename))

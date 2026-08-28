@@ -3,14 +3,14 @@ setlocal enableextensions enabledelayedexpansion
 
 cd /d "C:\var\log\screen-captures"
 
-:: 1. Read first argument (%1) or default to 0.25 if omitted
+:: 1. Read first argument (%1) or default to 0.1 (100 ms) if omitted
 set "FRAME_DURATION=%~1"
-if "%FRAME_DURATION%"=="" set "FRAME_DURATION=0.25"
+if "%FRAME_DURATION%"=="" set "FRAME_DURATION=0.1"
 
 :: 2. Clear existing files.txt
 if exist files.txt del files.txt
 
-:: 3. Build the file list with duration entries
+:: 3. Build the file list sorted chronologically
 set "LAST_FILE="
 (
   for /f "delims=" %%a in ('dir /b /o:n "frame_*.png"') do (
