@@ -31,6 +31,8 @@ export async function InitApp() {
     square.updateBindings();
     square.addObject('square', 0, 6 * 6, gl.TRIANGLES);
 
+    const max_lights = 32;
+
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW);
     debug_shader.bind_ubo('UBO', 0);
@@ -43,6 +45,19 @@ export async function InitApp() {
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 'UBO', 0);
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
+
+            const light_intensity = 25.0;// Math.sin(engine.time.current * 2.666667) * 0.5 + 0.5;
+            const light_color = new Float32Array([1.0, 1.0, 1.0, light_intensity]);
+            const ambient_light_offset = 16 * 3 * 4;
+            ubo_buffer.subdata(new Float32Array([0.3, 0.3, 0.3, 1.0]), ambient_light_offset);
+            const diffuse_light_offset = (16 * 3 + 4) * 4;
+            ubo_buffer.subdata(light_color, diffuse_light_offset);
+            // ubo_buffer.subdata(light_color, diffuse_light_offset + 4);
+            const diffuse_light_pos_offset = (16 * 3 + 4 + 4 * max_lights) * 4;
+            ubo_buffer.subdata(new Float32Array([5.0 * Math.cos(engine.time.current), 0.0,
+            5.0 * Math.sin(engine.time.current), 1.0]), diffuse_light_pos_offset);
+            const diffuse_light_count_offset = (16 * 3 + 4 + 8 * max_lights) * 4;
+            ubo_buffer.subdata(new Uint32Array([1]), diffuse_light_count_offset);
 
             const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
