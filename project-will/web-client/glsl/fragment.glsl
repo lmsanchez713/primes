@@ -24,17 +24,17 @@ uniform sampler2D u_sampler2d;
 out vec4 fragColor;
 
 void main() {
-    //vec4 texColor = texture(u_sampler2d, vTextureCoord);
-    //fragColor = vec4(texColor);
+    vec4 texColor = texture(u_sampler2d, vTextureCoord);
+    fragColor = vec4(texColor);
     //fragColor = vec4(vTextureCoord.x, vTextureCoord.y, u_rgbaColor.y, 1.0);
     //float c = step(abs(vWorldPosition.x) + abs(vWorldPosition.y), 0.5);
     //fragColor = vec4(c, 0.0, 0.0, 1.0);
-    float pct = length(vWorldPosition.xy);
+    //float pct = length(vWorldPosition.xy);
 
     // 4. Create a smooth edge (Radius: 0.25, Smoothness: 0.005)
-    float radius = 0.25;
-    float alpha = 1.0 - smoothstep(radius, radius + 0.005, pct);
+    //float radius = 0.25;
+    //float alpha = 1.0 - smoothstep(radius, radius + 0.005, pct);
 
     // 5. Output white circle on black background
-    fragColor = vec4(vec3(alpha), 1.0);
+    //fragColor = vec4(vec3(alpha), 1.0);
 }
