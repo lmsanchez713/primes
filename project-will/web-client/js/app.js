@@ -52,12 +52,15 @@ export async function InitApp() {
             ubo_buffer.subdata(new Float32Array([0.3, 0.3, 0.3, 1.0]), ambient_light_offset);
             const diffuse_light_offset = (16 * 3 + 4) * 4;
             ubo_buffer.subdata(light_color, diffuse_light_offset);
-            // ubo_buffer.subdata(light_color, diffuse_light_offset + 4);
+            ubo_buffer.subdata(light_color, diffuse_light_offset + 16);
+            // ubo_buffer.subdata(light_color, diffuse_light_offset + 8);
             const diffuse_light_pos_offset = (16 * 3 + 4 + 4 * max_lights) * 4;
             ubo_buffer.subdata(new Float32Array([5.0 * Math.cos(engine.time.current), 0.0,
-            5.0 * Math.sin(engine.time.current), 1.0]), diffuse_light_pos_offset);
+                5.0 * Math.sin(engine.time.current), 1.0]), diffuse_light_pos_offset);
+            ubo_buffer.subdata(new Float32Array([0.0, 5.0 * Math.cos(engine.time.current * 4.0),
+                5.0 * Math.sin(engine.time.current * 4.0), 1.0]), diffuse_light_pos_offset + 16);
             const diffuse_light_count_offset = (16 * 3 + 4 + 8 * max_lights) * 4;
-            ubo_buffer.subdata(new Uint32Array([1]), diffuse_light_count_offset);
+            ubo_buffer.subdata(new Uint32Array([2]), diffuse_light_count_offset);
 
             const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
             const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
