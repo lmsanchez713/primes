@@ -1,4 +1,4 @@
-import { Primitive_Scene, Primitive_Camera } from '/js/core/scene.js';
+// import { Primitive_Scene, Primitive_Camera } from '/js/core/scene.js';
 
 function draw_primitive(primitive, parent) {
     //console.log(primitive);
