@@ -19,13 +19,12 @@ export async function InitApp() {
     const square = engine.geometries['square'] = createCubeGeometry(engine);
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
-    square.addObject('square', 0, 6 * 6, gl.TRIANGLES);
 
     const max_lights = 32;
 
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
     const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW, false, 'UBO');
-    debug_shader.bind_ubo('UBO', 0);
+    debug_shader.bind_ubo(ubo_buffer.name, 0);
 
     // const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
     const texture = new Texture(engine, 'img/sprites/minecraft_world.png');
@@ -33,6 +32,7 @@ export async function InitApp() {
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
+            square.updateBindings();
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 0);
             texture.bind(0);
@@ -66,7 +66,7 @@ export async function InitApp() {
             // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
-            model_matrix.multiply(time_rotation);
+            // model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
             const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
             ubo_buffer.subdata(matrix_array);
@@ -82,6 +82,7 @@ export async function InitApp() {
             //model_matrix.multiply(translation);
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
+
             const factor = (Math.sin(engine.time.current) + 1.0) / 2.0;
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
             function updateMatrices(x, y, z, axis, angle, factor = 1.0, matrix = new Mat4()) {
