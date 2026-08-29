@@ -1,20 +1,22 @@
 export class Buffer {
-    constructor(engine, type, new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
+    constructor(engine, type, new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false, name = "") {
         this.engine = engine;
         this.type = type;
         this.buffer = this.engine.gl.createBuffer();
         this.data(new_data, usage, keep_on_ram);
+        this.name = name;
     }
 
     bind() {
         this.engine.gl.bindBuffer(this.type, this.buffer);
     }
 
-    bind_base(shader, name, index) {
+    bind_base(shader, index, name) {
         if (this.type !== this.engine.gl.UNIFORM_BUFFER) {
             console.warn('bind_base() is only supported for uniform buffers.');
             return;
         }
+        if (!name) name = this.name;
         const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
         this.engine.gl.uniformBlockBinding(shader.program, blockIndex, 0);
         this.engine.gl.bindBufferBase(this.type, index, this.buffer);
