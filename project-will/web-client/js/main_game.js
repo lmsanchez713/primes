@@ -1,4 +1,5 @@
 import { Primitive_Engine, Primitive } from './primitive.js';
+import { Primitive_Scene, Primitive_Camera } from './core/scene.js';
 import { loadShaderFromUrl } from './core/shader.js';
 import { createCubeGeometry } from './core/shapes.js';
 import { Buffer } from './core/buffer.js';
@@ -6,6 +7,17 @@ import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
 
 let engine;
+
+let sea;
+
+
+
+function update_geometry() {
+    //y=Asin(kx−ωt+ϕ)
+    //update existent geometry
+    const geo = engine.geometries['square'];
+    const geo_offset = 36;
+}
 
 export async function InitApp() {
     const canvas = document.getElementById('glCanvas');
@@ -16,7 +28,7 @@ export async function InitApp() {
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
-    const square = engine.geometries['square'] = createCubeGeometry(engine);
+    const square = engine.geometries['square'] = createCubeGeometry(engine, true);
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
 
@@ -30,8 +42,15 @@ export async function InitApp() {
     const texture = new Texture(engine, 'img/sprites/minecraft_world.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
 
+    const scene = new Primitive_Scene({
+        cameras: [
+            new Primitive_Camera(engine, { view: { position: new Vec3(0.0, 0.0, 5.0) }, perspective: {} })
+        ]
+    });
+
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
+            update_geometry();
             square.updateBindings();
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader, 0);
@@ -55,10 +74,11 @@ export async function InitApp() {
             const diffuse_light_count_offset = (16 * 3 + 4 + 8 * max_lights) * 4;
             ubo_buffer.subdata(new Uint32Array([2]), diffuse_light_count_offset);
 
-            const model_matrix = new Mat4(), view_matrix = new Mat4(), projection_matrix = new Mat4();
-            const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
-            Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
-            Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
+            const model_matrix = new Mat4();
+            //, view_matrix = new Mat4(), projection_matrix = new Mat4();
+            //const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
+            //Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
+            //Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
             // Mat4.ortho(-3.0, 3.0, -2.0, 2.0, 0.1, 100, projection_matrix);
 
             const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
@@ -68,7 +88,10 @@ export async function InitApp() {
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             // model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
-            const matrix_array = new Float32Array([...model_matrix.data, ...view_matrix.data, ...projection_matrix.data]);
+            scene.cameras[0].update_view_and_projection();
+            const matrix_array = new Float32Array([
+                ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
+            ]);
             ubo_buffer.subdata(matrix_array);
             //texture.bind(0);
             //texture2.bind(1);
