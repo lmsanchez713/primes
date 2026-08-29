@@ -1,3 +1,4 @@
+import { Primitive } from '/js/primitive.js';
 import { Mat4, Vec3 } from '/js/math.js';
 
 export class Primitive_Camera {
@@ -56,8 +57,9 @@ export class Primitive_Camera {
     }
 }
 
-export class Primitive_Scene {
-    constructor(parameters) {
+export class Primitive_Scene extends Primitive {
+    constructor(engine, parameters) {
+        super(engine, parameters);
         this.cameras = [];
         if (parameters.cameras) {
             for (const camera of parameters.cameras) this.cameras.push(camera);
