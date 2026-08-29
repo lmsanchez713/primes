@@ -42,7 +42,7 @@ export async function InitApp() {
     const texture = new Texture(engine, 'img/sprites/minecraft_world.png');
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
 
-    const scene = new Primitive_Scene({
+    const scene = new Primitive_Scene(engine, {
         cameras: [
             new Primitive_Camera(engine, { view: { position: new Vec3(0.0, 0.0, 5.0) }, perspective: {} })
         ]
