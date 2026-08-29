@@ -57,7 +57,11 @@ export class Primitive_Camera {
 }
 
 export class Primitive_Scene {
-    constructor() {
-        //
+    constructor(parameters) {
+        this.cameras = [];
+        if (parameters.cameras) {
+            for (const camera of parameters.cameras) this.cameras.push(camera);
+        }
+        this.model_matrix = parameters.model_matrix ?? new Mat4();
     }
 }
