@@ -1,4 +1,6 @@
-function draw_primitive(primitive) {
+import { Primitive_Scene, Primitive_Camera } from '/js/core/scene.js';
+
+function draw_primitive(primitive, parent) {
     //console.log(primitive);
     if (!primitive.enabled) return;
 }
@@ -7,9 +9,9 @@ export class Primitive {
     constructor(engine, parameters = {}) {
         this.engine = engine;
         this.name = parameters.name ?? "";
-        this.shader_program = parameters.shader_program ?? null;
-        this.vao = parameters.vao ?? null;
-        this.uniforms = parameters.uniforms ?? null;
+        this.geometry = parameters.geometry ?? null;
+        this.shader_name = parameters.shader_name ?? null;
+        this.ubo_buffer = parameters.ubo_buffer ?? null;
         this.uniform_blocks = parameters.uniform_blocks ?? null;
         this.engine_flags = parameters.engine_flags ?? null;
         this.draw_intervals = parameters.draw_intervals ?? null;
@@ -17,8 +19,8 @@ export class Primitive {
         this.enabled = parameters.enabled ?? true;
         this.children = parameters.children ?? [];
     }
-    render() {
-        this.draw_algorithm(this);
+    render(parent) {
+        this.draw_algorithm(this, parent);
     }
 }
 
@@ -41,7 +43,7 @@ export class Primitive_Engine {
         this.gl.enable(this.gl.CULL_FACE);
         this.gl.enable(this.gl.BLEND);
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
-        this.gl.disable(this.gl.DEPTH_TEST); // Added depth test
+        this.gl.enable(this.gl.DEPTH_TEST); // Added depth test
 
         this.is_running = true;
         this._loop = this._loop.bind(this);
@@ -72,7 +74,7 @@ export class Primitive_Engine {
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);// | gl.DEPTH_BUFFER_BIT);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         // Update projection based on mode and canvas aspect ratio
         const aspect = this.canvas.width / this.canvas.height;
