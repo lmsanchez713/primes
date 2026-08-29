@@ -1,8 +1,8 @@
-export const LightType = {
-    AMBIENT: 'ambient',
-    DIRECTIONAL: 'directional',
-    POINT: 'point'
-};
+//export const LightType = {
+//    AMBIENT: 'ambient',
+//    DIRECTIONAL: 'directional',
+//    POINT: 'point'
+//};
 
 export class Shader {
     constructor(engine, vsSource, fsSource, attributes, uniforms, uniform_blocks) {
@@ -69,45 +69,45 @@ export class Shader {
         return program;
     }
 
-    /**
-     * Parse UBO information from the shader source
-     * This is a simple parser that looks for uniform block declarations
-     */
-    _parseUBOInfo(vsSource, fsSource) {
-        // In a full implementation, we would parse the shader sources to find 
-        // uniform block declarations and their binding points
-
-        // For now, we just note that this shader uses UBOs
-        this.usesUBOs = true;
-    }
-
-    /**
-     * Sets a uniform block binding point for a UBO
-     * @param {string} blockName - Name of the uniform block
-     * @param {number} bindingPoint - Binding point to use
-     */
-    setUBOBinding(blockName, bindingPoint) {
-        this.uboBindings.set(blockName, bindingPoint);
-        // In WebGL 2, we'd bind the block here using glGetUniformBlockIndex and glUniformBlockBinding
-        // For now, we just track the binding for later use
-    }
-
-    /**
-     * Binds all UBOs that have been set up for this shader
-     * @param {UBOManager} uboManager - The UBO manager instance
-     */
-    bindUBOs(uboManager) {
-        // Bind each uniform block to its specified binding point
-        for (const [blockName, bindingPoint] of this.uboBindings.entries()) {
-            const blockIndex = this.engine.gl.getUniformBlockIndex(this.program, blockName);
-            if (blockIndex !== WebGLRenderingContext.INVALID_INDEX) {
-                this.engine.gl.uniformBlockBinding(this.program, blockIndex, bindingPoint);
-            }
-        }
-
-        // Bind all UBOs to their binding points
-        uboManager.bindAll();
-    }
+//    /**
+//     * Parse UBO information from the shader source
+//     * This is a simple parser that looks for uniform block declarations
+//     */
+//    _parseUBOInfo(vsSource, fsSource) {
+//        // In a full implementation, we would parse the shader sources to find 
+//        // uniform block declarations and their binding points
+//
+//        // For now, we just note that this shader uses UBOs
+//        this.usesUBOs = true;
+//    }
+//
+//    /**
+//     * Sets a uniform block binding point for a UBO
+//     * @param {string} blockName - Name of the uniform block
+//     * @param {number} bindingPoint - Binding point to use
+//     */
+//    setUBOBinding(blockName, bindingPoint) {
+//        this.uboBindings.set(blockName, bindingPoint);
+//        // In WebGL 2, we'd bind the block here using glGetUniformBlockIndex and glUniformBlockBinding
+//        // For now, we just track the binding for later use
+//    }
+//
+//    /**
+//     * Binds all UBOs that have been set up for this shader
+//     * @param {UBOManager} uboManager - The UBO manager instance
+//     */
+//    bindUBOs(uboManager) {
+//        // Bind each uniform block to its specified binding point
+//        for (const [blockName, bindingPoint] of this.uboBindings.entries()) {
+//            const blockIndex = this.engine.gl.getUniformBlockIndex(this.program, blockName);
+//            if (blockIndex !== WebGLRenderingContext.INVALID_INDEX) {
+//                this.engine.gl.uniformBlockBinding(this.program, blockIndex, bindingPoint);
+//            }
+//        }
+//
+//        // Bind all UBOs to their binding points
+//        uboManager.bindAll();
+//    }
 }
 
 export async function loadShaderFromUrl(gl, vsUrl, fsUrl, attributes, uniforms, uniform_blocks) {
