@@ -72,7 +72,7 @@ export class Geometry {
         }
     }
 
-    add_buffer_sub_data(attribute_subdata_object, offset = 0, src_offset = 0, length = data.length - src_offset) {
+    buffer_sub_data(attribute_subdata_object, offset = 0, src_offset = 0, length = data.length - src_offset) {
         for (const [attribute_name, buffer_subdata] of Object.entries(attribute_subdata_object)) {
             if (!Object.hasOwn(this.buffers, attribute_name)) {
                 console.warn(`Buffer ${attribute_name} not found in geometry.`);
