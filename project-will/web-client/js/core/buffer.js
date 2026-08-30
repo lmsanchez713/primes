@@ -51,7 +51,7 @@ export class Buffer {
         }
         this.persistent_data = new Float32Array([...this.persistent_data, ...new_data]);
         this.length += this.persistent_data.length;
-        this.data(this.persistent_data, usage);
+        this.data(this.persistent_data, usage, this.keep_on_ram);
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
