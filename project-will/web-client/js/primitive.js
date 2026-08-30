@@ -79,7 +79,7 @@ export class Primitive_Engine {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         // Update projection based on mode and canvas aspect ratio
-        const aspect = this.canvas.width / this.canvas.height;
+        // const aspect = this.canvas.width / this.canvas.height;
         for (const primitive of this.primitives) {
             primitive.render();
         }

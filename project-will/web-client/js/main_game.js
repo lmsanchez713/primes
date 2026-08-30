@@ -6,7 +6,7 @@ import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
 
-let engine;
+let engine, scene;
 
 let vertices_generated = 0, last_report = -1;
 
@@ -27,7 +27,9 @@ function update_geometry() {
     }
 
     if (last_report < current_cycle) {
-        console.log(`CYCLE ${current_cycle} QUADS ${quads} SIDE ${side} VTXS ${vertices_needed} `);
+        console.log(
+            `CYCLE ${current_cycle} QUADS ${quads} SIDE ${side} VTXS ${vertices_needed} ASPECT ${scene.cameras[0].perspective.aspect}`
+        );
         last_report = current_cycle;
     }
 
@@ -132,7 +134,7 @@ export async function InitApp() {
     const texture = new Texture(engine, 'img/sprites/minecraft_world.png', 0);
     const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png', 0);
 
-    const scene = new Primitive_Scene(engine, {
+    scene = new Primitive_Scene(engine, {
         cameras: [
             new Primitive_Camera(engine, { view: { position: new Vec3(3.0, 3.0, 5.0) }, perspective: {} })
         ]
@@ -227,7 +229,7 @@ export async function InitApp() {
             // model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
             const TOUCH = window.matchMedia('(pointer: coarse)').matches;
-            scene.cameras[0].consume_mouse_delta(TOUCH ? 0.005 : 0.0025);
+            scene.cameras[0].process_input(TOUCH ? 0.005 : 0.0025);
             const matrix_array = new Float32Array([
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
