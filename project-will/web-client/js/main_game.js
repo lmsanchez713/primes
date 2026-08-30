@@ -1,7 +1,7 @@
 import { Primitive_Engine, Primitive } from './primitive.js';
 import { Primitive_Scene, Primitive_Camera } from './core/scene.js';
 import { loadShaderFromUrl } from './core/shader.js';
-import { createCubeGeometry } from './core/shapes.js';
+import { createCubeGeometry, generate_triangle } from './core/shapes.js';
 import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
@@ -10,6 +10,8 @@ let engine;
 
 let sea;
 
+let vertices_generated = 0;
+
 function update_geometry() {
     //y=Asin(kx−ωt+ϕ)
     //update existent geometry
@@ -17,11 +19,24 @@ function update_geometry() {
     const geo_offset = 36;
     const position = new Float32Array(18), normal = new Float32Array(18), texture = new Float32Array(12);
 
+    generate_triangle(
+        -1.0, 0.0, 1.0, 0.0, 0.0,
+        1.0, 0.0, 1.0, 1.0, 0.0,
+        1.0, 0.0, -1.0, 1.0, 1.0,
+        0, position, normal, texture);
+    generate_triangle(
+        -1.0, 0.0, 1.0, 0.0, 0.0,
+        1.0, 0.0, -1.0, 1.0, 1.0,
+        -1.0, 0.0, -1.0, 0.0, 1.0,
+        3, position, normal, texture);
+
     geo.buffer_sub_data({
         aPosition: { data: position, offset: 36 * 3 * 4 },
         aNormal: { data: normal, offset: 36 * 3 * 4 },
         aTexCoord: { data: texture, offset: 36 * 2 * 4 }
     });
+
+    vertices_generated = 6;
 }
 
 export async function InitApp() {
@@ -99,7 +114,8 @@ export async function InitApp() {
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
             ubo_buffer.subdata(matrix_array);
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 12, 6);
+            if (vertices_generated)
+                engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);

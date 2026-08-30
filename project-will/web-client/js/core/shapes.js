@@ -10,9 +10,9 @@ export function generateCuboidVertices(p0, p1, p2, p3, p4, p5, p6, p7) {
 }
 
 export function generate_triangle(x0, y0, z0, u0, v0, x1, y1, z1, u1, v1, x2, y2, z2, u2, v2,
-    offset, position, normal, texture) {
-    if (position) position.set([x0, y0, z0, x1, y1, z1, x2, y2, z2], offset * 3);
-    if (texture) texture.set([u0, v0, u1, v1, u2, v2], offset * 2);
+    vertex_offset, position, normal, texture) {
+    if (position) position.set([x0, y0, z0, x1, y1, z1, x2, y2, z2], vertex_offset * 3);
+    if (texture) texture.set([u0, v0, u1, v1, u2, v2], vertex_offset * 2);
     if (normal) {
         // 1. Calcular os vetores v01 (de P0 para P1) e v02 (de P0 para P2)
         const v01x = x1 - x0;
@@ -33,7 +33,7 @@ export function generate_triangle(x0, y0, z0, u0, v0, x1, y1, z1, u1, v1, x2, y2
 
         // Evitar divisão por zero caso os pontos estejam alinhados ou sobrepostos
         if (length === 0) {
-            normal.set([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], offset * 3);
+            normal.set([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], vertex_offset * 3);
         }
 
         // 4. Retornar o vetor normal unitário
@@ -41,7 +41,7 @@ export function generate_triangle(x0, y0, z0, u0, v0, x1, y1, z1, u1, v1, x2, y2
             nlzd_y = ny / length,
             nlzd_z = nz / length;
 
-        normal.set([nlzd_x, nlzd_y, nlzd_z, nlzd_x, nlzd_y, nlzd_z, nlzd_x, nlzd_y, nlzd_z], offset * 3);
+        normal.set([nlzd_x, nlzd_y, nlzd_z, nlzd_x, nlzd_y, nlzd_z, nlzd_x, nlzd_y, nlzd_z], vertex_offset * 3);
     }
 }
 
