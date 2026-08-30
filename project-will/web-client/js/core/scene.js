@@ -55,6 +55,40 @@ export class Primitive_Camera {
         this.update_view_and_projection();
         Mat4.multiply(this.projection_matrix, this.view_matrix, this.view_projection_matrix);
     }
+    /**
+ * Rotate the camera around its target using the accumulated mouse deltas,
+ * then reset the deltas (consuming them).
+ * @param {number} sensitivity - radians of rotation per pixel (default ~0.0025)
+ * @returns {Primitive_Camera} this
+ */
+    consume_mouse_delta(sensitivity = 0.0025) {
+        const dx = this.mouse_delta_x ?? 0;
+        const dy = this.mouse_delta_y ?? 0;
+        this.mouse_delta_x = 0;   // consume
+        this.mouse_delta_y = 0;
+        if (dx === 0 && dy === 0) return this;
+
+        // offset from target to eye, in spherical coords
+        const ox = this.view.position.x - this.view.target.x;
+        const oy = this.view.position.y - this.view.target.y;
+        const oz = this.view.position.z - this.view.target.z;
+        const radius = Math.sqrt(ox * ox + oy * oy + oz * oz);
+        if (radius < 1e-8) return this;
+
+        let phi = Math.acos(Math.max(-1, Math.min(1, oy / radius))); // polar angle from +Y
+        let theta = Math.atan2(oz, ox);                               // azimuth around Y
+
+        theta += dx * sensitivity;      // yaw
+        phi -= dy * sensitivity;        // pitch (mouse up -> look up)
+        phi = Math.max(0.05, Math.min(Math.PI - 0.05, phi)); // clamp to avoid flipping over the poles
+
+        this.view.position.x = this.view.target.x + radius * Math.sin(phi) * Math.cos(theta);
+        this.view.position.y = this.view.target.y + radius * Math.cos(phi);
+        this.view.position.z = this.view.target.z + radius * Math.sin(phi) * Math.sin(theta);
+
+        this.update_view_and_projection();
+        return this;
+    }
 }
 
 export class Primitive_Scene extends Primitive {

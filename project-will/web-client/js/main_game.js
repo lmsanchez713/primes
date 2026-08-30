@@ -148,6 +148,19 @@ export async function InitApp() {
         waves.push({ a, kx, kz, w, o });
     }
 
+    window.addEventListener('mousemove', (e) => {
+        if (document.pointerLockElement === document.body) {
+            scene.cameras[0].mouse_delta_x = e.movementX;
+            scene.cameras[0].mouse_delta_y = e.movementY;
+        }
+    });
+
+    window.addEventListener('click', () => {
+        if (!document.pointerLockElement) {
+            document.body.requestPointerLock();
+        }
+    });
+
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             update_geometry();
@@ -192,7 +205,7 @@ export async function InitApp() {
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             // model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
-            scene.cameras[0].update_view_and_projection();
+            scene.cameras[0].consume_mouse_delta();
             const matrix_array = new Float32Array([
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
