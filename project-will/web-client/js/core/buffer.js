@@ -31,15 +31,15 @@ export class Buffer {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferData(this.type, new_data, this.usage);
         if (this.keep_on_ram) {
-            this.data = new Float32Array(this.length);
+            this.persistent_data = new Float32Array(this.length);
             if (new_data.length)
-                this.data.set(new_data);
+                this.persistent_data.set(new_data);
         }
     }
 
     free_from_ram() {
         if (this.keep_on_ram) {
-            this.data = null;
+            this.persistent_data = null;
             this.keep_on_ram = false;
         }
     }
@@ -49,16 +49,16 @@ export class Buffer {
             console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
             return;
         }
-        this.data = new Float32Array([...this.data, ...new_data]);
-        this.length += this.data.length;
-        this.data(this.data, usage);
+        this.persistent_data = new Float32Array([...this.persistent_data, ...new_data]);
+        this.length += this.persistent_data.length;
+        this.data(this.persistent_data, usage);
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
         if (this.keep_on_ram) {
-            this.data.set(data.subarray(src_offset, src_offset + length), offset);
+            this.persistent_data.set(data.subarray(src_offset, src_offset + length), offset);
         }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 

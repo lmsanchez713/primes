@@ -61,7 +61,7 @@ export class Geometry {
             = { buffer: new Buffer(this.engine, buffer_type, data, usage, this.keep_on_ram), size, type };
     }
 
-    add_buffer_data(attribute_data_object, usage = engine.gl.DYNAMIC_DRAW) {
+    add_buffer_data(attribute_data_object, usage = this.engine.gl.DYNAMIC_DRAW) {
         for (const [attribute_name, buffer_data] of Object.entries(attribute_data_object)) {
             if (!Object.hasOwn(this.buffers, attribute_name)) {
                 console.warn(`Buffer ${attribute_name} not found in geometry.`);
@@ -72,14 +72,14 @@ export class Geometry {
         }
     }
 
-    buffer_sub_data(attribute_subdata_object, offset = 0, src_offset = 0, length = data.length - src_offset) {
-        for (const [attribute_name, buffer_subdata] of Object.entries(attribute_subdata_object)) {
+    buffer_sub_data(attribute_subdata_object) {//, offset = 0, src_offset = 0, length = data.length - src_offset) {
+        for (const [attribute_name, subdata_entry] of Object.entries(attribute_subdata_object)) {
             if (!Object.hasOwn(this.buffers, attribute_name)) {
                 console.warn(`Buffer ${attribute_name} not found in geometry.`);
                 continue;
             }
             const buffer_entry = this.buffers[attribute_name];
-            buffer_entry.buffer.subdata(buffer_subdata.data, offset, src_offset, length);
+            buffer_entry.buffer.subdata(subdata_entry.data, subdata_entry.offset);//, src_offset, length);
         }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 

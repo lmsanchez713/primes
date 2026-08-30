@@ -15,6 +15,13 @@ function update_geometry() {
     //update existent geometry
     const geo = engine.geometries['square'];
     const geo_offset = 36;
+    const position = new Float32Array(18), normal = new Float32Array(18), texture = new Float32Array(12);
+
+    geo.buffer_sub_data({
+        aPosition: { data: position, offset: 36 * 3 * 4 },
+        aNormal: { data: normal, offset: 36 * 3 * 4 },
+        aTexCoord: { data: texture, offset: 36 * 2 * 4 }
+    });
 }
 
 export async function InitApp() {
@@ -27,6 +34,7 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const square = engine.geometries['square'] = createCubeGeometry(engine, true);
+    square.add_buffer_data({ aPosition: new Float32Array(18), aNormal: new Float32Array(18), aTexCoord: new Float32Array(12) });
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
 
@@ -42,7 +50,7 @@ export async function InitApp() {
 
     const scene = new Primitive_Scene(engine, {
         cameras: [
-            new Primitive_Camera(engine, { view: { position: new Vec3(0.0, 0.0, 5.0) }, perspective: {} })
+            new Primitive_Camera(engine, { view: { position: new Vec3(3.0, 3.0, 5.0) }, perspective: {} })
         ]
     });
 
@@ -91,6 +99,7 @@ export async function InitApp() {
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
             ubo_buffer.subdata(matrix_array);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 12, 6);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);
@@ -104,29 +113,29 @@ export async function InitApp() {
             //ubo_buffer.subdata(model_matrix.data);
             //square.drawObject('square');
 
-            const factor = (Math.sin(engine.time.current) + 1.0) / 2.0;
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
-            function updateMatrices(x, y, z, axis, angle, factor = 1.0, matrix = new Mat4()) {
-                if (factor < 0.0) factor = 0.0;
-                if (factor > 1.0) factor = 1.0;
-                model_matrix.copy(matrix);
-                model_matrix.multiply(time_rotation);
-                Mat4.translation(-x, -y, -z, translation);
-                model_matrix.multiply(translation);
-                Mat4.rotateAxis(axis, angle * factor, rotation);
-                model_matrix.multiply(rotation);
-                Mat4.translation(x, y, z, translation);
-                model_matrix.multiply(translation);
-                ubo_buffer.subdata(model_matrix.data);
-            }
-            updateMatrices(-0.5, 0.0, -0.5, new Vec3(0.0, 1.0, 0.0), Math.PI / 2.0, factor);
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
-            updateMatrices(0.0, -0.5, -0.5, new Vec3(-1.0, 0.0, 0.0), Math.PI / 2.0, factor);
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 12, 6);
-            updateMatrices(0.5, 0.0, -0.5, new Vec3(0.0, -1.0, 0.0), Math.PI / 2.0, factor);
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 18, 6);
-            updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0, factor);
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 24, 6);
+            //const factor = (Math.sin(engine.time.current) + 1.0) / 2.0;
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 6);
+            //function updateMatrices(x, y, z, axis, angle, factor = 1.0, matrix = new Mat4()) {
+            //    if (factor < 0.0) factor = 0.0;
+            //    if (factor > 1.0) factor = 1.0;
+            //    model_matrix.copy(matrix);
+            //    model_matrix.multiply(time_rotation);
+            //    Mat4.translation(-x, -y, -z, translation);
+            //    model_matrix.multiply(translation);
+            //    Mat4.rotateAxis(axis, angle * factor, rotation);
+            //    model_matrix.multiply(rotation);
+            //    Mat4.translation(x, y, z, translation);
+            //    model_matrix.multiply(translation);
+            //    ubo_buffer.subdata(model_matrix.data);
+            //}
+            //updateMatrices(-0.5, 0.0, -0.5, new Vec3(0.0, 1.0, 0.0), Math.PI / 2.0, factor);
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 6, 6);
+            //updateMatrices(0.0, -0.5, -0.5, new Vec3(-1.0, 0.0, 0.0), Math.PI / 2.0, factor);
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 12, 6);
+            //updateMatrices(0.5, 0.0, -0.5, new Vec3(0.0, -1.0, 0.0), Math.PI / 2.0, factor);
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 18, 6);
+            //updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0, factor);
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 24, 6);
             //updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0);
             //updateMatrices(0.0, 0.5, -0.5, new Vec3(1.0, 0.0, 0.0), Math.PI / 2.0, 1.0, model_matrix);
             //engine.gl.drawArrays(engine.gl.TRIANGLES, 30, 6);
