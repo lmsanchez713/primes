@@ -123,7 +123,9 @@ export async function InitApp() {
     const max_lights = 32;
 
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
-    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW, false, 'UBO', 0);
+    const ubo_float_count_ceiled = Math.ceil(ubo_float_count / 4.0) * 4.0;
+    const ubo_buffer
+        = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count_ceiled), gl.DYNAMIC_DRAW, false, 'UBO', 0);
     debug_shader.bind_ubo(ubo_buffer);
 
     // const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
