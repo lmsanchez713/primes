@@ -58,7 +58,7 @@ export class Buffer {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
         if (this.keep_on_ram) {
-            this.persistent_data.set(data.subarray(src_offset, src_offset + length), offset);
+            this.persistent_data.set(data.subarray(src_offset / 4, (src_offset + length) / 4), offset / 4);
         }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 
