@@ -10,6 +10,8 @@ let engine;
 
 let vertices_generated = 0, last_report = -1;
 
+const waves = [];
+
 function update_geometry() {
     const cycle_time = 5.0;
     const current_cycle = Math.trunc(engine.time.current / cycle_time);
@@ -59,10 +61,14 @@ function update_geometry() {
             const x0 = -side / 2.0 + quad_col * 1.0, x1 = -side / 2.0 + quad_col * 1.0 + 1.0;
             const z0 = side / 2.0 - quad_row * 1.0, z1 = side / 2.0 - quad_row * 1.0 - 1.0;
 
-            const y0 = y(x0, z0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-            const y1 = y(x1, z0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-            const y2 = y(x1, z1, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-            const y3 = y(x0, z1, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+            let y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
+
+            for (const wave of waves) {
+                y0 += y(x0, z0, engine.time.current, wave.a, wave.kx, wave.kz, wave.w, wave.o);
+                y1 += y(x1, z0, engine.time.current, wave.a, wave.kx, wave.kz, wave.w, wave.o);
+                y2 += y(x1, z1, engine.time.current, wave.a, wave.kx, wave.kz, wave.w, wave.o);
+                y3 += y(x0, z1, engine.time.current, wave.a, wave.kx, wave.kz, wave.w, wave.o);
+            }
 
             const buffer_offset = (quad_row * side + quad_col) * 6;
             generate_triangle(
@@ -114,6 +120,16 @@ export async function InitApp() {
             new Primitive_Camera(engine, { view: { position: new Vec3(3.0, 3.0, 5.0) }, perspective: {} })
         ]
     });
+
+    for (let c = 0; c < 10; c++) {
+        const a = (0.15 + Math.random() * 0.6) / 5.0,
+            rad = Math.random() * 2.0 * Math.PI,
+            kx = Math.sin(rad), kz = Math.cos(rad),
+            w = 0.5 + Math.random() * 1.5,
+            o = Math.random() * 2.0 * Math.PI;
+
+        waves.push({ a, kx, kz, w, o });
+    }
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
