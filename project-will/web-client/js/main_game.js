@@ -13,21 +13,29 @@ let sea;
 let vertices_generated = 0;
 
 function update_geometry() {
-    //y=Asin(kx−ωt+ϕ)
+    //y=Asin(kx−ωt+ϕ)   //   y(x,z,t) = Asin(kx+kz-wt+o)
+    function y(x, z, t, a, kx, kz, w, o) {
+        return a * Math.sin(kx * Math.PI * 2.0 * x + kz * Math.PI * 2.0 * z - w * t + o);
+    }
     //update existent geometry
     const geo = engine.geometries['square'];
     const geo_offset = 36;
     const position = new Float32Array(18), normal = new Float32Array(18), texture = new Float32Array(12);
 
+    const y0 = y(-1.0, 1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+    const y1 = y(1.0, 1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+    const y2 = y(1.0, -1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+    const y3 = y(-1.0, -1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+
     generate_triangle(
-        -1.0, 0.0, 1.0, 0.0, 0.0,
-        1.0, 0.0, 1.0, 1.0, 0.0,
-        1.0, 0.0, -1.0, 1.0, 1.0,
+        -1.0, y0, 1.0, 0.0, 0.0,
+        1.0, y1, 1.0, 1.0, 0.0,
+        1.0, y2, -1.0, 1.0, 1.0,
         0, position, normal, texture);
     generate_triangle(
-        -1.0, 0.0, 1.0, 0.0, 0.0,
-        1.0, 0.0, -1.0, 1.0, 1.0,
-        -1.0, 0.0, -1.0, 0.0, 1.0,
+        -1.0, y0, 1.0, 0.0, 0.0,
+        1.0, y2, -1.0, 1.0, 1.0,
+        -1.0, y3, -1.0, 0.0, 1.0,
         3, position, normal, texture);
 
     geo.buffer_sub_data({
