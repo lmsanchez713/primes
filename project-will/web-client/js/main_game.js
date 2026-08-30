@@ -8,17 +8,40 @@ import { Mat4, Vec3 } from './math.js';
 
 let engine;
 
-let sea;
-
-let vertices_generated = 0;
+let vertices_generated = 0, last_report = -1;
 
 function update_geometry() {
+    const cycle_time = 5.0;
+    const current_cycle = Math.trunc(engine.time.current / cycle_time);
+    const cycle_partial = engine.time.current % cycle_time;
+    let side = 1, vertices_needed = 6;
+
+    for (let c = 0; c <= current_cycle; c++) {
+        //
+    }
+
+    if (last_report < current_cycle) {
+        console.log(`CYCLE ${current_cycle}`);
+        last_report = current_cycle;
+    }
+
+    const geo = engine.geometries['square'];
+
+    if (vertices_needed > vertices_generated) {
+        const vertices_missing = vertices_needed - vertices_generated;
+        geo.add_buffer_data({
+            aPosition: new Float32Array(vertices_missing * 3),
+            aNormal: new Float32Array(vertices_missing * 3),
+            aTexCoord: new Float32Array(vertices_missing * 2)
+        });
+        vertices_generated = vertices_needed;
+    }
+
     //y=Asin(kx−ωt+ϕ)   //   y(x,z,t) = Asin(kx+kz-wt+o)
     function y(x, z, t, a, kx, kz, w, o) {
         return a * Math.sin(kx * Math.PI * 2.0 * x + kz * Math.PI * 2.0 * z - w * t + o);
     }
     //update existent geometry
-    const geo = engine.geometries['square'];
     const geo_offset = 36;
     const position = new Float32Array(18), normal = new Float32Array(18), texture = new Float32Array(12);
 
@@ -45,8 +68,6 @@ function update_geometry() {
         aNormal: { data: normal, offset: 36 * 3 * 4 },
         aTexCoord: { data: texture, offset: 36 * 2 * 4 }
     });
-
-    vertices_generated = 6;
 }
 
 export async function InitApp() {
@@ -59,7 +80,7 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const square = engine.geometries['square'] = createCubeGeometry(engine, true);
-    square.add_buffer_data({ aPosition: new Float32Array(18), aNormal: new Float32Array(18), aTexCoord: new Float32Array(12) });
+    
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
 
@@ -112,8 +133,8 @@ export async function InitApp() {
             //Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
             // Mat4.ortho(-3.0, 3.0, -2.0, 2.0, 0.1, 100, projection_matrix);
 
-            const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
-                rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
+            //const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
+            //    rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
             // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
