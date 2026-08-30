@@ -138,7 +138,7 @@ export async function InitApp() {
         ]
     });
 
-    for (let c = 0; c < 2; c++) {
+    for (let c = 0; c < 5; c++) {
         const a = 0.3 + Math.sin(Math.PI / 2.0 * Math.random()) / 3.0,
             rad = Math.random() * 2.0 * Math.PI,
             kx = 0.5 + Math.sin(rad) * 0.5, kz = 0.5 + Math.cos(rad) * 0.5,
@@ -150,24 +150,45 @@ export async function InitApp() {
 
     window.addEventListener('mousemove', (e) => {
         if (document.pointerLockElement === document.body) {
-            scene.cameras[0].mouse_delta_x = e.movementX;
-            scene.cameras[0].mouse_delta_y = e.movementY;
+            scene.cameras[0].mouse_delta_x += e.movementX;
+            scene.cameras[0].mouse_delta_y += e.movementY;
         }
     });
 
     window.addEventListener('click', () => {
-        if (!document.pointerLockElement) {
-            document.body.requestPointerLock();
+        if (!document.pointerLockElement && document.body.requestPointerLock) {
+            document.body.requestPointerLock()?.catch?.(() => { });
         }
     });
+
+    let touch_active = false, last_touch_x = 0, last_touch_y = 0;
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) { touch_active = false; return; }
+        touch_active = true;
+        last_touch_x = e.touches[0].clientX;
+        last_touch_y = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!touch_active || e.touches.length !== 1) return;
+        e.preventDefault(); // stop page scroll/zoom while rotating
+        const t = e.touches[0];
+        scene.cameras[0].mouse_delta_x += (t.clientX - last_touch_x);
+        scene.cameras[0].mouse_delta_y += (t.clientY - last_touch_y);
+        last_touch_x = t.clientX;
+        last_touch_y = t.clientY;
+    }, { passive: false });  // required: allows preventDefault()
+
+    window.addEventListener('touchend', () => { touch_active = false; });
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
             update_geometry();
-            const camera_factor = 0.03125 * 1.0;
-            scene.cameras[0].view.position.x *= (1.0 + camera_factor * engine.time.delta);
-            scene.cameras[0].view.position.y *= (1.0 + camera_factor * engine.time.delta);
-            scene.cameras[0].view.position.z *= (1.0 + camera_factor * engine.time.delta);
+            //const camera_factor = 0.03125 * 1.0;
+            //scene.cameras[0].view.position.x *= (1.0 + camera_factor * engine.time.delta);
+            //scene.cameras[0].view.position.y *= (1.0 + camera_factor * engine.time.delta);
+            //scene.cameras[0].view.position.z *= (1.0 + camera_factor * engine.time.delta);
             square.updateBindings();
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader);
@@ -205,7 +226,8 @@ export async function InitApp() {
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             // model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
-            scene.cameras[0].consume_mouse_delta();
+            const TOUCH = window.matchMedia('(pointer: coarse)').matches;
+            scene.cameras[0].consume_mouse_delta(TOUCH ? 0.005 : 0.0025);
             const matrix_array = new Float32Array([
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
