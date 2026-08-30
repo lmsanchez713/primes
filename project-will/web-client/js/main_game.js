@@ -14,14 +14,18 @@ function update_geometry() {
     const cycle_time = 5.0;
     const current_cycle = Math.trunc(engine.time.current / cycle_time);
     const cycle_partial = engine.time.current % cycle_time;
-    let side = 1, vertices_needed = 6;
+    let quads = 1, side = 1, vertices_needed = 6;
 
     for (let c = 0; c <= current_cycle; c++) {
-        //
+        const new_side = side + 2;
+        const new_quads = new_side * 2 + side * 2;
+        vertices_needed += new_quads * 6;
+        quads += new_quads;
+        side = new_side;
     }
 
     if (last_report < current_cycle) {
-        console.log(`CYCLE ${current_cycle}`);
+        console.log(`CYCLE ${current_cycle} QUADS ${quads} SIDE ${side} VTXS ${vertices_needed} `);
         last_report = current_cycle;
     }
 
@@ -43,7 +47,9 @@ function update_geometry() {
     }
     //update existent geometry
     const geo_offset = 36;
-    const position = new Float32Array(18), normal = new Float32Array(18), texture = new Float32Array(12);
+    const position = new Float32Array(vertices_generated * 3),
+        normal = new Float32Array(vertices_generated * 3),
+        texture = new Float32Array(vertices_generated * 2);
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
@@ -64,9 +70,9 @@ function update_geometry() {
         3, position, normal, texture);
 
     geo.buffer_sub_data({
-        aPosition: { data: position, offset: 36 * 3 * 4 },
-        aNormal: { data: normal, offset: 36 * 3 * 4 },
-        aTexCoord: { data: texture, offset: 36 * 2 * 4 }
+        aPosition: { data: position, offset: 36 * 3 },
+        aNormal: { data: normal, offset: 36 * 3 },
+        aTexCoord: { data: texture, offset: 36 * 2 }
     });
 }
 
@@ -80,7 +86,7 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const square = engine.geometries['square'] = createCubeGeometry(engine, true);
-    
+
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
 
@@ -102,7 +108,7 @@ export async function InitApp() {
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
-            update_geometry();
+            //update_geometry();
             square.updateBindings();
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader);
@@ -145,8 +151,10 @@ export async function InitApp() {
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
             ubo_buffer.subdata(matrix_array);
-            if (vertices_generated)
-                engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
+            if (vertices_generated) {
+                // engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
+            }
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 36);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);
