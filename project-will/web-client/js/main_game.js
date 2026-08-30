@@ -13,7 +13,7 @@ let vertices_generated = 0, last_report = -1;
 const waves = [];
 
 function update_geometry() {
-    const cycle_time = 1.5;
+    const cycle_time = 1.0;
     const current_cycle = Math.trunc(engine.time.current / cycle_time);
     const cycle_partial = engine.time.current % cycle_time;
     let quads = 1, side = 1, vertices_needed = 6;
@@ -136,11 +136,11 @@ export async function InitApp() {
         ]
     });
 
-    for (let c = 0; c < 10; c++) {
-        const a = (0.15 + Math.random() * 0.6) / 5.0,
+    for (let c = 0; c < 2; c++) {
+        const a = 0.3 + Math.sin(Math.PI / 2.0 * Math.random()) / 3.0,
             rad = Math.random() * 2.0 * Math.PI,
-            kx = Math.sin(rad), kz = Math.cos(rad),
-            w = 0.5 + Math.random() * 1.5,
+            kx = 0.5 + Math.sin(rad) * 0.5, kz = 0.5 + Math.cos(rad) * 0.5,
+            w = 3.0 + Math.random() * 3.0,
             o = Math.random() * 2.0 * Math.PI;
 
         waves.push({ a, kx, kz, w, o });
