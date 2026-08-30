@@ -22,13 +22,13 @@ export class Shader {
         }
     }
 
-    bind_ubo(ubo_name, binding_point) {
-        const blockIndex = this.ubos[ubo_name];
+    bind_ubo(ubo, binding_point) {
+        const blockIndex = this.ubos[ubo.name];
         if (blockIndex === this.engine.gl.INVALID_INDEX) {
             console.warn(`Uniform block ${ubo_name} not found in shader.`);
             return;
         }
-        this.engine.gl.uniformBlockBinding(this.program, blockIndex, binding_point);
+        this.engine.gl.uniformBlockBinding(this.program, blockIndex, binding_point ?? ubo.preferred_binding_point);
     }
 
     uniform1i(name, value) {

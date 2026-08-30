@@ -10,8 +10,6 @@ let engine;
 
 let sea;
 
-
-
 function update_geometry() {
     //y=Asin(kx−ωt+ϕ)
     //update existent geometry
@@ -35,12 +33,12 @@ export async function InitApp() {
     const max_lights = 32;
 
     const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
-    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW, false, 'UBO');
-    debug_shader.bind_ubo(ubo_buffer.name, 0);
+    const ubo_buffer = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count), gl.DYNAMIC_DRAW, false, 'UBO', 0);
+    debug_shader.bind_ubo(ubo_buffer);
 
     // const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
-    const texture = new Texture(engine, 'img/sprites/minecraft_world.png');
-    const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png');
+    const texture = new Texture(engine, 'img/sprites/minecraft_world.png', 0);
+    const texture2 = new Texture(engine, 'img/sprites/otsp_creatures_01_alpha.png', 0);
 
     const scene = new Primitive_Scene(engine, {
         cameras: [
@@ -53,8 +51,8 @@ export async function InitApp() {
             update_geometry();
             square.updateBindings();
             square.bind('debug_shader');
-            ubo_buffer.bind_base(debug_shader, 0);
-            texture.bind(0);
+            ubo_buffer.bind_base(debug_shader);
+            texture.bind();
             debug_shader.uniform1i('u_sampler2d', 0);
             ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
 

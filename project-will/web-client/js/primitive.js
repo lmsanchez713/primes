@@ -36,6 +36,8 @@ export class Primitive_Engine {
         this.primitives = [];
         this.shaders = {};
         this.geometries = {};
+        this.ubos = {};
+        this.textures = {};
         this.time = { current: 0.0, last: 0.0, delta: 0.0 };
     }
 

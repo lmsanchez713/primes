@@ -1,10 +1,11 @@
 export class Buffer {
-    constructor(engine, type, new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false, name = "") {
+    constructor(engine, type, new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false, name = "", preferred_binding_point = 0) {
         this.engine = engine;
         this.type = type;
         this.buffer = this.engine.gl.createBuffer();
         this.data(new_data, usage, keep_on_ram);
         this.name = name;
+        this.preferred_binding_point = preferred_binding_point;
     }
 
     bind() {
@@ -17,8 +18,9 @@ export class Buffer {
             return;
         }
         if (!name) name = this.name;
+        index = index ?? this.preferred_binding_point;
         const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
-        this.engine.gl.uniformBlockBinding(shader.program, blockIndex, 0);
+        this.engine.gl.uniformBlockBinding(shader.program, blockIndex, index);
         this.engine.gl.bindBufferBase(this.type, index, this.buffer);
     }
 

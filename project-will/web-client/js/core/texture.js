@@ -1,9 +1,10 @@
 export class Texture {
-    constructor(engine, url) {
+    constructor(engine, url, preferred_texture_unit) {
         this.engine = engine;
         this.texture = engine.gl.createTexture();
         this.isReady = false;
         this._load(url);
+        this.preferred_texture_unit = preferred_texture_unit ?? null;
     }
 
     _load(url) {
@@ -22,8 +23,9 @@ export class Texture {
         image.src = url;
     }
 
-    bind(unit = 0) {
+    bind(unit) {
         if (!this.isReady) return;
+        unit = unit ?? this.preferred_texture_unit;
         this.engine.gl.activeTexture(this.engine.gl.TEXTURE0 + unit);
         this.engine.gl.bindTexture(this.engine.gl.TEXTURE_2D, this.texture);
     }
