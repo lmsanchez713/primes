@@ -53,26 +53,35 @@ function update_geometry() {
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
-    const y0 = y(-1.0, 1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-    const y1 = y(1.0, 1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-    const y2 = y(1.0, -1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
-    const y3 = y(-1.0, -1.0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+    for (let quad_row = 0; quad_row < side; quad_row++) {
+        for (let quad_col = 0; quad_col < side; quad_col++) {
 
-    generate_triangle(
-        -1.0, y0, 1.0, u0, v0,
-        1.0, y1, 1.0, u1, v0,
-        1.0, y2, -1.0, u1, v1,
-        0, position, normal, texture);
-    generate_triangle(
-        -1.0, y0, 1.0, u0, v0,
-        1.0, y2, -1.0, u1, v1,
-        -1.0, y3, -1.0, u0, v1,
-        3, position, normal, texture);
+            const x0 = -side / 2.0 + quad_col * 1.0, x1 = -side / 2.0 + quad_col * 1.0 + 1.0;
+            const z0 = side / 2.0 - quad_row * 1.0, z1 = side / 2.0 - quad_row * 1.0 - 1.0;
+
+            const y0 = y(x0, z0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+            const y1 = y(x1, z0, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+            const y2 = y(x1, z1, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+            const y3 = y(x0, z1, engine.time.current, 0.5, 1.0, 1.3, 1.0, 0.0);
+
+            const buffer_offset = (quad_row * side + quad_col) * 6;
+            generate_triangle(
+                x0, y0, z0, u0, v0,
+                x1, y1, z0, u1, v0,
+                x1, y2, z1, u1, v1,
+                buffer_offset, position, normal, texture);
+            generate_triangle(
+                x0, y0, z0, u0, v0,
+                x1, y2, z1, u1, v1,
+                x0, y3, z1, u0, v1,
+                buffer_offset + 3, position, normal, texture);
+        }
+    }
 
     geo.buffer_sub_data({
-        aPosition: { data: position, offset: 36 * 3 },
-        aNormal: { data: normal, offset: 36 * 3 },
-        aTexCoord: { data: texture, offset: 36 * 2 }
+        aPosition: { data: position, offset: 36 * 3 * 4 },
+        aNormal: { data: normal, offset: 36 * 3 * 4 },
+        aTexCoord: { data: texture, offset: 36 * 2 * 4 }
     });
 }
 
@@ -108,7 +117,11 @@ export async function InitApp() {
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
-            //update_geometry();
+            update_geometry();
+            const camera_factor = 0.03125;
+            scene.cameras[0].view.position.x *= (1.0 + camera_factor * engine.time.delta);
+            scene.cameras[0].view.position.y *= (1.0 + camera_factor * engine.time.delta);
+            scene.cameras[0].view.position.z *= (1.0 + camera_factor * engine.time.delta);
             square.updateBindings();
             square.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader);
@@ -152,9 +165,9 @@ export async function InitApp() {
             ]);
             ubo_buffer.subdata(matrix_array);
             if (vertices_generated) {
-                // engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
+                engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
             }
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 36);
+            // engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 36);
             //texture.bind(0);
             //texture2.bind(1);
             //debug_shader.uniform1i('u_sampler2d', 0);
