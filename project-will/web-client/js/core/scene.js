@@ -88,7 +88,7 @@ export class Primitive_Camera {
             }
         }
 
-        this.update_matrices();
+        // this.update_matrices();
         return this;
     }
 }

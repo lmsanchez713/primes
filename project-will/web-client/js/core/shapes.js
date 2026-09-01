@@ -45,6 +45,21 @@ export function generate_triangle(x0, y0, z0, u0, v0, x1, y1, z1, u1, v1, x2, y2
     }
 }
 
+export function generate_sphere(radius, n_vertical_layers, n_horizontal_layers, position) {
+    if (n_vertical_layers < 3 || n_horizontal_layers < 3) {
+        console.warn(`Cannot create a circle with less than 3 vertical layers o 3 horizontal layers`);
+        return null;
+    }
+    //calc vertex count
+    let n_vertices = 2;
+    for (let n_v_layers = 1; n_v_layers < (n_vertical_layers - 1); n_v_layers++) {
+        for (let n_h_layers = 0; n_h_layers < n_horizontal_layers; n_h_layers++) {
+            n_vertices++;
+        }
+    }
+    return n_vertices;
+}
+
 export function generate_quad() {
     //
 }

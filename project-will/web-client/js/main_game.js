@@ -1,7 +1,7 @@
 import { Primitive_Engine, Primitive } from './primitive.js';
 import { Primitive_Scene, Primitive_Camera } from './core/scene.js';
 import { loadShaderFromUrl } from './core/shader.js';
-import { createCubeGeometry, generate_triangle } from './core/shapes.js';
+import { createCubeGeometry, generate_triangle, generate_sphere } from './core/shapes.js';
 import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
@@ -26,12 +26,12 @@ function update_geometry() {
         side = new_side;
     }
 
-    if (last_report < current_cycle) {
-        console.log(
-            `CYCLE ${current_cycle} QUADS ${quads} SIDE ${side} VTXS ${vertices_needed} ASPECT ${scene.cameras[0].perspective.aspect}`
-        );
-        last_report = current_cycle;
-    }
+    //if (last_report < current_cycle) {
+    //    console.log(
+    //        `C ${current_cycle} Q ${quads} S ${side} V ${vertices_needed} A ${scene.cameras[0].perspective.aspect}`
+    //    );
+    //    last_report = current_cycle;
+    //}
 
     const geo = engine.geometries['square'];
 
@@ -118,6 +118,8 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const square = engine.geometries['square'] = createCubeGeometry(engine, true);
+
+    console.log(`generate_sphere ${generate_sphere(1.0, 3, 3)}`);
 
     square.addShader('debug_shader', debug_shader);
     square.updateBindings();
@@ -230,6 +232,7 @@ export async function InitApp() {
             // model_matrix.multiply(translation);
             const TOUCH = window.matchMedia('(pointer: coarse)').matches;
             scene.cameras[0].process_input(TOUCH ? 0.005 : 0.0025);
+            scene.cameras[0].update_view_and_projection();
             const matrix_array = new Float32Array([
                 ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
             ]);
