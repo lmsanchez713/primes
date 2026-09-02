@@ -152,7 +152,7 @@ export function createSquareGeometry(engine) {
         0, 0, 1 // v5
     ]);
 
-    const geo = new Geometry(engine, engine.gl.TRIANGLES);
+    const geo = new Geometry(engine, false);
     geo.addBuffer('aPosition', vertices, 3);
     geo.addBuffer('aTexCoord', texCoords, 2);
     geo.addBuffer('aNormal', normals, 3);
