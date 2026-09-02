@@ -9,11 +9,17 @@ class Draw_Interval {
 }
 
 export class Geometry {
-    constructor(engine, keep_on_ram = false) {
+    constructor(engine, vertex_data = {}, keep_on_ram = false) {
         this.engine = engine;
         this.buffers = {};
         this.shaders = {};
         this.objects = {};
+        if (vertex_data && Object.keys(vertex_data).length > 0) {
+            for (const [attribute_name, attribute_data] of Object.entries(vertex_data)) {
+                const { data, size, type = this.engine.gl.FLOAT, usage = this.engine.gl.STATIC_DRAW, buffer_type = this.engine.gl.ARRAY_BUFFER } = attribute_data;
+                this.addBuffer(attribute_name, data, size, type, usage, buffer_type);
+            }
+        }
         this.keep_on_ram = keep_on_ram;
     }
 
@@ -119,43 +125,4 @@ export class Geometry {
         }
         this.engine.gl.drawArrays(obj.mode, obj.offset, obj.count);
     }
-}
-
-export function createSquareGeometry(engine) {
-    // Vertices for two triangles forming a quad
-    const vertices = new Float32Array([
-        -0.5, -0.5, 0.0, // v0
-        0.5, 0.5, 0.0, // v1
-        -0.5, 0.5, 0.0, // v2
-        -0.5, -0.5, 0.0, // v3
-        0.5, -0.5, 0.0, // v4
-        0.5, 0.5, 0.0  // v5
-    ]);
-
-    // Texture coordinates
-    const texCoords = new Float32Array([
-        0.0, 0.0, // v0
-        1.0, 1.0, // v1
-        0.0, 1.0, // v2
-        0.0, 0.0, // v3
-        1.0, 0.0, // v4
-        1.0, 1.0  // v5
-    ]);
-
-    // Normals (pointing towards the camera)
-    const normals = new Float32Array([
-        0, 0, 1, // v0
-        0, 0, 1, // v1
-        0, 0, 1, // v2
-        0, 0, 1, // v3
-        0, 0, 1, // v4
-        0, 0, 1 // v5
-    ]);
-
-    const geo = new Geometry(engine, false);
-    geo.addBuffer('aPosition', vertices, 3);
-    geo.addBuffer('aTexCoord', texCoords, 2);
-    geo.addBuffer('aNormal', normals, 3);
-
-    return geo;
 }
