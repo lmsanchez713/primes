@@ -3,6 +3,8 @@
 precision highp float;
 precision highp int;
 
+#define MAX_LIGHTS 32
+
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
@@ -12,8 +14,8 @@ layout(std140) uniform UBO {
     mat4 u_viewMatrix;
     mat4 u_projectionMatrix;
     vec4 u_ambientLight;
-    vec4 u_pointLight[32];
-    vec4 u_pointLightPos[32];
+    vec4 u_pointLight[MAX_LIGHTS];
+    vec4 u_pointLightPos[MAX_LIGHTS];
     uint u_pointLightCount;
     float u_time;
 };
