@@ -132,9 +132,10 @@ export async function InitApp() {
         { name: 'u_modelMatrix', type: 'mat4' },
         { name: 'u_viewMatrix', type: 'mat4' },
         { name: 'u_projectionMatrix', type: 'mat4' },
-        { name: 'u_ambientLight', type: 'vec4' },
         { name: 'u_pointLight', type: 'vec4', count: max_lights },
         { name: 'u_pointLightPos', type: 'vec4', count: max_lights },
+        { name: 'u_ambientLight', type: 'vec4' },
+        { name: 'u_cameraPosition', type: 'vec3' },
         { name: 'u_pointLightCount', type: 'uint' },
         { name: 'u_time', type: 'float' }
     ]);
@@ -206,17 +207,21 @@ export async function InitApp() {
             ubo_buffer.bind_base(debug_shader);
             texture.bind();
             debug_shader.uniform1i('u_sampler2d', 0);
-
+            
             const light_intensity = 25.0;// Math.sin(engine.time.current * 2.666667) * 0.5 + 0.5;
             const t = engine.time.current;
             ubo_buffer.set_many({
                 u_ambientLight: [0.3, 0.3, 0.3, 1.0],
+                u_cameraPosition: [
+                    scene.cameras[0].view.position.x,
+                    scene.cameras[0].view.position.y,
+                    scene.cameras[0].view.position.z,
+                    1.0],
                 u_pointLightCount: 2,
                 u_time: t
             });
             ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 0);
             ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 1);
-            // ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 2);
             ubo_buffer.set('u_pointLightPos', [5.0 * Math.cos(t), 0.0, 5.0 * Math.sin(t), 1.0], 0);
             ubo_buffer.set('u_pointLightPos', [0.0, 5.0 * Math.cos(t * 4.0), 5.0 * Math.sin(t * 4.0), 1.0], 1);
 

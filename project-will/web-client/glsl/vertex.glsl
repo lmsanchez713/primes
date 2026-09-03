@@ -13,9 +13,10 @@ layout(std140) uniform UBO {
     mat4 u_modelMatrix;
     mat4 u_viewMatrix;
     mat4 u_projectionMatrix;
-    vec4 u_ambientLight;
     vec4 u_pointLight[MAX_LIGHTS];
     vec4 u_pointLightPos[MAX_LIGHTS];
+    vec4 u_ambientLight;
+    vec3 u_cameraPosition;
     uint u_pointLightCount;
     float u_time;
 };
