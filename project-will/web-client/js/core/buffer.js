@@ -8,22 +8,6 @@ export class Buffer {
         this.preferred_binding_point = preferred_binding_point;
     }
 
-    bind() {
-        this.engine.gl.bindBuffer(this.type, this.buffer);
-    }
-
-    bind_base(shader, index, name) {
-        if (this.type !== this.engine.gl.UNIFORM_BUFFER) {
-            console.warn('bind_base() is only supported for uniform buffers.');
-            return;
-        }
-        if (!name) name = this.name;
-        index = index ?? this.preferred_binding_point;
-        const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
-        this.engine.gl.uniformBlockBinding(shader.program, blockIndex, index);
-        this.engine.gl.bindBufferBase(this.type, index, this.buffer);
-    }
-
     data(new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
         this.usage = usage;
         this.keep_on_ram = keep_on_ram;
@@ -62,6 +46,10 @@ export class Buffer {
         }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
 
+    bind() {
+        this.engine.gl.bindBuffer(this.type, this.buffer);
+    }
+
     bind_to_vao(shader, name, vao) {
         if (!shader || !vao || typeof name !== 'string' || name.trim() === '' || !shader.attributes[name]) {
             console.warn(`Invalid arguments at Buffer.bind_to_vao(): ${shader}, ${vao}, ${name}`);
@@ -72,5 +60,17 @@ export class Buffer {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.enableVertexAttribArray(location);
         this.engine.gl.vertexAttribPointer(location, this.size, this.type, false, 0, 0);
+    }
+
+    bind_base(shader, index, name) {
+        if (this.type !== this.engine.gl.UNIFORM_BUFFER) {
+            console.warn('bind_base() is only supported for uniform buffers.');
+            return;
+        }
+        if (!name) name = this.name;
+        index = index ?? this.preferred_binding_point;
+        const blockIndex = this.engine.gl.getUniformBlockIndex(shader.program, name);
+        this.engine.gl.uniformBlockBinding(shader.program, blockIndex, index);
+        this.engine.gl.bindBufferBase(this.type, index, this.buffer);
     }
 }
