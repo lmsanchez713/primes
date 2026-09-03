@@ -156,10 +156,51 @@ export function createCubeGeometry(engine, keep_on_ram = false) {
         0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1
     ]);
 
-    const geo = new Geometry(engine, keep_on_ram);
-    geo.addBuffer('aPosition', vertices, 3);
-    geo.addBuffer('aTexCoord', texCoords, 2);
-    geo.addBuffer('aNormal', normals, 3);
+    const geo = new Geometry(engine, {
+        aPosition: { data: vertices, size: 3 },
+        aTexCoord: { data: texCoords, size: 2 },
+        aNormal: { data: normals, size: 3 }
+    }, keep_on_ram);
+
+    return geo;
+}
+
+export function createSquareGeometry(engine, keep_on_ram = false) {
+    // Vertices for two triangles forming a quad
+    const vertices = new Float32Array([
+        -0.5, -0.5, 0.0, // v0
+        0.5, 0.5, 0.0, // v1
+        -0.5, 0.5, 0.0, // v2
+        -0.5, -0.5, 0.0, // v3
+        0.5, -0.5, 0.0, // v4
+        0.5, 0.5, 0.0  // v5
+    ]);
+
+    // Texture coordinates
+    const texCoords = new Float32Array([
+        0.0, 0.0, // v0
+        1.0, 1.0, // v1
+        0.0, 1.0, // v2
+        0.0, 0.0, // v3
+        1.0, 0.0, // v4
+        1.0, 1.0  // v5
+    ]);
+
+    // Normals (pointing towards the camera)
+    const normals = new Float32Array([
+        0, 0, 1, // v0
+        0, 0, 1, // v1
+        0, 0, 1, // v2
+        0, 0, 1, // v3
+        0, 0, 1, // v4
+        0, 0, 1 // v5
+    ]);
+
+    const geo = new Geometry(engine, {
+        aPosition: { data: vertices, size: 3 },
+        aTexCoord: { data: texCoords, size: 2 },
+        aNormal: { data: normals, size: 3 }
+    }, keep_on_ram);
 
     return geo;
 }
