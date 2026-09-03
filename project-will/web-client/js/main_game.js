@@ -137,6 +137,7 @@ export async function InitApp() {
         { name: 'u_ambientLight', type: 'vec4' },
         { name: 'u_cameraPosition', type: 'vec3' },
         { name: 'u_pointLightCount', type: 'uint' },
+        { name: 'u_shininess', type: 'float' },
         { name: 'u_time', type: 'float' }
     ]);
     debug_shader.bind_ubo(ubo_buffer);
@@ -218,6 +219,7 @@ export async function InitApp() {
                     scene.cameras[0].view.position.z,
                     1.0],
                 u_pointLightCount: 2,
+                u_shininess: 0.0,
                 u_time: t
             });
             ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 0);
@@ -225,19 +227,20 @@ export async function InitApp() {
             ubo_buffer.set('u_pointLightPos', [5.0 * Math.cos(t), 0.0, 5.0 * Math.sin(t), 1.0], 0);
             ubo_buffer.set('u_pointLightPos', [0.0, 5.0 * Math.cos(t * 4.0), 5.0 * Math.sin(t * 4.0), 1.0], 1);
 
-            const model_matrix = new Mat4();
+            //const model_matrix = new Mat4();
             //, view_matrix = new Mat4(), projection_matrix = new Mat4();
             //const camera = { position: new Vec3(0.0, 0.0, 5.0), target: new Vec3(0.0, 0.0, 0.0), up: new Vec3(0.0, 1.0, 0.0) };
             //Mat4.lookAt(camera.position, camera.target, camera.up, view_matrix);
             //Mat4.perspective(45 * Math.PI / 180, engine.canvas.width / engine.canvas.height, 0.1, 100, projection_matrix);
             // Mat4.ortho(-3.0, 3.0, -2.0, 2.0, 0.1, 100, projection_matrix);
 
-            //const time_rotation = new Mat4(), translation = new Mat4(), rotation = new Mat4(),
+            const time_rotation = new Mat4();//, translation = new Mat4(), rotation = new Mat4(),
             //    rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
-            // Mat4.rotateY(-engine.time.current / 2.0, time_rotation);
+            scene.model_matrix.identity();
+            Mat4.rotateY(-engine.time.current, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
-            // model_matrix.multiply(time_rotation);
+            scene.model_matrix.multiply(time_rotation);
             // model_matrix.multiply(translation);
             const TOUCH = window.matchMedia('(pointer: coarse)').matches;
             scene.cameras[0].process_input(TOUCH ? 0.005 : 0.0025);

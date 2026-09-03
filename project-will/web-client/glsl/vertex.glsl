@@ -18,18 +18,21 @@ layout(std140) uniform UBO {
     vec4 u_ambientLight;
     vec3 u_cameraPosition;
     uint u_pointLightCount;
+    float u_shininess;
     float u_time;
 };
 
 out vec2 vTextureCoord;
 out vec3 vWorldPosition;
 out vec3 vNormal;
+out vec3 vViewDir;
 
 void main() {
     vec4 worldPosition = u_modelMatrix * vec4(aPosition, 1.0);
     vWorldPosition = worldPosition.xyz;
     vTextureCoord = aTexCoord;
-    vNormal = aNormal;
+    vNormal = normalize(mat3(u_modelMatrix) * aNormal); // valid under uniform scale
+    vViewDir = u_cameraPosition - worldPosition.xyz;
 
     gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
 }

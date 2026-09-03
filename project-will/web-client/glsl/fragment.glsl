@@ -9,6 +9,7 @@ precision highp sampler2D;
 in vec2 vTextureCoord;
 in vec3 vWorldPosition;
 in vec3 vNormal;
+in vec3 vViewDir;
 
 layout(std140) uniform UBO {
     mat4 u_modelMatrix;
@@ -19,6 +20,7 @@ layout(std140) uniform UBO {
     vec4 u_ambientLight;
     vec3 u_cameraPosition;
     uint u_pointLightCount;
+    float u_shininess;
     float u_time;
 };
 
@@ -30,6 +32,7 @@ void main() {
     vec4 texColor = texture(u_sampler2d, vTextureCoord);
     vec3 normal = normalize(vNormal);
     vec3 diffuseAccumulation = vec3(0.0);
+    vec3 specularAccumulation = vec3(0.0);
     
     for (int i = 0; i < MAX_LIGHTS && i < int(u_pointLightCount); i++) {
         vec3 lightVec = u_pointLightPos[i].xyz - vWorldPosition;
@@ -49,11 +52,16 @@ void main() {
         
         // Accumulate diffuse light
         diffuseAccumulation += u_pointLight[i].rgb * diff * attenuation;
+
+        vec3 viewDir = normalize(vViewDir);
+        vec3 halfDir = normalize(lightDir + viewDir);
+        float spec = pow(max(dot(normal, halfDir), 0.0), u_shininess);
+        specularAccumulation += u_pointLight[i].rgb * spec * attenuation;
     }
     
     // Combine ambient and diffuse lights ONCE before multiplying by texture color
     vec3 totalLighting = u_ambientLight.rgb + diffuseAccumulation;
-    vec3 finalColor = totalLighting * texColor.rgb;
+    vec3 finalColor = totalLighting * texColor.rgb;// + specularAccumulation;
     
     fragColor = vec4(finalColor, texColor.a);
 }
