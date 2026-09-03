@@ -33,9 +33,7 @@ export class Buffer {
             console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
             return;
         }
-        this.persistent_data = new Float32Array([...this.persistent_data, ...new_data]);
-        this.length += this.persistent_data.length;
-        this.data(this.persistent_data, usage, this.keep_on_ram);
+        this.data(new Float32Array([...this.persistent_data, ...new_data]), usage, this.keep_on_ram);
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
