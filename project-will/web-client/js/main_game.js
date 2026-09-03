@@ -5,6 +5,8 @@ import { createCubeGeometry, generate_triangle, generate_sphere } from './core/s
 import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
+import { UniformBuffer } from './core/ubo.js';
+
 
 let engine, scene;
 
@@ -126,10 +128,16 @@ export async function InitApp() {
 
     const max_lights = 32;
 
-    const ubo_float_count = 16 * 3 + 4 * 32 * 2 + 4 + 1 + 1;
-    const ubo_float_count_ceiled = Math.ceil(ubo_float_count / 4.0) * 4.0;
-    const ubo_buffer
-        = new Buffer(engine, gl.UNIFORM_BUFFER, new Float32Array(ubo_float_count_ceiled), gl.DYNAMIC_DRAW, false, 'UBO', 0);
+    const ubo_buffer = new UniformBuffer(engine, 'UBO', [
+        { name: 'u_modelMatrix', type: 'mat4' },
+        { name: 'u_viewMatrix', type: 'mat4' },
+        { name: 'u_projectionMatrix', type: 'mat4' },
+        { name: 'u_ambientLight', type: 'vec4' },
+        { name: 'u_pointLight', type: 'vec4', count: max_lights },
+        { name: 'u_pointLightPos', type: 'vec4', count: max_lights },
+        { name: 'u_pointLightCount', type: 'uint' },
+        { name: 'u_time', type: 'float' }
+    ]);
     debug_shader.bind_ubo(ubo_buffer);
 
     // const texture = new Texture(engine, 'img/sprites/otsp_tiles_01_alpha.png');
@@ -198,23 +206,19 @@ export async function InitApp() {
             ubo_buffer.bind_base(debug_shader);
             texture.bind();
             debug_shader.uniform1i('u_sampler2d', 0);
-            ubo_buffer.subdata(new Float32Array([engine.time.current]), (ubo_float_count - 1) * 4);
 
             const light_intensity = 25.0;// Math.sin(engine.time.current * 2.666667) * 0.5 + 0.5;
-            const light_color = new Float32Array([1.0, 1.0, 1.0, light_intensity]);
-            const ambient_light_offset = 16 * 3 * 4;
-            ubo_buffer.subdata(new Float32Array([0.3, 0.3, 0.3, 1.0]), ambient_light_offset);
-            const diffuse_light_offset = (16 * 3 + 4) * 4;
-            ubo_buffer.subdata(light_color, diffuse_light_offset);
-            ubo_buffer.subdata(light_color, diffuse_light_offset + 16);
-            // ubo_buffer.subdata(light_color, diffuse_light_offset + 8);
-            const diffuse_light_pos_offset = (16 * 3 + 4 + 4 * max_lights) * 4;
-            ubo_buffer.subdata(new Float32Array([5.0 * Math.cos(engine.time.current), 0.0,
-            5.0 * Math.sin(engine.time.current), 1.0]), diffuse_light_pos_offset);
-            ubo_buffer.subdata(new Float32Array([0.0, 5.0 * Math.cos(engine.time.current * 4.0),
-                5.0 * Math.sin(engine.time.current * 4.0), 1.0]), diffuse_light_pos_offset + 16);
-            const diffuse_light_count_offset = (16 * 3 + 4 + 8 * max_lights) * 4;
-            ubo_buffer.subdata(new Uint32Array([2]), diffuse_light_count_offset);
+            const t = engine.time.current;
+            ubo_buffer.set_many({
+                u_ambientLight: [0.3, 0.3, 0.3, 1.0],
+                u_pointLightCount: 2,
+                u_time: t
+            });
+            ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 0);
+            ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 1);
+            // ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 2);
+            ubo_buffer.set('u_pointLightPos', [5.0 * Math.cos(t), 0.0, 5.0 * Math.sin(t), 1.0], 0);
+            ubo_buffer.set('u_pointLightPos', [0.0, 5.0 * Math.cos(t * 4.0), 5.0 * Math.sin(t * 4.0), 1.0], 1);
 
             const model_matrix = new Mat4();
             //, view_matrix = new Mat4(), projection_matrix = new Mat4();
@@ -233,10 +237,13 @@ export async function InitApp() {
             const TOUCH = window.matchMedia('(pointer: coarse)').matches;
             scene.cameras[0].process_input(TOUCH ? 0.005 : 0.0025);
             scene.cameras[0].update_view_and_projection();
-            const matrix_array = new Float32Array([
-                ...scene.model_matrix.data, ...scene.cameras[0].view_matrix.data, ...scene.cameras[0].projection_matrix.data
-            ]);
-            ubo_buffer.subdata(matrix_array);
+
+            ubo_buffer.set_many({
+                u_modelMatrix: scene.model_matrix,
+                u_viewMatrix: scene.cameras[0].view_matrix,
+                u_projectionMatrix: scene.cameras[0].projection_matrix
+            });
+
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 36);
             if (vertices_generated) {
                 engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
