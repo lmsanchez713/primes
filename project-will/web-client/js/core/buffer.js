@@ -21,13 +21,6 @@ export class Buffer {
         }
     }
 
-    free_from_ram() {
-        if (this.keep_on_ram) {
-            this.persistent_data = null;
-            this.keep_on_ram = false;
-        }
-    }
-
     add_data(new_data, usage = engine.gl.DYNAMIC_DRAW) {
         if (!this.keep_on_ram) {
             console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
@@ -43,6 +36,13 @@ export class Buffer {
             this.persistent_data.set(data.subarray(src_offset / 4, (src_offset + length) / 4), offset / 4);
         }
     } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
+
+    free_from_ram() {
+        if (this.keep_on_ram) {
+            this.persistent_data = null;
+            this.keep_on_ram = false;
+        }
+    }
 
     bind() {
         this.engine.gl.bindBuffer(this.type, this.buffer);
