@@ -6,7 +6,7 @@ import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
 import { UniformBuffer } from './core/ubo.js';
-
+import { inicializar_websocket } from './wss.js';
 
 let engine, scene;
 
@@ -111,6 +111,7 @@ function update_geometry() {
 }
 
 export async function InitApp() {
+    inicializar_websocket();
     const canvas = document.getElementById('glCanvas');
     engine = new Primitive_Engine(canvas);
     if (!engine.gl) return;
