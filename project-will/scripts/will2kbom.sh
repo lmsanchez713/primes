@@ -1,0 +1,6 @@
+#!/bin/bash
+cd /var/www/kanboom.com.br
+echo Removing current website folder...
+sudo rm -r public_html
+echo Copying project files...
+sudo cp -r /primes/project-will/web-client public_html
