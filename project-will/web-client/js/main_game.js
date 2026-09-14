@@ -220,7 +220,7 @@ export async function InitApp() {
                     scene.cameras[0].view.position.z,
                     1.0],
                 u_pointLightCount: 2,
-                u_shininess: 0.0,
+                u_shininess: 1.0,
                 u_time: t
             });
             ubo_buffer.set('u_pointLight', [1.0, 1.0, 1.0, light_intensity], 0);
