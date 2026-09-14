@@ -25,7 +25,9 @@ export class Geometry {
     }
 
     addShader(name, shader) {
-        this.shaders[name] = new vertex_array_object(this.engine, shader);
+        const vao = new vertex_array_object(this.engine, shader);
+        this.shaders[name] = vao;
+        return vao;
     }
 
     bind(shader_name) {
