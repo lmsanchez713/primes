@@ -1,4 +1,5 @@
 import { Buffer } from './buffer.js';
+import { vertex_array_object } from './vao.js';
 
 class Draw_Interval {
     constructor(engine, offset, count, mode = engine.gl.TRIANGLES) {
@@ -23,48 +24,22 @@ export class Geometry {
         }
     }
 
-    addAttribute(buffer, location, size, type = this.engine.gl.FLOAT) {
-        this.engine.gl.bindVertexArray(this.vao.vao);
-        this.engine.gl.bindBuffer(this.engine.gl.ARRAY_BUFFER, buffer.buffer);
-        this.engine.gl.enableVertexAttribArray(location);
-        this.engine.gl.vertexAttribPointer(location, size, type, false, 0, 0);
-        this.buffers.push(buffer);
-    }
-
-    updateBufferBindings(name) {
-        if (Object.hasOwn(this.buffers, name)) {
-            const buffer = this.buffers[name];
-            for (const shader of this.shaders.values()) {
-                if (Object.hasOwn(shader.attributes, name)) {
-                    const location = shader.attributes[name];
-                    this.engine.gl.bindVertexArray(shader.vao);
-                    this.engine.gl.bindBuffer(buffer.type, buffer.buffer);
-                    this.engine.gl.enableVertexAttribArray(location);
-                    this.engine.gl.vertexAttribPointer(location, buffer.size, buffer.type, false, 0, 0);
-                }
-            }
-        }
-        //also update uniform buffer bindings here
-    }
-
     addShader(name, shader) {
-        this.shaders[name] = { shader, vao: this.engine.gl.createVertexArray() };
+        this.shaders[name] = new vertex_array_object(this.engine, shader);
     }
 
     bind(shader_name) {
-        const shader_vao_pair = this.shaders[shader_name];
-        if (!shader_vao_pair) {
+        const vao = this.shaders[shader_name];
+        if (!vao) {
             console.warn(`Shader ${shader_name} not found in geometry.`);
             return;
         }
-        this.engine.gl.useProgram(shader_vao_pair.shader.program);
-        this.engine.gl.bindVertexArray(shader_vao_pair.vao);
+        vao.bind();
     }
 
     addBuffer(name, data, size, type = this.engine.gl.FLOAT,
         usage = this.engine.gl.STATIC_DRAW, buffer_type = this.engine.gl.ARRAY_BUFFER) {
-        const buffer_entry = this.buffers[name]
-            = { buffer: new Buffer(this.engine, buffer_type, data, usage, this.keep_on_ram), size, type };
+        this.buffers[name] = { buffer: new Buffer(this.engine, buffer_type, data, usage, this.keep_on_ram), size, type };
     }
 
     add_buffer_data(attribute_data_object, usage = this.engine.gl.DYNAMIC_DRAW) {
@@ -78,16 +53,16 @@ export class Geometry {
         }
     }
 
-    buffer_sub_data(attribute_subdata_object) {//, offset = 0, src_offset = 0, length = data.length - src_offset) {
+    buffer_sub_data(attribute_subdata_object) {
         for (const [attribute_name, subdata_entry] of Object.entries(attribute_subdata_object)) {
             if (!Object.hasOwn(this.buffers, attribute_name)) {
                 console.warn(`Buffer ${attribute_name} not found in geometry.`);
                 continue;
             }
             const buffer_entry = this.buffers[attribute_name];
-            buffer_entry.buffer.subdata(subdata_entry.data, subdata_entry.offset);//, src_offset, length);
+            buffer_entry.buffer.subdata(subdata_entry.data, subdata_entry.offset);
         }
-    } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
+    }
 
     free_from_ram() {
         for (const buffer_entry of Object.values(this.buffers)) {
@@ -96,20 +71,9 @@ export class Geometry {
     }
 
     updateBindings() {
-        for (const [shader_name, shader_vao_pair] of Object.entries(this.shaders)) {
-            const shader = shader_vao_pair.shader;
-            this.engine.gl.useProgram(shader.program);
-            this.engine.gl.bindVertexArray(shader_vao_pair.vao);
-            for (const [attribute_name, attribute_location] of Object.entries(shader.attributes)) {
-                if (!Object.hasOwn(this.buffers, attribute_name)) {
-                    console.warn(`Buffer ${attribute_name} not found in geometry for shader ${shader_name}.`);
-                    continue;
-                }
-                const buffer_entry = this.buffers[attribute_name];
-                this.engine.gl.bindBuffer(buffer_entry.buffer.type, buffer_entry.buffer.buffer);
-                this.engine.gl.enableVertexAttribArray(attribute_location);
-                this.engine.gl.vertexAttribPointer(attribute_location, buffer_entry.size, buffer_entry.type, false, 0, 0);
-            }
+        for (const vao of Object.values(this.shaders)) {
+            vao.bind();
+            vao.setup_attributes(this.buffers);
         }
     }
 
