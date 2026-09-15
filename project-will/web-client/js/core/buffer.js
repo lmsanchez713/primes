@@ -3,9 +3,10 @@ export class Buffer {
         this.engine = engine;
         this.type = type;
         this.buffer = this.engine.gl.createBuffer();
-        this.data(new_data, usage, keep_on_ram);
         this.name = name;
         this.preferred_binding_point = preferred_binding_point;
+        this.dirty_ranges = [];
+        this.data(new_data, usage, keep_on_ram);
     }
 
     data(new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
@@ -15,10 +16,15 @@ export class Buffer {
         this.engine.gl.bindBuffer(this.type, this.buffer);
         this.engine.gl.bufferData(this.type, new_data, this.usage);
         if (this.keep_on_ram) {
-            this.persistent_data = new Float32Array(this.length);
-            if (new_data.length)
-                this.persistent_data.set(new_data);
+            if (new_data instanceof Float32Array) {
+                this.persistent_data = new_data;
+            } else {
+                this.persistent_data = new Float32Array(this.length);
+                if (new_data.length)
+                    this.persistent_data.set(new_data);
+            }
         }
+        this.dirty_ranges = [];
     }
 
     add_data(new_data, usage = engine.gl.DYNAMIC_DRAW) {
@@ -30,12 +36,42 @@ export class Buffer {
     }
 
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
-        this.engine.gl.bindBuffer(this.type, this.buffer);
-        this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
-        if (this.keep_on_ram) {
-            this.persistent_data.set(data.subarray(src_offset / 4, (src_offset + length) / 4), offset / 4);
+        if (!this.keep_on_ram) {
+            this.engine.gl.bindBuffer(this.type, this.buffer);
+            this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
+        } else {
+            this.persistent_data.set(data.subarray(src_offset, src_offset + length), offset / 4);
+            this.mark_dirty(offset / 4, length);
         }
-    } // TO-DO: add error checking for subdata -- CHECK LENGTHS!
+    }
+
+    mark_dirty(offset_idx, count) {
+        this.dirty_ranges.push([offset_idx, offset_idx + count]);
+    }
+
+    flush() {
+        if (this.dirty_ranges.length === 0) return this;
+
+        this.dirty_ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [];
+        for (const range of this.dirty_ranges) {
+            const last = merged[merged.length - 1];
+            if (last && range[0] <= last[1]) {
+                last[1] = Math.max(last[1], range[1]);
+            } else {
+                merged.push(range);
+            }
+        }
+        this.dirty_ranges = [];
+
+        this.engine.gl.bindBuffer(this.type, this.buffer);
+        for (const [start_idx, end_idx] of merged) {
+            const offset_bytes = start_idx * 4;
+            const count = end_idx - start_idx;
+            this.engine.gl.bufferSubData(this.type, offset_bytes, this.persistent_data, start_idx, count);
+        }
+        return this;
+    }
 
     free_from_ram() {
         if (this.keep_on_ram) {

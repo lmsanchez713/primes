@@ -66,6 +66,12 @@ export class Geometry {
         }
     }
 
+    flush() {
+        for (const buffer_entry of Object.values(this.buffers)) {
+            buffer_entry.buffer.flush();
+        }
+    }
+
     free_from_ram() {
         for (const buffer_entry of Object.values(this.buffers)) {
             buffer_entry.buffer.free_from_ram();

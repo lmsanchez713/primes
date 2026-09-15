@@ -108,6 +108,8 @@ function update_geometry() {
         aNormal: { data: normal, offset: 36 * 3 * 4 },
         aTexCoord: { data: texture, offset: 36 * 2 * 4 }
     });
+
+    geo.flush();
 }
 
 export async function InitApp() {

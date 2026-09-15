@@ -61,15 +61,16 @@ export class UniformBuffer {
 
         // std140: total block size is a multiple of 16 bytes (4 floats)
         this.float_count = alignUp(this.float_count, 4);
-        this.data = new Float32Array(this.float_count);
-        this.buffer = new Buffer(engine, engine.gl.UNIFORM_BUFFER, this.data, usage, false, name, binding_point);
-        this.dirty = [];
+        
+        // Initialize the Buffer with persistent memory
+        this.buffer = new Buffer(engine, engine.gl.UNIFORM_BUFFER, this.float_count * 4, usage, true, name, binding_point);
+        this.data = this.buffer.persistent_data;
     }
 
     /** Total buffer size in bytes. */
     get byte_size() { return this.float_count * 4; }
 
-    /** Byte offset of a field (or of an array element when index given). */
+    /** Byte offset of a field (or an array element when index given). */
     offset_bytes(name, index = 0) {
         const field = this.fields[name];
         return field ? (field.offset + index * field.size) * 4 : -1;
@@ -80,10 +81,10 @@ export class UniformBuffer {
         return this.buffer.bind_base(shader, this.binding_point, this.name);
     }
 
-    /** Write one field (or one array element) and upload it right away. */
+    /** Write one field (or an array element) and upload it right away. */
     set(name, value, index = null) {
         const range = this._write(name, value, index);
-        if (range) this.dirty.push(range);
+        if (range) this.buffer.mark_dirty(range[0], range[1] - range[0]);
         return this.flush();
     }
 
@@ -91,36 +92,24 @@ export class UniformBuffer {
     set_many(values) {
         for (const [name, value] of Object.entries(values)) {
             const range = this._write(name, value, null);
-            if (range) this.dirty.push(range);
+            if (range) this.buffer.mark_dirty(range[0], range[1] - range[0]);
         }
         return this.flush();
     }
 
     /** Upload all pending writes, merged into the minimum number of sub-uploads. */
     flush() {
-        if (this.dirty.length === 0) return this;
-        this.dirty.sort((a, b) => a[0] - b[0]);
-        const merged = [];
-        for (const range of this.dirty) {
-            const last = merged[merged.length - 1];
-            if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
-            else merged.push([range[0], range[1]]);
-        }
-        this.dirty = [];
-        for (const [start, end] of merged) {
-            this.buffer.subdata(this.data, start * 4, start, (end - start));
-        }
-        return this;
+        return this.buffer.flush();
     }
 
     /** Zero the whole buffer and upload. */
     clear() {
         this.data.fill(0);
-        this.dirty.push([0, this.float_count]);
+        this.buffer.mark_dirty(0, this.float_count);
         return this.flush();
     }
 
-    // -- internals ---------------------------------------------------------
+    // -- internals ---------------------------------------------------------\
 
     _write(name, value, index = null) {
         const field = this.fields[name];
