@@ -6,6 +6,7 @@ export class Buffer {
         this.name = name;
         this.preferred_binding_point = preferred_binding_point;
         this.dirty_ranges = [];
+        this.pending_reallocation = false;
         this.data(new_data, usage, keep_on_ram);
     }
 
@@ -13,8 +14,6 @@ export class Buffer {
         this.usage = usage;
         this.keep_on_ram = keep_on_ram;
         this.length = new_data.length ?? new_data;
-        this.engine.gl.bindBuffer(this.type, this.buffer);
-        this.engine.gl.bufferData(this.type, new_data, this.usage);
         if (this.keep_on_ram) {
             if (new_data instanceof Float32Array) {
                 this.persistent_data = new_data;
@@ -23,25 +22,36 @@ export class Buffer {
                 if (new_data.length)
                     this.persistent_data.set(new_data);
             }
+            this.pending_reallocation = true;
         }
-        this.dirty_ranges = [];
+        else {
+            this.engine.gl.bindBuffer(this.type, this.buffer);
+            this.engine.gl.bufferData(this.type, new_data, this.usage);
+        }
     }
 
-    add_data(new_data, usage = engine.gl.DYNAMIC_DRAW) {
+    add_data(new_data, usage = engine.gl.DYNAMIC_DRAW, flush = false) {
         if (!this.keep_on_ram) {
             console.warn('Calling Buffer.add_data() on a buffer that is not kept on RAM is not supported.');
             return;
         }
         this.data(new Float32Array([...this.persistent_data, ...new_data]), usage, this.keep_on_ram);
+        if (flush) this.flush();
     }
 
+    // TODO: handle subdata call across buffer limits
     subdata(data, offset = 0, src_offset = 0, length = data.length - src_offset) {
         if (!this.keep_on_ram) {
             this.engine.gl.bindBuffer(this.type, this.buffer);
             this.engine.gl.bufferSubData(this.type, offset, data, src_offset, length);
         } else {
-            this.persistent_data.set(data.subarray(src_offset, src_offset + length), offset / 4);
-            this.mark_dirty(offset / 4, length);
+            if ((offset + length * 4) > this.persistent_data.length * this.persistent_data.BYTES_PER_ELEMENT) {
+                console.warn(`Buffer.subdata() exceeds buffer size. Buffer size: ${this.persistent_data.length * this.persistent_data.BYTES_PER_ELEMENT} bytes, requested: ${offset + length * 4} bytes.`);
+            }
+            else {
+                this.persistent_data.set(data.subarray(src_offset, src_offset + length), offset / 4);
+                this.mark_dirty(offset / 4, length);
+            }
         }
     }
 
@@ -50,26 +60,33 @@ export class Buffer {
     }
 
     flush() {
-        if (this.dirty_ranges.length === 0) return this;
+        if (!this.keep_on_ram || (this.dirty_ranges.length === 0 && !this.pending_reallocation)) return this;
 
-        this.dirty_ranges.sort((a, b) => a[0] - b[0]);
-        const merged = [];
-        for (const range of this.dirty_ranges) {
-            const last = merged[merged.length - 1];
-            if (last && range[0] <= last[1]) {
-                last[1] = Math.max(last[1], range[1]);
-            } else {
-                merged.push(range);
+        this.engine.gl.bindBuffer(this.type, this.buffer);
+
+        if (this.pending_reallocation) {
+            this.engine.gl.bufferData(this.type, this.persistent_data, this.usage);
+            this.pending_reallocation = false;
+        }
+        else {
+            this.dirty_ranges.sort((a, b) => a[0] - b[0]);
+            const merged = [];
+            for (const range of this.dirty_ranges) {
+                const last = merged[merged.length - 1];
+                if (last && range[0] <= last[1]) {
+                    last[1] = Math.max(last[1], range[1]);
+                } else {
+                    merged.push(range);
+                }
+            }
+
+            for (const [start_idx, end_idx] of merged) {
+                const offset_bytes = start_idx * 4;
+                const count = end_idx - start_idx;
+                this.engine.gl.bufferSubData(this.type, offset_bytes, this.persistent_data, start_idx, count);
             }
         }
         this.dirty_ranges = [];
-
-        this.engine.gl.bindBuffer(this.type, this.buffer);
-        for (const [start_idx, end_idx] of merged) {
-            const offset_bytes = start_idx * 4;
-            const count = end_idx - start_idx;
-            this.engine.gl.bufferSubData(this.type, offset_bytes, this.persistent_data, start_idx, count);
-        }
         return this;
     }
 
