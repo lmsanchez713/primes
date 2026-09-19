@@ -82,7 +82,7 @@ export function generateSea(side_length, senoid) {
     return { positions, normals, textures };
 }
 
-export function createCubeGeometry(engine, keep_on_ram = false) {
+export function createCubeGeometry(engine, keep_on_ram = false, flush = true) {
     // Vertices for two triangles forming a quad
     const vertices = new Float32Array([
         -1.0, -1.0, 1.0,
@@ -161,6 +161,8 @@ export function createCubeGeometry(engine, keep_on_ram = false) {
         aTexCoord: { data: texCoords, size: 2 },
         aNormal: { data: normals, size: 3 }
     }, keep_on_ram);
+
+    if (flush) geo.flush();
 
     return geo;
 }
