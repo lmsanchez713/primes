@@ -106,17 +106,18 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const cube = engine.geometries['cube'] = createCubeGeometry(engine, true);
-    const misc_geo = engine.geometries['misc'] = new Geometry(engine, {}, false);
+    const misc_geo = engine.geometries['misc'] = new Geometry(engine, {}, true);
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
-    cube.generate_triangle(
+    misc_geo.generate_triangle(
         -2.0, -2.0, 0.0, u0, v0,
         2.0, -2.0, 0.0, u1, v0,
-        2.0, 2.0, 0.0, u1, v1, false);
+        2.0, 2.0, 0.0, u1, v1, true);
 
-    cube.flush();
-    
+    misc_geo.addShader('debug_shader', debug_shader);
+    misc_geo.updateBindings();
+
     console.log(`generate_sphere ${generate_sphere(1.0, 3, 3)}`);
 
     cube.addShader('debug_shader', debug_shader);
@@ -249,9 +250,10 @@ export async function InitApp() {
             });
 
             engine.gl.drawArrays(engine.gl.TRIANGLES, 0, cube.get_vertex_count());
-            if (vertices_generated) {
-                engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
-            }
+            
+            misc_geo.updateBindings();
+            misc_geo.bind('debug_shader');
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, misc_geo.get_vertex_count());
         }
     }));
 

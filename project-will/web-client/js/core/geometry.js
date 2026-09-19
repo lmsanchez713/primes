@@ -16,6 +16,13 @@ export class Geometry {
         this.shaders = {};
         this.objects = {};
         this.keep_on_ram = keep_on_ram;
+        if (!vertex_data || Object.keys(vertex_data).length <= 0) {
+            vertex_data = {
+                aPosition: { data: null, size: 3 },
+                aTexCoord: { data: null, size: 2 },
+                aNormal: { data: null, size: 3 }
+            };
+        }
         if (vertex_data && Object.keys(vertex_data).length > 0) {
             for (const [attribute_name, attribute_data] of Object.entries(vertex_data)) {
                 const { data, size, type = this.engine.gl.FLOAT, usage = this.engine.gl.STATIC_DRAW, buffer_type = this.engine.gl.ARRAY_BUFFER } = attribute_data;

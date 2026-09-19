@@ -13,13 +13,13 @@ export class Buffer {
     data(new_data, usage = engine.gl.STATIC_DRAW, keep_on_ram = false) {
         this.usage = usage;
         this.keep_on_ram = keep_on_ram;
-        this.length = new_data.length ?? new_data;
+        this.length = new_data ? (new_data.length ?? new_data) : 0;
         if (this.keep_on_ram) {
             if (new_data instanceof Float32Array) {
                 this.persistent_data = new_data;
             } else {
                 this.persistent_data = new Float32Array(this.length);
-                if (new_data.length)
+                if (new_data && new_data.length)
                     this.persistent_data.set(new_data);
             }
             this.pending_reallocation = true;
