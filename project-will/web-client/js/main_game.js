@@ -15,27 +15,8 @@ let vertices_generated = 0, last_report = -1;
 const waves = [];
 
 function update_geometry() {
-    const cycle_time = 1.0;
-    const current_cycle = Math.trunc(engine.time.current / cycle_time);
-    const cycle_partial = engine.time.current % cycle_time;
-    let quads = 1, side = 1, vertices_needed = 6;
 
-    for (let c = 0; c <= current_cycle; c++) {
-        const new_side = side + 2;
-        const new_quads = new_side * 2 + side * 2;
-        vertices_needed += new_quads * 6;
-        quads += new_quads;
-        side = new_side;
-    }
-
-    //if (last_report < current_cycle) {
-    //    console.log(
-    //        `C ${current_cycle} Q ${quads} S ${side} V ${vertices_needed} A ${scene.cameras[0].perspective.aspect}`
-    //    );
-    //    last_report = current_cycle;
-    //}
-
-    const geo = engine.geometries['square'];
+    const geo = engine.geometries['cube'];
 
     if (vertices_needed > vertices_generated) {
         const vertices_missing = vertices_needed - vertices_generated;
@@ -122,12 +103,12 @@ export async function InitApp() {
     const debug_shader = await loadShaderFromUrl(engine, 'glsl/vertex.glsl', 'glsl/fragment.glsl',
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
-    const square = engine.geometries['square'] = createCubeGeometry(engine, true);
+    const cube = engine.geometries['cube'] = createCubeGeometry(engine, true);
 
     console.log(`generate_sphere ${generate_sphere(1.0, 3, 3)}`);
 
-    square.addShader('debug_shader', debug_shader);
-    square.updateBindings();
+    cube.addShader('debug_shader', debug_shader);
+    cube.updateBindings();
 
     const max_lights = 32;
 
@@ -201,13 +182,13 @@ export async function InitApp() {
 
     engine.primitives.push(new Primitive(engine, {
         draw_algorithm: (primitive) => {
-            update_geometry();
+            //update_geometry();
             //const camera_factor = 0.03125 * 1.0;
             //scene.cameras[0].view.position.x *= (1.0 + camera_factor * engine.time.delta);
             //scene.cameras[0].view.position.y *= (1.0 + camera_factor * engine.time.delta);
             //scene.cameras[0].view.position.z *= (1.0 + camera_factor * engine.time.delta);
-            square.updateBindings();
-            square.bind('debug_shader');
+            cube.updateBindings();
+            cube.bind('debug_shader');
             ubo_buffer.bind_base(debug_shader);
             texture.bind();
             debug_shader.uniform1i('u_sampler2d', 0);
