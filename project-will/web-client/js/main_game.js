@@ -1,12 +1,14 @@
 import { Primitive_Engine, Primitive } from './primitive.js';
 import { Primitive_Scene, Primitive_Camera } from './core/scene.js';
 import { loadShaderFromUrl } from './core/shader.js';
+import { Geometry } from './core/geometry.js';
 import { createCubeGeometry, generate_triangle, generate_sphere } from './core/shapes.js';
 import { Buffer } from './core/buffer.js';
 import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
 import { UniformBuffer } from './core/ubo.js';
 import { inicializar_websocket } from './wss.js';
+import { Path, Mesh } from '/js/core/mesh.js';
 
 let engine, scene;
 
@@ -104,7 +106,17 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const cube = engine.geometries['cube'] = createCubeGeometry(engine, true);
+    const misc_geo = engine.geometries['misc'] = new Geometry(engine, {}, false);
 
+    const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
+
+    cube.generate_triangle(
+        -2.0, -2.0, 0.0, u0, v0,
+        2.0, -2.0, 0.0, u1, v0,
+        2.0, 2.0, 0.0, u1, v1, false);
+
+    cube.flush();
+    
     console.log(`generate_sphere ${generate_sphere(1.0, 3, 3)}`);
 
     cube.addShader('debug_shader', debug_shader);
@@ -221,7 +233,7 @@ export async function InitApp() {
             const time_rotation = new Mat4();//, translation = new Mat4(), rotation = new Mat4(),
             //    rotationX = new Mat4(), rotationY = new Mat4(), rotationZ = new Mat4();
             scene.model_matrix.identity();
-            Mat4.rotateY(-engine.time.current, time_rotation);
+            // Mat4.rotateY(-engine.time.current, time_rotation);
             //Mat4.translation(0.0, 0.0, 0.5, translation);
             //Mat4.rotateY(Math.PI / 2.0, rotationY);
             scene.model_matrix.multiply(time_rotation);
@@ -236,7 +248,7 @@ export async function InitApp() {
                 u_projectionMatrix: scene.cameras[0].projection_matrix
             });
 
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, 36);
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, cube.get_vertex_count());
             if (vertices_generated) {
                 engine.gl.drawArrays(engine.gl.TRIANGLES, 36, vertices_generated);
             }
