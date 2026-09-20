@@ -115,6 +115,8 @@ export async function InitApp() {
         2.0, -2.0, 0.0, u1, v0,
         2.0, 2.0, 0.0, u1, v1, true);
 
+    const mesh = new Mesh(engine, 'misc', 'debug_shader');
+
     misc_geo.addShader('debug_shader', debug_shader);
     misc_geo.updateBindings();
 
