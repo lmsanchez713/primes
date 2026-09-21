@@ -156,11 +156,11 @@ export function createCubeGeometry(engine, keep_on_ram = false, flush = true) {
         0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1
     ]);
 
-    const geo = new Geometry(engine, {
+    const geo = new Geometry(engine, keep_on_ram, {
         aPosition: { data: vertices, size: 3 },
         aTexCoord: { data: texCoords, size: 2 },
         aNormal: { data: normals, size: 3 }
-    }, keep_on_ram);
+    });
 
     if (flush) geo.flush();
 
@@ -198,11 +198,11 @@ export function createSquareGeometry(engine, keep_on_ram = false) {
         0, 0, 1 // v5
     ]);
 
-    const geo = new Geometry(engine, {
+    const geo = new Geometry(engine, keep_on_ram, {
         aPosition: { data: vertices, size: 3 },
         aTexCoord: { data: texCoords, size: 2 },
         aNormal: { data: normals, size: 3 }
-    }, keep_on_ram);
+    });
 
     return geo;
 }

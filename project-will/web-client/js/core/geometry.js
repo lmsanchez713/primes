@@ -10,7 +10,7 @@ class Draw_Interval {
 }
 
 export class Geometry {
-    constructor(engine, vertex_data = {}, keep_on_ram = false) {
+    constructor(engine, keep_on_ram = false, vertex_data = {}) {
         this.engine = engine;
         this.buffers = {};
         this.shaders = {};
