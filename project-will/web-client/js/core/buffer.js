@@ -26,7 +26,7 @@ export class Buffer {
         }
         else {
             this.engine.gl.bindBuffer(this.type, this.buffer);
-            this.engine.gl.bufferData(this.type, new_data, this.usage);
+            if (new_data !== null) this.engine.gl.bufferData(this.type, new_data, this.usage);
         }
     }
 
