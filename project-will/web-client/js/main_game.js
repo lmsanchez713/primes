@@ -107,17 +107,22 @@ export async function InitApp() {
 
     const cube = engine.geometries['cube'] = createCubeGeometry(engine, true);
     const mesh = new Mesh(engine, 'misc');
-    const misc_geo = engine.geometries['misc'];
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
-    misc_geo.generate_triangle(
-        -2.0, -2.0, 0.0, u0, v0,
-        2.0, -2.0, 0.0, u1, v0,
-        2.0, 2.0, 0.0, u1, v1, true);
+    const path = new Path([
+        [1.0, -1.0, 1.0],
+        [1.0, -1.0, -1.0],
+        [1.0, 1.0, -1.0],
+        [1.0, 1.0, 1.0]
+    ], true);
+    const texcoords = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
 
-    misc_geo.addShader('debug_shader', debug_shader);
-    misc_geo.updateBindings();
+    mesh.fill_path(path, texcoords);
+    mesh.geometry.flush();
+
+    mesh.geometry.addShader('debug_shader', debug_shader);
+    mesh.geometry.updateBindings();
 
     console.log(`generate_sphere ${generate_sphere(1.0, 3, 3)}`);
 
@@ -250,11 +255,11 @@ export async function InitApp() {
                 u_projectionMatrix: scene.cameras[0].projection_matrix
             });
 
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, cube.get_vertex_count());
+            //engine.gl.drawArrays(engine.gl.TRIANGLES, 0, cube.get_vertex_count());
             
-            misc_geo.updateBindings();
-            misc_geo.bind('debug_shader');
-            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, misc_geo.get_vertex_count());
+            mesh.geometry.updateBindings();
+            mesh.geometry.bind('debug_shader');
+            engine.gl.drawArrays(engine.gl.TRIANGLES, 0, mesh.geometry.get_vertex_count());
         }
     }));
 
