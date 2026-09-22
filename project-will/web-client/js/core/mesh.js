@@ -1,25 +1,36 @@
 import { Vec3, Mat4 } from '/js/math.js';
+import { Geometry } from '/js/core/geometry.js';
 
-export class mesh {
-    constructor(engine, geometry, shader_name, model_matrix = new Mat4()) {
-        this.engine = engine;
-        this.geometry = geometry;
-        this.shader_name = shader_name;
-        this.model_matrix = model_matrix;
-    }
-}
-
-export class path {
-    constructor(vertices = [], closed = false) {
-        this.vertices = vertices;
+export class Path {
+    constructor(points = [], closed = false) {
+        this.points = points;
         this.closed = closed;
     }
 
-    add(vertex) {
-        this.vertices.push(vertex);
+    add(point) {
+        this.points.push(point);
     }
 
     close() {
         this.closed = true;
+    }
+}
+
+export class Mesh {
+    constructor(engine, geometry_name) {
+        this.engine = engine;
+        if (geometry_name in engine.geometries) {
+            this.geometry = engine.geometries[geometry_name];
+        }
+        else {
+            this.geometry = engine.geometries[geometry_name] = new Geometry(engine, true);
+        }
+    }
+
+    generate_quad(path) {
+        misc_geo.generate_triangle(
+            -2.0, -2.0, 0.0, u0, v0,
+            2.0, -2.0, 0.0, u1, v0,
+            2.0, 2.0, 0.0, u1, v1, true);
     }
 }

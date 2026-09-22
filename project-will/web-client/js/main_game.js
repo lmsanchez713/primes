@@ -106,7 +106,8 @@ export async function InitApp() {
         ['aPosition', 'aTexCoord', 'aNormal'], ['u_sampler2d'], ['UBO']);
 
     const cube = engine.geometries['cube'] = createCubeGeometry(engine, true);
-    const misc_geo = engine.geometries['misc'] = new Geometry(engine, true);
+    const mesh = new Mesh(engine, 'misc');
+    const misc_geo = engine.geometries['misc'];
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
@@ -114,8 +115,6 @@ export async function InitApp() {
         -2.0, -2.0, 0.0, u0, v0,
         2.0, -2.0, 0.0, u1, v0,
         2.0, 2.0, 0.0, u1, v1, true);
-
-    const mesh = new Mesh(engine, 'misc', 'debug_shader');
 
     misc_geo.addShader('debug_shader', debug_shader);
     misc_geo.updateBindings();
