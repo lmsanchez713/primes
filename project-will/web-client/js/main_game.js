@@ -111,14 +111,13 @@ export async function InitApp() {
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
     const path = new Path([
-        [1.0, -1.0, 1.0],
-        [1.0, -1.0, -1.0],
-        [1.0, 1.0, -1.0],
-        [1.0, 1.0, 1.0]
+        [1.0, -1.0, 1.0, u0, v0],
+        [1.0, -1.0, -1.0, u1, v0],
+        [1.0, 1.0, -1.0, u1, v1],
+        [1.0, 1.0, 1.0, u0, v1]
     ], true);
-    const texcoords = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
 
-    mesh.fill_path(path, texcoords);
+    mesh.fill_path(path);
     mesh.geometry.flush();
 
     mesh.geometry.addShader('debug_shader', debug_shader);

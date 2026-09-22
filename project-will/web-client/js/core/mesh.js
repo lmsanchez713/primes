@@ -2,9 +2,10 @@ import { Vec3, Mat4 } from '/js/math.js';
 import { Geometry } from '/js/core/geometry.js';
 
 export class Path {
-    constructor(points = [], closed = false) {
+    constructor(points = [], closed = false, attributes = {}) {
         this.points = points;
         this.closed = closed;
+        this.attributes = attributes;
     }
 
     add(point) {
@@ -25,23 +26,25 @@ export class Mesh {
         else {
             this.geometry = engine.geometries[geometry_name] = new Geometry(engine, true);
         }
+        this.generated = [];
     }
 
-    fill_quad(path, texpoints) {
-        const p = path.points;
+    fill_quad(path) {
+        const points = path.points;
         this.geometry.generate_triangle(
-            p[0][0], p[0][1], p[0][2], texpoints[0][0], texpoints[0][1],
-            p[1][0], p[1][1], p[1][2], texpoints[1][0], texpoints[1][1],
-            p[2][0], p[2][1], p[2][2], texpoints[2][0], texpoints[2][1]);
+            points[0][0], points[0][1], points[0][2], points[0][3], points[0][4],
+            points[1][0], points[1][1], points[1][2], points[1][3], points[1][4],
+            points[2][0], points[2][1], points[2][2], points[2][3], points[2][4]);
         this.geometry.generate_triangle(
-            p[0][0], p[0][1], p[0][2], texpoints[0][0], texpoints[0][1],
-            p[2][0], p[2][1], p[2][2], texpoints[2][0], texpoints[2][1],
-            p[3][0], p[3][1], p[3][2], texpoints[3][0], texpoints[3][1]);
+            points[0][0], points[0][1], points[0][2], points[0][3], points[0][4],
+            points[2][0], points[2][1], points[2][2], points[2][3], points[2][4],
+            points[3][0], points[3][1], points[3][2], points[3][3], points[3][4]);
     }
 
-    fill_path(path, texpoints) {
+    fill_path(path) {
+        const generated_object = { path: path, offset: this.geometry.generated_element_count };
         if (path.points.length == 4) {
-            this.fill_quad(path, texpoints);
+            this.fill_quad(path);
         }
         //handle other paths
         //let i0 = 0, i1 = 1, i2 = 2, i3 = 3, iq = 0;
@@ -55,5 +58,7 @@ export class Mesh {
         //
         //i0 += 2, i1 += 2, i2 += 2, i3 += 2, iq += 1;
         //}
+        generated_object.count = this.geometry.generated_element_count - generated_object.offset;
+        this.generated.push(generated_object);
     }
 }
