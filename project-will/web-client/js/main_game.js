@@ -109,19 +109,18 @@ export async function InitApp() {
     const mesh = new Mesh(engine, 'misc');
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
+    let p0 = [1.0, -1.0, 1.0], p1 = [1.0, -1.0, -1.0], p2 = [1.0, 1.0, -1.0], p3 = [1.0, 1.0, 1.0];
 
     const path = [
-        [1.0, -1.0, 1.0, u0, v0],
-        [1.0, -1.0, -1.0, u1, v0],
-        [1.0, 1.0, -1.0, u1, v1],
-        [1.0, 1.0, 1.0, u0, v1],
-        [1.0, -1.0, -1.0, u0, v0],
-        [1.0, 0.0, -2.0, u1, v0],
-        [1.0, 2.0, -2.0, u1, v1],
-        [1.0, 1.0, -1.0, u0, v1]
+        [...p0, u0, v0],
+        [...p1, u1, v0],
+        [...p2, u1, v1],
+        [...p3, u0, v1]
     ];
 
     mesh.fill_path(path, "quads");
+    //extend "quads" with single uv starting pair
+
     mesh.geometry.flush();
 
     mesh.geometry.addShader('debug_shader', debug_shader);

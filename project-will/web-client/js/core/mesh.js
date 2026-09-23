@@ -13,9 +13,9 @@ export class Mesh {
         this.generated = [];
     }
 
-    fill_quads(points) {
-        let i0 = 0, i1 = 1, i2 = 2, i3 = 3;
-        while (i3 < points.length) {
+    fill_quads(points, offset = 0, count = points.length - offset) {
+        let i0 = offset, i1 = offset + 1, i2 = offset + 2, i3 = offset + 3;
+        while (i3 < (offset + count)) {
             this.geometry.generate_triangle(
                 points[i0][0], points[i0][1], points[i0][2], points[i0][3], points[i0][4],
                 points[i1][0], points[i1][1], points[i1][2], points[i1][3], points[i1][4],
@@ -28,10 +28,10 @@ export class Mesh {
         }
     }
 
-    fill_path(points, mode) {
+    fill_path(points, mode, offset = 0, count = points.length - offset) {
         const generated_object = { path: points, offset: this.geometry.get_vertex_count() };
         if (mode === "quads") {
-            this.fill_quads(points);
+            this.fill_quads(points, offset, count);
         }
         //handle other paths
         //let i0 = 0, i1 = 1, i2 = 2, i3 = 3, iq = 0;
