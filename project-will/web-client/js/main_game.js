@@ -8,7 +8,7 @@ import { Texture } from './core/texture.js';
 import { Mat4, Vec3 } from './math.js';
 import { UniformBuffer } from './core/ubo.js';
 import { inicializar_websocket } from './wss.js';
-import { Path, Mesh } from '/js/core/mesh.js';
+import { Mesh } from '/js/core/mesh.js';
 
 let engine, scene;
 
@@ -110,14 +110,18 @@ export async function InitApp() {
 
     const u0 = (1.0 / 24.0) * 22.0, v0 = (1.0 / 16.0) * 12.0, u1 = (1.0 / 24.0) * 23.0, v1 = (1.0 / 16.0) * 13.0;
 
-    const path = new Path([
+    const path = [
         [1.0, -1.0, 1.0, u0, v0],
         [1.0, -1.0, -1.0, u1, v0],
         [1.0, 1.0, -1.0, u1, v1],
-        [1.0, 1.0, 1.0, u0, v1]
-    ], true);
+        [1.0, 1.0, 1.0, u0, v1],
+        [1.0, -1.0, -1.0, u0, v0],
+        [1.0, 0.0, -2.0, u1, v0],
+        [1.0, 2.0, -2.0, u1, v1],
+        [1.0, 1.0, -1.0, u0, v1]
+    ];
 
-    mesh.fill_path(path);
+    mesh.fill_path(path, "quads");
     mesh.geometry.flush();
 
     mesh.geometry.addShader('debug_shader', debug_shader);

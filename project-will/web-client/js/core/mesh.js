@@ -1,22 +1,6 @@
 import { Vec3, Mat4 } from '/js/math.js';
 import { Geometry } from '/js/core/geometry.js';
 
-export class Path {
-    constructor(points = [], closed = false, attributes = {}) {
-        this.points = points;
-        this.closed = closed;
-        this.attributes = attributes;
-    }
-
-    add(point) {
-        this.points.push(point);
-    }
-
-    close() {
-        this.closed = true;
-    }
-}
-
 export class Mesh {
     constructor(engine, geometry_name) {
         this.engine = engine;
@@ -29,22 +13,25 @@ export class Mesh {
         this.generated = [];
     }
 
-    fill_quad(path) {
-        const points = path.points;
-        this.geometry.generate_triangle(
-            points[0][0], points[0][1], points[0][2], points[0][3], points[0][4],
-            points[1][0], points[1][1], points[1][2], points[1][3], points[1][4],
-            points[2][0], points[2][1], points[2][2], points[2][3], points[2][4]);
-        this.geometry.generate_triangle(
-            points[0][0], points[0][1], points[0][2], points[0][3], points[0][4],
-            points[2][0], points[2][1], points[2][2], points[2][3], points[2][4],
-            points[3][0], points[3][1], points[3][2], points[3][3], points[3][4]);
+    fill_quads(points) {
+        let i0 = 0, i1 = 1, i2 = 2, i3 = 3;
+        while (i3 < points.length) {
+            this.geometry.generate_triangle(
+                points[i0][0], points[i0][1], points[i0][2], points[i0][3], points[i0][4],
+                points[i1][0], points[i1][1], points[i1][2], points[i1][3], points[i1][4],
+                points[i2][0], points[i2][1], points[i2][2], points[i2][3], points[i2][4]);
+            this.geometry.generate_triangle(
+                points[i0][0], points[i0][1], points[i0][2], points[i0][3], points[i0][4],
+                points[i2][0], points[i2][1], points[i2][2], points[i2][3], points[i2][4],
+                points[i3][0], points[i3][1], points[i3][2], points[i3][3], points[i3][4]);
+            i0 += 4, i1 += 4, i2 += 4, i3 += 4;
+        }
     }
 
-    fill_path(path) {
-        const generated_object = { path: path, offset: this.geometry.generated_element_count };
-        if (path.points.length == 4) {
-            this.fill_quad(path);
+    fill_path(points, mode) {
+        const generated_object = { path: points, offset: this.geometry.get_vertex_count() };
+        if (mode === "quads") {
+            this.fill_quads(points);
         }
         //handle other paths
         //let i0 = 0, i1 = 1, i2 = 2, i3 = 3, iq = 0;
@@ -58,7 +45,7 @@ export class Mesh {
         //
         //i0 += 2, i1 += 2, i2 += 2, i3 += 2, iq += 1;
         //}
-        generated_object.count = this.geometry.generated_element_count - generated_object.offset;
+        generated_object.count = this.geometry.get_vertex_count() - generated_object.offset;
         this.generated.push(generated_object);
     }
 }
