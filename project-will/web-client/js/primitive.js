@@ -49,6 +49,7 @@ export class Primitive_Engine {
 
         this.is_running = true;
         this._loop = this._loop.bind(this);
+
         requestAnimationFrame(this._loop);
     }
 
@@ -71,8 +72,9 @@ export class Primitive_Engine {
     }
 
     render() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
+
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
